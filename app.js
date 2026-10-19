@@ -14,12 +14,11 @@ const COURSE_FILE = "english_chunks.html";
 const $ = id => document.getElementById(id);
 
 let currentProfile = null;
-let courseBlobUrl = null;
 
 
-// ===============================
-// LOGIN / REGISTRO
-// ===============================
+// ==================================================
+// LOGIN / CREAR CUENTA
+// ==================================================
 
 function setAuthTab(mode) {
   const login = mode === "login";
@@ -35,6 +34,10 @@ $("loginTab").onclick = () => setAuthTab("login");
 $("signupTab").onclick = () => setAuthTab("signup");
 
 
+// ==================================================
+// CAMBIAR ENTRE PANTALLAS
+// ==================================================
+
 function showOnly(view) {
   ["authView", "pendingView", "portalView"].forEach(id => {
     $(id).classList.add("hidden");
@@ -44,12 +47,11 @@ function showOnly(view) {
 }
 
 
-// ===============================
-// PERFIL
-// ===============================
+// ==================================================
+// OBTENER PERFIL
+// ==================================================
 
 async function getProfile(userId) {
-
   const { data, error } = await supabase
     .from("profiles")
     .select("id,email,display_name,is_admin,is_active")
@@ -57,6 +59,7 @@ async function getProfile(userId) {
     .single();
 
   if (error) {
+    console.error("Error leyendo perfil:", error);
     throw error;
   }
 
@@ -64,19 +67,16 @@ async function getProfile(userId) {
 }
 
 
-// ===============================
-// SESIÓN
-// ===============================
+// ==================================================
+// CARGAR SESIÓN
+// ==================================================
 
 async function loadSession() {
-
   const {
     data: { session }
   } = await supabase.auth.getSession();
 
-
   if (!session) {
-
     currentProfile = null;
 
     $("logoutBtn").classList.add("hidden");
@@ -86,18 +86,11 @@ async function loadSession() {
     return;
   }
 
-
   $("logoutBtn").classList.remove("hidden");
 
-
   try {
-
-    currentProfile = await getProfile(
-      session.user.id
-    );
-
+    currentProfile = await getProfile(session.user.id);
   } catch (err) {
-
     console.error(err);
 
     await supabase.auth.signOut();
@@ -107,25 +100,20 @@ async function loadSession() {
     return;
   }
 
-
-  // CUENTA NO AUTORIZADA
+  // Usuario todavía no autorizado
   if (!currentProfile.is_active) {
-
     showOnly("pendingView");
 
     return;
   }
 
-
-  // CUENTA AUTORIZADA
+  // Usuario autorizado
   showOnly("portalView");
-
 
   $("roleBadge").textContent =
     currentProfile.is_admin
       ? "Administrador"
       : "Estudiante";
-
 
   $("roleBadge").className =
     "status " +
@@ -135,7 +123,6 @@ async function loadSession() {
         : "active"
     );
 
-
   $("welcomeTitle").textContent =
     "Hola, " +
     (
@@ -143,112 +130,84 @@ async function loadSession() {
       currentProfile.email
     );
 
-
   $("welcomeEmail").textContent =
     currentProfile.email;
 
-
   await renderCourses();
 
-
   if (currentProfile.is_admin) {
-
     $("adminPanel").classList.remove("hidden");
 
     await loadUsers();
-
   } else {
-
     $("adminPanel").classList.add("hidden");
-
   }
-
 }
 
 
-// ===============================
+// ==================================================
 // INICIAR SESIÓN
-// ===============================
+// ==================================================
 
 $("loginForm").addEventListener(
   "submit",
   async e => {
-
     e.preventDefault();
 
-    $("loginMsg").textContent =
-      "Entrando...";
-
+    $("loginMsg").textContent = "Entrando...";
 
     const { error } =
       await supabase.auth.signInWithPassword({
-
-        email:
-          $("loginEmail").value.trim(),
-
-        password:
-          $("loginPassword").value
-
+        email: $("loginEmail").value.trim(),
+        password: $("loginPassword").value
       });
 
+    if (error) {
+      console.error(error);
 
-    $("loginMsg").textContent =
-      error
-        ? "Correo o contraseña incorrectos."
-        : "";
+      $("loginMsg").textContent =
+        "Correo o contraseña incorrectos.";
 
-
-    if (!error) {
-
-      await loadSession();
-
+      return;
     }
 
+    $("loginMsg").textContent = "";
+
+    await loadSession();
   }
 );
 
 
-// ===============================
+// ==================================================
 // CREAR CUENTA
-// ===============================
+// ==================================================
 
 $("signupForm").addEventListener(
   "submit",
   async e => {
-
     e.preventDefault();
-
 
     $("signupMsg").className = "msg";
 
     $("signupMsg").textContent =
       "Creando cuenta...";
 
-
     const { data, error } =
       await supabase.auth.signUp({
+        email: $("signupEmail").value.trim(),
 
-        email:
-          $("signupEmail").value.trim(),
-
-        password:
-          $("signupPassword").value,
+        password: $("signupPassword").value,
 
         options: {
-
           data: {
-
             display_name:
               $("signupName").value.trim()
-
           }
-
         }
-
       });
 
-
     if (error) {
+      console.error(error);
 
       $("signupMsg").textContent =
         error.message;
@@ -256,50 +215,32 @@ $("signupForm").addEventListener(
       return;
     }
 
-
     $("signupMsg").className =
       "msg ok";
 
-
     $("signupMsg").textContent =
-      data.session
-        ? "Cuenta creada. Joan debe activarla y asignarte el curso."
-        : "Cuenta creada. Revisa tu correo si te pide confirmación; luego Joan debe activarla.";
-
+      "Cuenta creada. Joan debe activarla y darte acceso al curso.";
   }
 );
 
 
-// ===============================
+// ==================================================
 // CERRAR SESIÓN
-// ===============================
+// ==================================================
 
 $("logoutBtn").onclick =
   async () => {
-
     await supabase.auth.signOut();
 
-
-    if (courseBlobUrl) {
-
-      URL.revokeObjectURL(
-        courseBlobUrl
-      );
-
-    }
-
-
     location.reload();
-
   };
 
 
-// ===============================
-// CURSOS DEL USUARIO
-// ===============================
+// ==================================================
+// MOSTRAR CURSOS
+// ==================================================
 
 async function renderCourses() {
-
   const { data: access, error } =
     await supabase
       .from("course_access")
@@ -309,6 +250,12 @@ async function renderCourses() {
         currentProfile.id
       );
 
+  if (error) {
+    console.error(
+      "Error leyendo acceso:",
+      error
+    );
+  }
 
   const allowed =
     !error &&
@@ -317,7 +264,6 @@ async function renderCourses() {
         r.course_code ===
         COURSE_CODE
     );
-
 
   $("courseGrid").innerHTML = `
 
@@ -355,135 +301,104 @@ async function renderCourses() {
       }
 
     </article>
-
   `;
 
-
   if (allowed) {
-
     $("openChunks").onclick =
       openCourse;
-
   }
-
 }
 
 
-// ===============================
+// ==================================================
 // ABRIR CURSO PRIVADO
-// ===============================
+// ==================================================
 
 async function openCourse() {
-
   $("courseView")
     .classList
     .remove("hidden");
 
-
   $("courseStatus").textContent =
     "Cargando contenido privado...";
-
 
   const { data, error } =
     await supabase.storage
       .from("courses")
       .download(COURSE_FILE);
 
-
   if (error) {
-
-    console.error(error);
+    console.error(
+      "Error descargando curso:",
+      error
+    );
 
     $("courseStatus").textContent =
       "No se pudo abrir el curso.";
 
     return;
-
   }
 
-
   try {
-
-    // Convertimos el archivo descargado
-    // explícitamente a HTML.
-
     const htmlText =
       await data.text();
 
+    /*
+      IMPORTANTE:
+      usamos srcdoc en vez de blob/src.
 
-    const htmlBlob =
-      new Blob(
+      Esto obliga al navegador a interpretar
+      el contenido como HTML real y evita
+      que aparezca todo el código en pantalla.
+    */
 
-        [htmlText],
+    const iframe =
+      $("courseFrame");
 
-        {
-          type:
-            "text/html;charset=utf-8"
-        }
+    iframe.removeAttribute("src");
 
-      );
-
-
-    if (courseBlobUrl) {
-
-      URL.revokeObjectURL(
-        courseBlobUrl
-      );
-
-    }
-
-
-    courseBlobUrl =
-      URL.createObjectURL(
-        htmlBlob
-      );
-
-
-    $("courseFrame").src =
-      courseBlobUrl;
-
+    iframe.srcdoc =
+      htmlText;
 
     $("courseStatus").textContent =
       "Curso cargado";
 
-
   } catch (err) {
-
-    console.error(err);
-
+    console.error(
+      "Error preparando curso:",
+      err
+    );
 
     $("courseStatus").textContent =
       "Error al preparar el curso.";
-
   }
-
 }
 
 
-// ===============================
+// ==================================================
 // VOLVER AL PORTAL
-// ===============================
+// ==================================================
 
 $("backToPortal").onclick =
   () => {
-
     $("courseView")
       .classList
       .add("hidden");
 
+    $("courseFrame").removeAttribute(
+      "srcdoc"
+    );
 
     $("courseFrame").src =
       "about:blank";
-
   };
 
 
-// ===============================
-// PANEL ADMINISTRADOR
-// ===============================
+// ==================================================
+// PANEL DE ADMINISTRADOR
+// ==================================================
 
 async function loadUsers() {
-
   const {
     data: profiles,
     error
@@ -500,21 +415,21 @@ async function loadUsers() {
         }
       );
 
-
   if (error) {
-
-    console.error(error);
+    console.error(
+      "Error cargando usuarios:",
+      error
+    );
 
     $("usersList").innerHTML =
       "<p>No se pudieron cargar los usuarios.</p>";
 
     return;
-
   }
 
-
   const {
-    data: accessRows
+    data: accessRows,
+    error: accessError
   } =
     await supabase
       .from("course_access")
@@ -522,25 +437,26 @@ async function loadUsers() {
         "user_id,course_code"
       );
 
+  if (accessError) {
+    console.error(
+      "Error cargando accesos:",
+      accessError
+    );
+  }
 
   const accessSet =
     new Set(
-
       (accessRows || [])
-
         .filter(
           x =>
             x.course_code ===
             COURSE_CODE
         )
-
         .map(
           x =>
             x.user_id
         )
-
     );
-
 
   const students =
     profiles.filter(
@@ -549,7 +465,10 @@ async function loadUsers() {
     );
 
 
-  // ESTADÍSTICAS
+// ==================================================
+// ESTADÍSTICAS
+// ==================================================
+
   $("adminStats").innerHTML = `
 
     <div class="stat">
@@ -601,11 +520,13 @@ async function loadUsers() {
       </span>
 
     </div>
-
   `;
 
 
-  // LISTA DE USUARIOS
+// ==================================================
+// LISTA DE USUARIOS
+// ==================================================
+
   $("usersList").innerHTML =
 
     profiles.map(
@@ -734,14 +655,13 @@ async function loadUsers() {
         </div>
 
       </div>
-
     `
     ).join("");
 
 
-// ===============================
-// BOTONES ADMIN
-// ===============================
+// ==================================================
+// BOTONES DEL ADMIN
+// ==================================================
 
   document
     .querySelectorAll(
@@ -757,7 +677,10 @@ async function loadUsers() {
               btn.dataset.id;
 
 
-            // ACTIVAR / BLOQUEAR
+// ==================================================
+// ACTIVAR / BLOQUEAR
+// ==================================================
+
             if (
               btn.dataset.action ===
               "toggle"
@@ -767,21 +690,31 @@ async function loadUsers() {
                 btn.dataset.active !==
                 "true";
 
+              const {
+                error
+              } =
+                await supabase
+                  .from("profiles")
+                  .update({
+                    is_active: next
+                  })
+                  .eq(
+                    "id",
+                    id
+                  );
 
-              await supabase
-                .from("profiles")
-                .update({
-                  is_active: next
-                })
-                .eq(
-                  "id",
-                  id
+              if (error) {
+                console.error(
+                  error
                 );
-
+              }
             }
 
 
-            // DAR / QUITAR CURSO
+// ==================================================
+// DAR / QUITAR CURSO
+// ==================================================
+
             if (
               btn.dataset.action ===
               "course"
@@ -791,103 +724,98 @@ async function loadUsers() {
                 btn.dataset.has ===
                 "true";
 
-
               if (has) {
 
-                await supabase
-                  .from(
-                    "course_access"
-                  )
-                  .delete()
-                  .eq(
-                    "user_id",
-                    id
-                  )
-                  .eq(
-                    "course_code",
-                    COURSE_CODE
-                  );
+                const {
+                  error
+                } =
+                  await supabase
+                    .from(
+                      "course_access"
+                    )
+                    .delete()
+                    .eq(
+                      "user_id",
+                      id
+                    )
+                    .eq(
+                      "course_code",
+                      COURSE_CODE
+                    );
 
+                if (error) {
+                  console.error(
+                    error
+                  );
+                }
 
               } else {
 
+                const {
+                  error
+                } =
+                  await supabase
+                    .from(
+                      "course_access"
+                    )
+                    .insert({
+                      user_id: id,
+                      course_code:
+                        COURSE_CODE
+                    });
 
-                await supabase
-                  .from(
-                    "course_access"
-                  )
-                  .insert({
-
-                    user_id: id,
-
-                    course_code:
-                      COURSE_CODE
-
-                  });
-
+                if (error) {
+                  console.error(
+                    error
+                  );
+                }
               }
-
             }
 
-
             await loadUsers();
-
           };
-
       }
     );
-
 }
 
 
-// ===============================
-// ACTUALIZAR USUARIOS
-// ===============================
+// ==================================================
+// BOTÓN ACTUALIZAR USUARIOS
+// ==================================================
 
 $("refreshUsers").onclick =
   loadUsers;
 
 
-// ===============================
-// SEGURIDAD HTML
-// ===============================
+// ==================================================
+// PROTEGER TEXTO HTML
+// ==================================================
 
 function escapeHtml(s) {
-
   return String(
     s ?? ""
   ).replace(
-
     /[&<>"']/g,
 
     c => ({
-
       "&": "&amp;",
-
       "<": "&lt;",
-
       ">": "&gt;",
-
       '"': "&quot;",
-
       "'": "&#039;"
-
     }[c])
-
   );
-
 }
 
 
-// ===============================
+// ==================================================
 // CAMBIOS DE AUTENTICACIÓN
-// ===============================
+// ==================================================
 
 supabase.auth.onAuthStateChange(
   (_event, session) => {
 
     if (!session) {
-
       currentProfile = null;
 
       $("logoutBtn")
@@ -897,15 +825,13 @@ supabase.auth.onAuthStateChange(
       showOnly(
         "authView"
       );
-
     }
-
   }
 );
 
 
-// ===============================
+// ==================================================
 // INICIAR PORTAL
-// ===============================
+// ==================================================
 
 await loadSession();
