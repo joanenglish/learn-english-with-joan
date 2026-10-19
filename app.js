@@ -37,6 +37,16 @@ const COURSES = [
       "100 conectores · 1,000 ejemplos · traducción · pronunciación americana · uso real.",
     file: "english_connectors.html",
     badge: "A2–C1"
+  },
+
+  {
+    code: "COLLOCATIONS",
+    title: "1000 English Collocations",
+    shortTitle: "English Collocations",
+    description:
+      "1,000 collocations · flashcards · ejemplos · pronunciación americana · modo automático.",
+    file: "english_collocations.html",
+    badge: "American English"
   }
 ];
 
@@ -554,8 +564,6 @@ async function openCourse(courseCode) {
   }
 
 
-  /* VERIFICAR CUENTA */
-
   const {
     data: freshProfile,
     error: profileError
@@ -696,7 +704,7 @@ $("backToPortal").onclick =
 
 
 /* ============================================================
-   PANEL DE ADMINISTRADOR
+   PANEL ADMINISTRADOR
    ============================================================ */
 
 async function loadUsers() {
@@ -725,6 +733,7 @@ async function loadUsers() {
     console.error(
       error
     );
+
 
     $("usersList").innerHTML =
       "<p>No se pudieron cargar los estudiantes.</p>";
@@ -854,7 +863,7 @@ async function loadUsers() {
 
 
 /* ============================================================
-   CREAR TARJETAS
+   TARJETAS DE USUARIOS
    ============================================================ */
 
   $("usersList").innerHTML =
@@ -878,7 +887,7 @@ async function loadUsers() {
 
           return `
 
-            <label class="course-switch-row">
+            <div class="course-switch-row">
 
               <div class="course-switch-copy">
 
@@ -925,7 +934,7 @@ async function loadUsers() {
 
               </label>
 
-            </label>
+            </div>
           `;
 
         }).join("");
@@ -1058,7 +1067,7 @@ async function loadUsers() {
 
 
 /* ============================================================
-   BLOQUEAR / DESBLOQUEAR ESTUDIANTE
+   BLOQUEAR / DESBLOQUEAR
    ============================================================ */
 
   document
@@ -1083,16 +1092,7 @@ async function loadUsers() {
             true;
 
 
-          console.log(
-            "Cambiando estudiante:",
-            userId,
-            "Estado:",
-            newStatus
-          );
-
-
           const {
-            data,
             error
           } =
             await supabase.rpc(
@@ -1112,7 +1112,6 @@ async function loadUsers() {
           if (error) {
 
             console.error(
-              "ERROR AL BLOQUEAR:",
               error
             );
 
@@ -1134,12 +1133,6 @@ async function loadUsers() {
           }
 
 
-          console.log(
-            "Estado cambiado correctamente:",
-            data
-          );
-
-
           input.disabled =
             false;
 
@@ -1151,7 +1144,7 @@ async function loadUsers() {
 
 
 /* ============================================================
-   DAR / QUITAR CURSOS
+   DAR / QUITAR ACCESO A CURSOS
    ============================================================ */
 
   document
@@ -1328,7 +1321,7 @@ supabase.auth
 
 
 /* ============================================================
-   REVISAR SI ESTUDIANTE FUE BLOQUEADO
+   REVISAR BLOQUEO
    ============================================================ */
 
 setInterval(
@@ -1412,7 +1405,7 @@ setInterval(
 
 
 /* ============================================================
-   INICIAR PORTAL
+   INICIAR
    ============================================================ */
 
 await loadSession();
