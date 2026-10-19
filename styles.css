@@ -742,3 +742,37 @@ select:focus{
     font-size:21px;
   }
 }
+/* LOGO DE LA BARRA AZUL */
+
+.brand-glass{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.4px;
+
+  background:linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #dcecff 28%,
+    #ffffff 52%,
+    #b9d8ff 76%,
+    #ffffff 100%
+  );
+
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.5),
+    0 2px 6px rgba(0,0,0,.20),
+    0 0 14px rgba(255,255,255,.20);
+}
+
+.brand-book{
+  -webkit-text-fill-color:initial;
+  font-size:23px;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));
+}
