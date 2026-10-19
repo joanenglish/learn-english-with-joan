@@ -1,7 +1,10 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-const SUPABASE_URL = "https://ggdrcklhyzmacpwctblv.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_L-kS8DGmd07cfw-UZdBvSg_G_OWhQUK";
+const SUPABASE_URL =
+  "https://ggdrcklhyzmacpwctblv.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_L-kS8DGmd07cfw-UZdBvSg_G_OWhQUK";
 
 const supabase = createClient(
   SUPABASE_URL,
@@ -9,6 +12,7 @@ const supabase = createClient(
 );
 
 const $ = id => document.getElementById(id);
+
 
 const COURSES = [
   {
@@ -20,6 +24,7 @@ const COURSES = [
     file: "english_chunks.html",
     badge: "American English"
   },
+
   {
     code: "CONNECTORS",
     title: "English Connectors in Context",
@@ -31,43 +36,42 @@ const COURSES = [
   }
 ];
 
+
 let currentProfile = null;
 
 
-/* =========================================================
-   LOGIN / REGISTRO
-   ========================================================= */
+/* ============================================================
+   CAMBIAR LOGIN / REGISTRO
+   ============================================================ */
 
 function setAuthTab(mode) {
-  const login = mode === "login";
 
-  $("loginForm").classList.toggle(
-    "hidden",
-    !login
-  );
+  const login =
+    mode === "login";
 
-  $("signupForm").classList.toggle(
-    "hidden",
-    login
-  );
+  $("loginForm")
+    .classList
+    .toggle("hidden", !login);
 
-  $("loginTab").classList.toggle(
-    "active",
-    login
-  );
+  $("signupForm")
+    .classList
+    .toggle("hidden", login);
 
-  $("signupTab").classList.toggle(
-    "active",
-    !login
-  );
+  $("loginTab")
+    .classList
+    .toggle("active", login);
+
+  $("signupTab")
+    .classList
+    .toggle("active", !login);
 }
 
 
-$("loginTab").onclick = () =>
-  setAuthTab("login");
+$("loginTab").onclick =
+  () => setAuthTab("login");
 
-$("signupTab").onclick = () =>
-  setAuthTab("signup");
+$("signupTab").onclick =
+  () => setAuthTab("signup");
 
 
 function showOnly(view) {
@@ -78,42 +82,49 @@ function showOnly(view) {
     "portalView"
   ].forEach(id => {
 
-    $(id).classList.add("hidden");
+    $(id)
+      .classList
+      .add("hidden");
 
   });
 
-  $(view).classList.remove("hidden");
+  $(view)
+    .classList
+    .remove("hidden");
 }
 
 
-/* =========================================================
-   PERFIL
-   ========================================================= */
+/* ============================================================
+   OBTENER PERFIL
+   ============================================================ */
 
 async function getProfile(userId) {
 
   const {
     data,
     error
-  } = await supabase
-    .from("profiles")
-    .select(
-      "id,email,display_name,is_admin,is_active"
-    )
-    .eq("id", userId)
-    .single();
+  } =
+    await supabase
+      .from("profiles")
+      .select(
+        "id,email,display_name,is_admin,is_active"
+      )
+      .eq("id", userId)
+      .single();
+
 
   if (error) {
     throw error;
   }
 
+
   return data;
 }
 
 
-/* =========================================================
+/* ============================================================
    CARGAR SESIÓN
-   ========================================================= */
+   ============================================================ */
 
 async function loadSession() {
 
@@ -122,7 +133,8 @@ async function loadSession() {
       session
     }
   } =
-    await supabase.auth.getSession();
+    await supabase.auth
+      .getSession();
 
 
   if (!session) {
@@ -151,11 +163,12 @@ async function loadSession() {
         session.user.id
       );
 
-  } catch (err) {
+  } catch (error) {
 
-    console.error(err);
+    console.error(error);
 
-    await supabase.auth.signOut();
+    await supabase.auth
+      .signOut();
 
     showOnly("authView");
 
@@ -163,23 +176,23 @@ async function loadSession() {
   }
 
 
-  /*
-    CUENTA BLOQUEADA
-  */
+  /* CUENTA BLOQUEADA */
 
   if (!currentProfile.is_active) {
 
-    showOnly("pendingView");
+    showOnly(
+      "pendingView"
+    );
 
     return;
   }
 
 
-  /*
-    CUENTA ACTIVA
-  */
+  /* CUENTA ACTIVA */
 
-  showOnly("portalView");
+  showOnly(
+    "portalView"
+  );
 
 
   $("roleBadge").textContent =
@@ -229,132 +242,139 @@ async function loadSession() {
 }
 
 
-/* =========================================================
-   INICIAR SESIÓN
-   ========================================================= */
+/* ============================================================
+   LOGIN
+   ============================================================ */
 
-$("loginForm").addEventListener(
-  "submit",
-  async e => {
+$("loginForm")
+  .addEventListener(
+    "submit",
+    async event => {
 
-    e.preventDefault();
-
-    $("loginMsg").textContent =
-      "Entrando...";
-
-
-    const {
-      error
-    } =
-      await supabase.auth
-        .signInWithPassword({
-
-          email:
-            $("loginEmail")
-              .value
-              .trim(),
-
-          password:
-            $("loginPassword")
-              .value
-        });
-
-
-    if (error) {
+      event.preventDefault();
 
       $("loginMsg").textContent =
-        "Correo o contraseña incorrectos.";
-
-      return;
-    }
+        "Entrando...";
 
 
-    $("loginMsg").textContent = "";
+      const {
+        error
+      } =
+        await supabase.auth
+          .signInWithPassword({
 
-    await loadSession();
-  }
-);
-
-
-/* =========================================================
-   CREAR CUENTA
-   ========================================================= */
-
-$("signupForm").addEventListener(
-  "submit",
-  async e => {
-
-    e.preventDefault();
-
-
-    $("signupMsg").className =
-      "msg";
-
-    $("signupMsg").textContent =
-      "Creando cuenta...";
-
-
-    const {
-      error
-    } =
-      await supabase.auth.signUp({
-
-        email:
-          $("signupEmail")
-            .value
-            .trim(),
-
-        password:
-          $("signupPassword")
-            .value,
-
-        options: {
-
-          data: {
-
-            display_name:
-              $("signupName")
+            email:
+              $("loginEmail")
                 .value
-                .trim()
-          }
-        }
-      });
+                .trim(),
+
+            password:
+              $("loginPassword")
+                .value
+          });
 
 
-    if (error) {
+      if (error) {
+
+        $("loginMsg").textContent =
+          "Correo o contraseña incorrectos.";
+
+        return;
+      }
+
+
+      $("loginMsg").textContent =
+        "";
+
+
+      await loadSession();
+    }
+  );
+
+
+/* ============================================================
+   REGISTRO
+   ============================================================ */
+
+$("signupForm")
+  .addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+
+      $("signupMsg").className =
+        "msg";
 
       $("signupMsg").textContent =
-        error.message;
+        "Creando cuenta...";
 
-      return;
+
+      const {
+        error
+      } =
+        await supabase.auth
+          .signUp({
+
+            email:
+              $("signupEmail")
+                .value
+                .trim(),
+
+            password:
+              $("signupPassword")
+                .value,
+
+            options: {
+
+              data: {
+
+                display_name:
+                  $("signupName")
+                    .value
+                    .trim()
+              }
+            }
+          });
+
+
+      if (error) {
+
+        $("signupMsg").textContent =
+          error.message;
+
+        return;
+      }
+
+
+      $("signupMsg").className =
+        "msg ok";
+
+
+      $("signupMsg").textContent =
+        "Cuenta creada. Joan debe activarla y darte acceso al curso.";
     }
+  );
 
 
-    $("signupMsg").className =
-      "msg ok";
-
-    $("signupMsg").textContent =
-      "Cuenta creada. Joan debe activarla y darte acceso al curso.";
-  }
-);
-
-
-/* =========================================================
+/* ============================================================
    CERRAR SESIÓN
-   ========================================================= */
+   ============================================================ */
 
 $("logoutBtn").onclick =
   async () => {
 
-    await supabase.auth.signOut();
+    await supabase.auth
+      .signOut();
 
     location.reload();
   };
 
 
-/* =========================================================
-   ACCESO A CURSOS
-   ========================================================= */
+/* ============================================================
+   OBTENER CURSOS DEL USUARIO
+   ============================================================ */
 
 async function getMyCourseAccess() {
 
@@ -380,17 +400,19 @@ async function getMyCourseAccess() {
 
 
   return new Set(
+
     (data || [])
       .map(
-        x => x.course_code
+        item =>
+          item.course_code
       )
   );
 }
 
 
-/* =========================================================
+/* ============================================================
    MOSTRAR CURSOS
-   ========================================================= */
+   ============================================================ */
 
 async function renderCourses() {
 
@@ -408,6 +430,7 @@ async function renderCourses() {
 
 
       return `
+
         <article class="course-card">
 
           <span class="status active">
@@ -422,20 +445,27 @@ async function renderCourses() {
             ${escapeHtml(course.description)}
           </p>
 
+
           ${
             allowed
+
               ? `
+
                 <button
                   class="primary open-course"
                   data-code="${course.code}"
                 >
                   Abrir curso
                 </button>
+
               `
+
               : `
+
                 <span class="status pending">
                   Sin acceso asignado
                 </span>
+
               `
           }
 
@@ -446,26 +476,31 @@ async function renderCourses() {
 
 
   document
-    .querySelectorAll(".open-course")
-    .forEach(btn => {
+    .querySelectorAll(
+      ".open-course"
+    )
+    .forEach(button => {
 
-      btn.onclick = () =>
-        openCourse(
-          btn.dataset.code
-        );
+      button.onclick =
+        () =>
+          openCourse(
+            button.dataset.code
+          );
     });
 }
 
 
-/* =========================================================
+/* ============================================================
    ABRIR CURSO
-   ========================================================= */
+   ============================================================ */
 
 async function openCourse(courseCode) {
 
   const course =
     COURSES.find(
-      c => c.code === courseCode
+      item =>
+        item.code ===
+        courseCode
     );
 
 
@@ -475,12 +510,12 @@ async function openCourse(courseCode) {
 
 
   /*
-    COMPROBAR QUE
-    LA CUENTA SIGA ACTIVA
+    VERIFICAR QUE
+    SIGA ACTIVO
   */
 
   const {
-    data: freshProfile,
+    data: profile,
     error: profileError
   } =
     await supabase
@@ -495,14 +530,16 @@ async function openCourse(courseCode) {
 
   if (
     profileError ||
-    !freshProfile?.is_active
+    !profile?.is_active
   ) {
 
     $("courseView")
       .classList
       .add("hidden");
 
-    showOnly("pendingView");
+    showOnly(
+      "pendingView"
+    );
 
     return;
   }
@@ -539,50 +576,39 @@ async function openCourse(courseCode) {
   }
 
 
-  try {
-
-    const htmlText =
-      await data.text();
+  const htmlText =
+    await data.text();
 
 
-    $("courseFrame")
-      .removeAttribute("src");
+  $("courseFrame")
+    .removeAttribute("src");
 
 
-    $("courseFrame").srcdoc =
-      htmlText;
+  $("courseFrame").srcdoc =
+    htmlText;
 
 
-    const titleNode =
-      document.querySelector(
-        ".course-toolbar strong"
-      );
+  const title =
+    document.querySelector(
+      ".course-toolbar strong"
+    );
 
 
-    if (titleNode) {
+  if (title) {
 
-      titleNode.textContent =
-        course.title;
-    }
-
-
-    $("courseStatus").textContent =
-      "Curso cargado";
-
-
-  } catch (err) {
-
-    console.error(err);
-
-    $("courseStatus").textContent =
-      "Error al preparar el curso.";
+    title.textContent =
+      course.title;
   }
+
+
+  $("courseStatus").textContent =
+    "Curso cargado";
 }
 
 
-/* =========================================================
+/* ============================================================
    VOLVER AL PORTAL
-   ========================================================= */
+   ============================================================ */
 
 $("backToPortal").onclick =
   () => {
@@ -593,7 +619,9 @@ $("backToPortal").onclick =
 
 
     $("courseFrame")
-      .removeAttribute("srcdoc");
+      .removeAttribute(
+        "srcdoc"
+      );
 
 
     $("courseFrame").src =
@@ -601,9 +629,9 @@ $("backToPortal").onclick =
   };
 
 
-/* =========================================================
-   PANEL ADMINISTRADOR
-   ========================================================= */
+/* ============================================================
+   PANEL DE ADMINISTRADOR
+   ============================================================ */
 
 async function loadUsers() {
 
@@ -629,16 +657,11 @@ async function loadUsers() {
     console.error(error);
 
     $("usersList").innerHTML =
-      "<p>No se pudieron cargar los usuarios.</p>";
+      "<p>No se pudieron cargar los estudiantes.</p>";
 
     return;
   }
 
-
-  /*
-    CARGAR TODOS LOS
-    PERMISOS DE CURSOS
-  */
 
   const {
     data: accessRows,
@@ -689,16 +712,14 @@ async function loadUsers() {
   }
 
 
-  /*
-    SOLO ESTUDIANTES
-    PARA ESTADÍSTICAS
-  */
-
   const students =
     profiles.filter(
-      p => !p.is_admin
+      profile =>
+        !profile.is_admin
     );
 
+
+  /* ESTADÍSTICAS */
 
   $("adminStats").innerHTML = `
 
@@ -718,11 +739,14 @@ async function loadUsers() {
     <div class="stat">
 
       <strong>
+
         ${
           students.filter(
-            x => x.is_active
+            student =>
+              student.is_active
           ).length
         }
+
       </strong>
 
       <span>
@@ -735,11 +759,14 @@ async function loadUsers() {
     <div class="stat">
 
       <strong>
+
         ${
           students.filter(
-            x => !x.is_active
+            student =>
+              !student.is_active
           ).length
         }
+
       </strong>
 
       <span>
@@ -750,9 +777,7 @@ async function loadUsers() {
   `;
 
 
-/* =========================================================
-   CREAR TARJETAS DE USUARIOS
-   ========================================================= */
+  /* TARJETAS */
 
   $("usersList").innerHTML =
     profiles.map(profile => {
@@ -760,13 +785,9 @@ async function loadUsers() {
       const userCourses =
         accessMap.get(
           profile.id
-        ) || new Set();
+        ) ||
+        new Set();
 
-
-      /*
-        INTERRUPTORES
-        DE CURSOS
-      */
 
       const courseSwitches =
         COURSES.map(course => {
@@ -778,6 +799,7 @@ async function loadUsers() {
 
 
           return `
+
             <label class="course-switch-row">
 
               <div class="course-switch-copy">
@@ -789,11 +811,13 @@ async function loadUsers() {
                 </strong>
 
                 <span>
+
                   ${
                     hasAccess
                       ? "Acceso permitido"
                       : "Sin acceso"
                   }
+
                 </span>
 
               </div>
@@ -818,8 +842,7 @@ async function loadUsers() {
                   }
                 >
 
-                <span class="slider">
-                </span>
+                <span class="slider"></span>
 
               </span>
 
@@ -829,28 +852,32 @@ async function loadUsers() {
         }).join("");
 
 
-      /*
-        TARJETA DEL USUARIO
-      */
-
       return `
+
         <div class="student-admin-card">
 
+
           <div class="student-admin-head">
+
 
             <div class="user-meta">
 
               <strong>
+
                 ${escapeHtml(
                   profile.display_name ||
                   "Sin nombre"
                 )}
+
               </strong>
 
+
               <span>
+
                 ${escapeHtml(
                   profile.email
                 )}
+
               </span>
 
             </div>
@@ -872,6 +899,7 @@ async function loadUsers() {
 
             </span>
 
+
           </div>
 
 
@@ -879,13 +907,19 @@ async function loadUsers() {
             profile.is_admin
 
               ? `
+
                 <div class="admin-account-note">
+
                   Cuenta de administrador
+
                 </div>
+
               `
 
               : `
+
                 <div class="student-account-control">
+
 
                   <div>
 
@@ -893,12 +927,13 @@ async function loadUsers() {
                       Cuenta del estudiante
                     </strong>
 
+
                     <div class="small">
 
                       ${
                         profile.is_active
                           ? "Puede entrar a la plataforma"
-                          : "No puede entrar a la plataforma"
+                          : "Cuenta bloqueada"
                       }
 
                     </div>
@@ -907,6 +942,7 @@ async function loadUsers() {
 
 
                   <span class="switch">
+
 
                     <input
                       type="checkbox"
@@ -919,10 +955,13 @@ async function loadUsers() {
                       }
                     >
 
+
                     <span class="slider">
                     </span>
 
+
                   </span>
+
 
                 </div>
 
@@ -932,8 +971,10 @@ async function loadUsers() {
                   ${courseSwitches}
 
                 </div>
+
               `
           }
+
 
         </div>
       `;
@@ -941,9 +982,9 @@ async function loadUsers() {
     }).join("");
 
 
-/* =========================================================
-   BLOQUEAR / DESBLOQUEAR ESTUDIANTE
-   ========================================================= */
+  /* =========================================================
+     BLOQUEAR / DESBLOQUEAR
+     ========================================================= */
 
   document
     .querySelectorAll(
@@ -955,74 +996,103 @@ async function loadUsers() {
         "change",
         async () => {
 
+
           const userId =
             input.dataset.id;
 
-          const nextState =
+
+          const newStatus =
             input.checked;
 
 
-          /*
-            DESACTIVAR INTERRUPTOR
-            MIENTRAS GUARDA
-          */
+          input.disabled =
+            true;
 
-          input.disabled = true;
-
-
-          /*
-            LLAMAR FUNCIÓN SEGURA
-            DE SUPABASE
-          */
 
           const {
+            data,
             error
           } =
             await supabase.rpc(
               "set_student_active",
               {
 
-                target_user:
+                p_target_user:
                   userId,
 
-                active:
-                  nextState
+                p_active:
+                  newStatus
+
               }
             );
 
 
-          /*
-            SI FALLA
-          */
-
           if (error) {
 
             console.error(
-              "Error al cambiar estado:",
+              "ERROR BLOQUEANDO:",
               error
             );
 
 
             input.checked =
-              !nextState;
-
-
-            alert(
-              "No se pudo bloquear o desbloquear la cuenta."
-            );
+              !newStatus;
 
 
             input.disabled =
               false;
 
 
+            alert(
+              "ERROR: no se pudo cambiar el estado del estudiante. Revisa Supabase."
+            );
+
+
             return;
           }
 
 
+          console.log(
+            "Nuevo estado:",
+            data
+          );
+
+
           /*
-            RECARGAR PANEL
+            VOLVER A LEER LOS DATOS
+            DIRECTAMENTE DE SUPABASE
           */
+
+          const {
+            data: updatedProfile,
+            error: verifyError
+          } =
+            await supabase
+              .from("profiles")
+              .select(
+                "is_active"
+              )
+              .eq(
+                "id",
+                userId
+              )
+              .single();
+
+
+          if (verifyError) {
+
+            console.error(
+              verifyError
+            );
+
+          } else {
+
+            console.log(
+              "Estado guardado:",
+              updatedProfile.is_active
+            );
+          }
+
 
           input.disabled =
             false;
@@ -1034,9 +1104,9 @@ async function loadUsers() {
     });
 
 
-/* =========================================================
-   DAR / QUITAR ACCESO A CURSOS
-   ========================================================= */
+  /* =========================================================
+     CURSOS
+     ========================================================= */
 
   document
     .querySelectorAll(
@@ -1048,13 +1118,16 @@ async function loadUsers() {
         "change",
         async () => {
 
+
           const userId =
             input.dataset.id;
+
 
           const courseCode =
             input.dataset.code;
 
-          const shouldHaveAccess =
+
+          const giveAccess =
             input.checked;
 
 
@@ -1065,11 +1138,7 @@ async function loadUsers() {
           let error = null;
 
 
-          /*
-            DAR ACCESO
-          */
-
-          if (shouldHaveAccess) {
+          if (giveAccess) {
 
             const result =
               await supabase
@@ -1089,14 +1158,8 @@ async function loadUsers() {
             error =
               result.error;
 
-          }
+          } else {
 
-
-          /*
-            QUITAR ACCESO
-          */
-
-          else {
 
             const result =
               await supabase
@@ -1119,19 +1182,12 @@ async function loadUsers() {
           }
 
 
-          /*
-            ERROR
-          */
-
           if (error) {
 
-            console.error(
-              error
-            );
-
+            console.error(error);
 
             input.checked =
-              !shouldHaveAccess;
+              !giveAccess;
 
 
             alert(
@@ -1151,25 +1207,27 @@ async function loadUsers() {
 }
 
 
-/* =========================================================
-   BOTÓN ACTUALIZAR USUARIOS
-   ========================================================= */
+/* ============================================================
+   ACTUALIZAR
+   ============================================================ */
 
 $("refreshUsers").onclick =
   loadUsers;
 
 
-/* =========================================================
-   SEGURIDAD HTML
-   ========================================================= */
+/* ============================================================
+   ESCAPAR HTML
+   ============================================================ */
 
-function escapeHtml(s) {
+function escapeHtml(value) {
 
   return String(
-    s ?? ""
+    value ?? ""
   ).replace(
+
     /[&<>"']/g,
-    c => ({
+
+    character => ({
 
       "&": "&amp;",
 
@@ -1181,54 +1239,49 @@ function escapeHtml(s) {
 
       "'": "&#039;"
 
-    }[c])
+    }[character])
   );
 }
 
 
-/* =========================================================
-   CAMBIOS DE AUTENTICACIÓN
-   ========================================================= */
+/* ============================================================
+   CAMBIO DE AUTENTICACIÓN
+   ============================================================ */
 
-supabase.auth.onAuthStateChange(
-  (_event, session) => {
+supabase.auth
+  .onAuthStateChange(
 
-    if (!session) {
-
-      currentProfile =
-        null;
+    (_event, session) => {
 
 
-      $("logoutBtn")
-        .classList
-        .add("hidden");
+      if (!session) {
+
+        currentProfile =
+          null;
 
 
-      showOnly(
-        "authView"
-      );
+        $("logoutBtn")
+          .classList
+          .add("hidden");
+
+
+        showOnly(
+          "authView"
+        );
+      }
+
     }
-  }
-);
+  );
 
 
-/* =========================================================
-   REVISIÓN AUTOMÁTICA
-   DE CUENTA BLOQUEADA
-   ========================================================= */
-
-/*
-  Cada 10 segundos revisa
-  si el estudiante continúa activo.
-
-  Si tú lo bloqueas desde
-  el panel administrador,
-  aunque ya esté dentro,
-  pierde acceso.
-*/
+/* ============================================================
+   REVISAR BLOQUEO CADA 5 SEGUNDOS
+   ============================================================ */
 
 setInterval(
+
   async () => {
+
 
     const {
       data: {
@@ -1243,11 +1296,6 @@ setInterval(
       return;
     }
 
-
-    /*
-      NO REVISAR
-      CUENTA ADMIN
-    */
 
     if (
       currentProfile?.is_admin
@@ -1277,13 +1325,10 @@ setInterval(
     }
 
 
-    /*
-      SI FUE BLOQUEADO
-    */
-
     if (
       !profile.is_active
     ) {
+
 
       $("courseView")
         .classList
@@ -1307,12 +1352,12 @@ setInterval(
 
   },
 
-  10000
+  5000
 );
 
 
-/* =========================================================
-   INICIAR PORTAL
-   ========================================================= */
+/* ============================================================
+   INICIAR
+   ============================================================ */
 
 await loadSession();
