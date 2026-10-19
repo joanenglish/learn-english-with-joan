@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#13203a">
+  <title>Learn English with Joan</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <div class="brand">Learn English with Joan</div>
+    <div class="subbrand">Portal privado de estudio</div>
+  </div>
+  <button id="logoutBtn" class="ghost hidden">Cerrar sesión</button>
+</header>
+
+<main class="container">
+  <section id="authView" class="auth-grid">
+    <div class="hero">
+      <span class="eyebrow">PRIVATE STUDENT PORTAL</span>
+      <h1>Inglés práctico, organizado y privado.</h1>
+      <p>Entra con tu cuenta para acceder únicamente a los cursos que Joan haya autorizado.</p>
+    </div>
+
+    <div class="auth-card">
+      <div class="tabs">
+        <button id="loginTab" class="tab active" type="button">Entrar</button>
+        <button id="signupTab" class="tab" type="button">Crear cuenta</button>
+      </div>
+
+      <form id="loginForm">
+        <h2>Iniciar sesión</h2>
+        <label>Correo
+          <input id="loginEmail" type="email" autocomplete="email" required>
+        </label>
+        <label>Contraseña
+          <input id="loginPassword" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary full" type="submit">Entrar</button>
+        <p id="loginMsg" class="msg"></p>
+      </form>
+
+      <form id="signupForm" class="hidden">
+        <h2>Crear cuenta</h2>
+        <p class="small">Después de registrarte, Joan debe activar tu cuenta y asignarte el curso.</p>
+        <label>Nombre
+          <input id="signupName" required>
+        </label>
+        <label>Correo
+          <input id="signupEmail" type="email" autocomplete="email" required>
+        </label>
+        <label>Contraseña
+          <input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required>
+        </label>
+        <button class="primary full" type="submit">Crear cuenta</button>
+        <p id="signupMsg" class="msg"></p>
+      </form>
+    </div>
+  </section>
+
+  <section id="pendingView" class="panel hidden">
+    <span class="status pending">Cuenta pendiente</span>
+    <h1>Tu cuenta todavía no está autorizada.</h1>
+    <p>Joan debe activarla antes de que puedas abrir el contenido.</p>
+  </section>
+
+  <section id="portalView" class="hidden">
+    <section class="welcome panel">
+      <div>
+        <span id="roleBadge" class="status"></span>
+        <h1 id="welcomeTitle">Bienvenido</h1>
+        <p id="welcomeEmail"></p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div>
+          <h2>Mis cursos</h2>
+          <p>Solo aparecen los cursos autorizados para esta cuenta.</p>
+        </div>
+      </div>
+      <div id="courseGrid" class="course-grid"></div>
+    </section>
+
+    <section id="adminPanel" class="panel hidden">
+      <div class="section-head">
+        <div>
+          <h2>Administrar estudiantes</h2>
+          <p>Activa, bloquea y asigna acceso al curso.</p>
+        </div>
+        <button id="refreshUsers" class="secondary">Actualizar</button>
+      </div>
+      <div id="adminStats" class="stats"></div>
+      <div id="usersList" class="users-list"></div>
+    </section>
+  </section>
+
+  <section id="courseView" class="course-view hidden">
+    <div class="course-toolbar">
+      <button id="backToPortal" class="secondary">← Volver al portal</button>
+      <strong>1000 English Chunks</strong>
+      <span id="courseStatus">Cargando...</span>
+    </div>
+    <iframe id="courseFrame" title="1000 English Chunks"></iframe>
+  </section>
+</main>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
