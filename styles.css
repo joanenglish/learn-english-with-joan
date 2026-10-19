@@ -612,3 +612,89 @@ select:focus{
     gap:10px;
   }
 }
+/* ================================
+   LOGO BONITO TIPO CRISTAL
+   ================================ */
+
+.brand-box{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.portal-logo{
+  margin:0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.logo-text{
+  font-size:36px;
+  font-weight:900;
+  line-height:1.1;
+  letter-spacing:.4px;
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,.98) 0%,
+    rgba(220,238,255,.92) 30%,
+    rgba(255,255,255,.85) 55%,
+    rgba(190,220,255,.95) 75%,
+    rgba(255,255,255,1) 100%
+  );
+
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  color:transparent;
+
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.45),
+    0 2px 8px rgba(0,0,0,.10),
+    0 0 18px rgba(255,255,255,.22);
+}
+
+.logo-book{
+  font-size:30px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 10px;
+  border-radius:14px;
+
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.35),
+    0 4px 14px rgba(0,0,0,.12);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.portal-subtitle{
+  margin:0;
+  font-size:14px;
+  color:rgba(255,255,255,.92);
+  font-weight:600;
+  letter-spacing:.2px;
+}
+
+/* para móvil */
+@media (max-width:700px){
+  .logo-text{
+    font-size:28px;
+  }
+
+  .logo-book{
+    font-size:24px;
+    padding:5px 8px;
+  }
+
+  .portal-subtitle{
+    font-size:13px;
+  }
+}
