@@ -3,7 +3,11 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = "https://ggdrcklhyzmacpwctblv.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_L-kS8DGmd07cfw-UZdBvSg_G_OWhQUK";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
 const $ = id => document.getElementById(id);
 
 const COURSES = [
@@ -11,7 +15,8 @@ const COURSES = [
     code: "CHUNKS",
     title: "1000 English Chunks",
     shortTitle: "English Chunks",
-    description: "1,000 chunks, significados, ejemplos y flashcards.",
+    description:
+      "1,000 chunks, significados, ejemplos y flashcards.",
     file: "english_chunks.html",
     badge: "American English"
   },
@@ -19,7 +24,8 @@ const COURSES = [
     code: "CONNECTORS",
     title: "English Connectors in Context",
     shortTitle: "English Connectors",
-    description: "100 conectores · 1,000 ejemplos · traducción · pronunciación americana · uso real.",
+    description:
+      "100 conectores · 1,000 ejemplos · traducción · pronunciación americana · uso real.",
     file: "english_connectors.html",
     badge: "A2–C1"
   }
@@ -27,254 +33,599 @@ const COURSES = [
 
 let currentProfile = null;
 
+
+/* =========================================================
+   LOGIN / REGISTRO
+   ========================================================= */
+
 function setAuthTab(mode) {
   const login = mode === "login";
 
-  $("loginForm").classList.toggle("hidden", !login);
-  $("signupForm").classList.toggle("hidden", login);
+  $("loginForm").classList.toggle(
+    "hidden",
+    !login
+  );
 
-  $("loginTab").classList.toggle("active", login);
-  $("signupTab").classList.toggle("active", !login);
+  $("signupForm").classList.toggle(
+    "hidden",
+    login
+  );
+
+  $("loginTab").classList.toggle(
+    "active",
+    login
+  );
+
+  $("signupTab").classList.toggle(
+    "active",
+    !login
+  );
 }
 
-$("loginTab").onclick = () => setAuthTab("login");
-$("signupTab").onclick = () => setAuthTab("signup");
+
+$("loginTab").onclick = () =>
+  setAuthTab("login");
+
+$("signupTab").onclick = () =>
+  setAuthTab("signup");
+
 
 function showOnly(view) {
-  ["authView", "pendingView", "portalView"].forEach(id => {
+
+  [
+    "authView",
+    "pendingView",
+    "portalView"
+  ].forEach(id => {
+
     $(id).classList.add("hidden");
+
   });
 
   $(view).classList.remove("hidden");
 }
 
+
+/* =========================================================
+   PERFIL
+   ========================================================= */
+
 async function getProfile(userId) {
-  const { data, error } = await supabase
+
+  const {
+    data,
+    error
+  } = await supabase
     .from("profiles")
-    .select("id,email,display_name,is_admin,is_active")
+    .select(
+      "id,email,display_name,is_admin,is_active"
+    )
     .eq("id", userId)
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
+
   return data;
 }
 
+
+/* =========================================================
+   CARGAR SESIÓN
+   ========================================================= */
+
 async function loadSession() {
+
   const {
-    data: { session }
-  } = await supabase.auth.getSession();
+    data: {
+      session
+    }
+  } =
+    await supabase.auth.getSession();
+
 
   if (!session) {
+
     currentProfile = null;
-    $("logoutBtn").classList.add("hidden");
+
+    $("logoutBtn")
+      .classList
+      .add("hidden");
+
     showOnly("authView");
+
     return;
   }
 
-  $("logoutBtn").classList.remove("hidden");
+
+  $("logoutBtn")
+    .classList
+    .remove("hidden");
+
 
   try {
-    currentProfile = await getProfile(session.user.id);
+
+    currentProfile =
+      await getProfile(
+        session.user.id
+      );
+
   } catch (err) {
+
     console.error(err);
+
     await supabase.auth.signOut();
+
     showOnly("authView");
+
     return;
   }
 
+
+  /*
+    CUENTA BLOQUEADA
+  */
+
   if (!currentProfile.is_active) {
+
     showOnly("pendingView");
+
     return;
   }
+
+
+  /*
+    CUENTA ACTIVA
+  */
 
   showOnly("portalView");
 
+
   $("roleBadge").textContent =
-    currentProfile.is_admin ? "Administrador" : "Estudiante";
+    currentProfile.is_admin
+      ? "Administrador"
+      : "Estudiante";
+
 
   $("roleBadge").className =
-    "status " + (currentProfile.is_admin ? "admin" : "active");
+    "status " +
+    (
+      currentProfile.is_admin
+        ? "admin"
+        : "active"
+    );
+
 
   $("welcomeTitle").textContent =
-    "Hola, " + (currentProfile.display_name || currentProfile.email);
+    "Hola, " +
+    (
+      currentProfile.display_name ||
+      currentProfile.email
+    );
 
-  $("welcomeEmail").textContent = currentProfile.email;
+
+  $("welcomeEmail").textContent =
+    currentProfile.email;
+
 
   await renderCourses();
 
+
   if (currentProfile.is_admin) {
-    $("adminPanel").classList.remove("hidden");
+
+    $("adminPanel")
+      .classList
+      .remove("hidden");
+
     await loadUsers();
+
   } else {
-    $("adminPanel").classList.add("hidden");
+
+    $("adminPanel")
+      .classList
+      .add("hidden");
   }
 }
 
-$("loginForm").addEventListener("submit", async e => {
-  e.preventDefault();
 
-  $("loginMsg").textContent = "Entrando...";
+/* =========================================================
+   INICIAR SESIÓN
+   ========================================================= */
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: $("loginEmail").value.trim(),
-    password: $("loginPassword").value
-  });
+$("loginForm").addEventListener(
+  "submit",
+  async e => {
 
-  if (error) {
-    $("loginMsg").textContent = "Correo o contraseña incorrectos.";
-    return;
-  }
+    e.preventDefault();
 
-  $("loginMsg").textContent = "";
-  await loadSession();
-});
+    $("loginMsg").textContent =
+      "Entrando...";
 
-$("signupForm").addEventListener("submit", async e => {
-  e.preventDefault();
 
-  $("signupMsg").className = "msg";
-  $("signupMsg").textContent = "Creando cuenta...";
+    const {
+      error
+    } =
+      await supabase.auth
+        .signInWithPassword({
 
-  const { error } = await supabase.auth.signUp({
-    email: $("signupEmail").value.trim(),
-    password: $("signupPassword").value,
-    options: {
-      data: {
-        display_name: $("signupName").value.trim()
-      }
+          email:
+            $("loginEmail")
+              .value
+              .trim(),
+
+          password:
+            $("loginPassword")
+              .value
+        });
+
+
+    if (error) {
+
+      $("loginMsg").textContent =
+        "Correo o contraseña incorrectos.";
+
+      return;
     }
-  });
 
-  if (error) {
-    $("signupMsg").textContent = error.message;
-    return;
+
+    $("loginMsg").textContent = "";
+
+    await loadSession();
   }
+);
 
-  $("signupMsg").className = "msg ok";
-  $("signupMsg").textContent =
-    "Cuenta creada. Joan debe activarla y darte acceso al curso.";
-});
 
-$("logoutBtn").onclick = async () => {
-  await supabase.auth.signOut();
-  location.reload();
-};
+/* =========================================================
+   CREAR CUENTA
+   ========================================================= */
+
+$("signupForm").addEventListener(
+  "submit",
+  async e => {
+
+    e.preventDefault();
+
+
+    $("signupMsg").className =
+      "msg";
+
+    $("signupMsg").textContent =
+      "Creando cuenta...";
+
+
+    const {
+      error
+    } =
+      await supabase.auth.signUp({
+
+        email:
+          $("signupEmail")
+            .value
+            .trim(),
+
+        password:
+          $("signupPassword")
+            .value,
+
+        options: {
+
+          data: {
+
+            display_name:
+              $("signupName")
+                .value
+                .trim()
+          }
+        }
+      });
+
+
+    if (error) {
+
+      $("signupMsg").textContent =
+        error.message;
+
+      return;
+    }
+
+
+    $("signupMsg").className =
+      "msg ok";
+
+    $("signupMsg").textContent =
+      "Cuenta creada. Joan debe activarla y darte acceso al curso.";
+  }
+);
+
+
+/* =========================================================
+   CERRAR SESIÓN
+   ========================================================= */
+
+$("logoutBtn").onclick =
+  async () => {
+
+    await supabase.auth.signOut();
+
+    location.reload();
+  };
+
+
+/* =========================================================
+   ACCESO A CURSOS
+   ========================================================= */
 
 async function getMyCourseAccess() {
-  const { data, error } = await supabase
-    .from("course_access")
-    .select("course_code")
-    .eq("user_id", currentProfile.id);
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from("course_access")
+      .select("course_code")
+      .eq(
+        "user_id",
+        currentProfile.id
+      );
+
 
   if (error) {
+
     console.error(error);
+
     return new Set();
   }
 
-  return new Set((data || []).map(x => x.course_code));
+
+  return new Set(
+    (data || [])
+      .map(
+        x => x.course_code
+      )
+  );
 }
+
+
+/* =========================================================
+   MOSTRAR CURSOS
+   ========================================================= */
 
 async function renderCourses() {
-  const accessSet = await getMyCourseAccess();
 
-  $("courseGrid").innerHTML = COURSES.map(course => {
-    const allowed = accessSet.has(course.code);
+  const accessSet =
+    await getMyCourseAccess();
 
-    return `
-      <article class="course-card">
-        <span class="status active">${escapeHtml(course.badge)}</span>
 
-        <h3>${escapeHtml(course.title)}</h3>
+  $("courseGrid").innerHTML =
+    COURSES.map(course => {
 
-        <p>${escapeHtml(course.description)}</p>
+      const allowed =
+        accessSet.has(
+          course.code
+        );
 
-        ${
-          allowed
-            ? `
-              <button
-                class="primary open-course"
-                data-code="${course.code}">
-                Abrir curso
-              </button>
-            `
-            : `
-              <span class="status pending">
-                Sin acceso asignado
-              </span>
-            `
-        }
-      </article>
-    `;
-  }).join("");
 
-  document.querySelectorAll(".open-course").forEach(btn => {
-    btn.onclick = () => openCourse(btn.dataset.code);
-  });
+      return `
+        <article class="course-card">
+
+          <span class="status active">
+            ${escapeHtml(course.badge)}
+          </span>
+
+          <h3>
+            ${escapeHtml(course.title)}
+          </h3>
+
+          <p>
+            ${escapeHtml(course.description)}
+          </p>
+
+          ${
+            allowed
+              ? `
+                <button
+                  class="primary open-course"
+                  data-code="${course.code}"
+                >
+                  Abrir curso
+                </button>
+              `
+              : `
+                <span class="status pending">
+                  Sin acceso asignado
+                </span>
+              `
+          }
+
+        </article>
+      `;
+
+    }).join("");
+
+
+  document
+    .querySelectorAll(".open-course")
+    .forEach(btn => {
+
+      btn.onclick = () =>
+        openCourse(
+          btn.dataset.code
+        );
+    });
 }
+
+
+/* =========================================================
+   ABRIR CURSO
+   ========================================================= */
 
 async function openCourse(courseCode) {
-  const course = COURSES.find(c => c.code === courseCode);
 
-  if (!course) return;
+  const course =
+    COURSES.find(
+      c => c.code === courseCode
+    );
 
-  const { data: freshProfile, error: profileError } = await supabase
-    .from("profiles")
-    .select("is_active")
-    .eq("id", currentProfile.id)
-    .single();
 
-  if (profileError || !freshProfile?.is_active) {
-    $("courseView").classList.add("hidden");
-    showOnly("pendingView");
+  if (!course) {
     return;
   }
 
-  $("courseView").classList.remove("hidden");
-  $("courseStatus").textContent = "Cargando contenido privado...";
 
-  const { data, error } = await supabase.storage
-    .from("courses")
-    .download(course.file);
+  /*
+    COMPROBAR QUE
+    LA CUENTA SIGA ACTIVA
+  */
+
+  const {
+    data: freshProfile,
+    error: profileError
+  } =
+    await supabase
+      .from("profiles")
+      .select("is_active")
+      .eq(
+        "id",
+        currentProfile.id
+      )
+      .single();
+
+
+  if (
+    profileError ||
+    !freshProfile?.is_active
+  ) {
+
+    $("courseView")
+      .classList
+      .add("hidden");
+
+    showOnly("pendingView");
+
+    return;
+  }
+
+
+  $("courseView")
+    .classList
+    .remove("hidden");
+
+
+  $("courseStatus").textContent =
+    "Cargando contenido privado...";
+
+
+  const {
+    data,
+    error
+  } =
+    await supabase.storage
+      .from("courses")
+      .download(
+        course.file
+      );
+
 
   if (error) {
+
     console.error(error);
-    $("courseStatus").textContent = "No se pudo abrir el curso.";
+
+    $("courseStatus").textContent =
+      "No se pudo abrir el curso.";
+
     return;
   }
 
+
   try {
-    const htmlText = await data.text();
 
-    $("courseFrame").removeAttribute("src");
-    $("courseFrame").srcdoc = htmlText;
+    const htmlText =
+      await data.text();
 
-    const titleNode = document.querySelector(".course-toolbar strong");
+
+    $("courseFrame")
+      .removeAttribute("src");
+
+
+    $("courseFrame").srcdoc =
+      htmlText;
+
+
+    const titleNode =
+      document.querySelector(
+        ".course-toolbar strong"
+      );
+
 
     if (titleNode) {
-      titleNode.textContent = course.title;
+
+      titleNode.textContent =
+        course.title;
     }
 
-    $("courseStatus").textContent = "Curso cargado";
+
+    $("courseStatus").textContent =
+      "Curso cargado";
+
+
   } catch (err) {
+
     console.error(err);
-    $("courseStatus").textContent = "Error al preparar el curso.";
+
+    $("courseStatus").textContent =
+      "Error al preparar el curso.";
   }
 }
 
-$("backToPortal").onclick = () => {
-  $("courseView").classList.add("hidden");
 
-  $("courseFrame").removeAttribute("srcdoc");
-  $("courseFrame").src = "about:blank";
-};
+/* =========================================================
+   VOLVER AL PORTAL
+   ========================================================= */
+
+$("backToPortal").onclick =
+  () => {
+
+    $("courseView")
+      .classList
+      .add("hidden");
+
+
+    $("courseFrame")
+      .removeAttribute("srcdoc");
+
+
+    $("courseFrame").src =
+      "about:blank";
+  };
+
+
+/* =========================================================
+   PANEL ADMINISTRADOR
+   ========================================================= */
 
 async function loadUsers() {
-  const { data: profiles, error } = await supabase
-    .from("profiles")
-    .select("id,email,display_name,is_admin,is_active,created_at")
-    .order("created_at", { ascending: false });
+
+  const {
+    data: profiles,
+    error
+  } =
+    await supabase
+      .from("profiles")
+      .select(
+        "id,email,display_name,is_admin,is_active,created_at"
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
+
 
   if (error) {
+
     console.error(error);
 
     $("usersList").innerHTML =
@@ -283,186 +634,321 @@ async function loadUsers() {
     return;
   }
 
-  const { data: accessRows, error: accessError } = await supabase
-    .from("course_access")
-    .select("user_id,course_code");
+
+  /*
+    CARGAR TODOS LOS
+    PERMISOS DE CURSOS
+  */
+
+  const {
+    data: accessRows,
+    error: accessError
+  } =
+    await supabase
+      .from("course_access")
+      .select(
+        "user_id,course_code"
+      );
+
 
   if (accessError) {
-    console.error(accessError);
+
+    console.error(
+      accessError
+    );
   }
 
-  const accessMap = new Map();
 
-  for (const row of accessRows || []) {
-    if (!accessMap.has(row.user_id)) {
-      accessMap.set(row.user_id, new Set());
+  const accessMap =
+    new Map();
+
+
+  for (
+    const row
+    of accessRows || []
+  ) {
+
+    if (
+      !accessMap.has(
+        row.user_id
+      )
+    ) {
+
+      accessMap.set(
+        row.user_id,
+        new Set()
+      );
     }
 
-    accessMap.get(row.user_id).add(row.course_code);
+
+    accessMap
+      .get(row.user_id)
+      .add(
+        row.course_code
+      );
   }
 
-  const students = profiles.filter(p => !p.is_admin);
+
+  /*
+    SOLO ESTUDIANTES
+    PARA ESTADÍSTICAS
+  */
+
+  const students =
+    profiles.filter(
+      p => !p.is_admin
+    );
+
 
   $("adminStats").innerHTML = `
-    <div class="stat">
-      <strong>${students.length}</strong>
-      <span>Estudiantes</span>
-    </div>
 
     <div class="stat">
-      <strong>${students.filter(x => x.is_active).length}</strong>
-      <span>Activos</span>
+
+      <strong>
+        ${students.length}
+      </strong>
+
+      <span>
+        Estudiantes
+      </span>
+
     </div>
 
+
     <div class="stat">
-      <strong>${students.filter(x => !x.is_active).length}</strong>
-      <span>Bloqueados</span>
+
+      <strong>
+        ${
+          students.filter(
+            x => x.is_active
+          ).length
+        }
+      </strong>
+
+      <span>
+        Activos
+      </span>
+
+    </div>
+
+
+    <div class="stat">
+
+      <strong>
+        ${
+          students.filter(
+            x => !x.is_active
+          ).length
+        }
+      </strong>
+
+      <span>
+        Bloqueados
+      </span>
+
     </div>
   `;
 
-  $("usersList").innerHTML = profiles.map(profile => {
-    const userCourses =
-      accessMap.get(profile.id) || new Set();
 
-    const courseSwitches = COURSES.map(course => {
-      const hasAccess =
-        userCourses.has(course.code);
+/* =========================================================
+   CREAR TARJETAS DE USUARIOS
+   ========================================================= */
 
-      return `
-        <label class="course-switch-row">
+  $("usersList").innerHTML =
+    profiles.map(profile => {
 
-          <div class="course-switch-copy">
-            <strong>
-              ${escapeHtml(course.shortTitle)}
-            </strong>
+      const userCourses =
+        accessMap.get(
+          profile.id
+        ) || new Set();
 
-            <span>
-              ${hasAccess
-                ? "Acceso permitido"
-                : "Sin acceso"}
-            </span>
-          </div>
 
-          <span class="switch">
+      /*
+        INTERRUPTORES
+        DE CURSOS
+      */
 
-            <input
-              type="checkbox"
-              class="course-access-switch"
-              data-id="${profile.id}"
-              data-code="${course.code}"
-              ${hasAccess ? "checked" : ""}
-              ${profile.is_admin ? "disabled" : ""}
-            >
+      const courseSwitches =
+        COURSES.map(course => {
 
-            <span class="slider"></span>
+          const hasAccess =
+            userCourses.has(
+              course.code
+            );
 
-          </span>
 
-        </label>
-      `;
-    }).join("");
+          return `
+            <label class="course-switch-row">
 
-    return `
-      <div class="student-admin-card">
+              <div class="course-switch-copy">
 
-        <div class="student-admin-head">
+                <strong>
+                  ${escapeHtml(
+                    course.shortTitle
+                  )}
+                </strong>
 
-          <div class="user-meta">
-
-            <strong>
-              ${escapeHtml(
-                profile.display_name || "Sin nombre"
-              )}
-            </strong>
-
-            <span>
-              ${escapeHtml(profile.email)}
-            </span>
-
-          </div>
-
-          <span
-            class="status ${
-              profile.is_active
-                ? "active"
-                : "blocked"
-            }"
-          >
-
-            ${
-              profile.is_active
-                ? "Activo"
-                : "Bloqueado"
-            }
-
-          </span>
-
-        </div>
-
-        ${
-          profile.is_admin
-
-            ? `
-              <div class="admin-account-note">
-                Cuenta de administrador
-              </div>
-            `
-
-            : `
-              <div class="student-account-control">
-
-                <div>
-
-                  <strong>
-                    Cuenta del estudiante
-                  </strong>
-
-                  <div class="small">
-
-                    ${
-                      profile.is_active
-                        ? "Puede entrar a la plataforma"
-                        : "No puede entrar a la plataforma"
-                    }
-
-                  </div>
-
-                </div>
-
-                <span class="switch">
-
-                  <input
-                    type="checkbox"
-                    class="student-active-switch"
-                    data-id="${profile.id}"
-                    ${profile.is_active
-                      ? "checked"
-                      : ""}
-                  >
-
-                  <span class="slider"></span>
-
+                <span>
+                  ${
+                    hasAccess
+                      ? "Acceso permitido"
+                      : "Sin acceso"
+                  }
                 </span>
 
               </div>
 
-              <div class="course-access-list">
-                ${courseSwitches}
-              </div>
-            `
-        }
 
-      </div>
-    `;
-  }).join("");
+              <span class="switch">
 
-  /*
-    BLOQUEAR / DESBLOQUEAR
-    CUENTA DEL ESTUDIANTE
-  */
+                <input
+                  type="checkbox"
+                  class="course-access-switch"
+                  data-id="${profile.id}"
+                  data-code="${course.code}"
+                  ${
+                    hasAccess
+                      ? "checked"
+                      : ""
+                  }
+                  ${
+                    profile.is_admin
+                      ? "disabled"
+                      : ""
+                  }
+                >
+
+                <span class="slider">
+                </span>
+
+              </span>
+
+            </label>
+          `;
+
+        }).join("");
+
+
+      /*
+        TARJETA DEL USUARIO
+      */
+
+      return `
+        <div class="student-admin-card">
+
+          <div class="student-admin-head">
+
+            <div class="user-meta">
+
+              <strong>
+                ${escapeHtml(
+                  profile.display_name ||
+                  "Sin nombre"
+                )}
+              </strong>
+
+              <span>
+                ${escapeHtml(
+                  profile.email
+                )}
+              </span>
+
+            </div>
+
+
+            <span
+              class="status ${
+                profile.is_active
+                  ? "active"
+                  : "blocked"
+              }"
+            >
+
+              ${
+                profile.is_active
+                  ? "Activo"
+                  : "Bloqueado"
+              }
+
+            </span>
+
+          </div>
+
+
+          ${
+            profile.is_admin
+
+              ? `
+                <div class="admin-account-note">
+                  Cuenta de administrador
+                </div>
+              `
+
+              : `
+                <div class="student-account-control">
+
+                  <div>
+
+                    <strong>
+                      Cuenta del estudiante
+                    </strong>
+
+                    <div class="small">
+
+                      ${
+                        profile.is_active
+                          ? "Puede entrar a la plataforma"
+                          : "No puede entrar a la plataforma"
+                      }
+
+                    </div>
+
+                  </div>
+
+
+                  <span class="switch">
+
+                    <input
+                      type="checkbox"
+                      class="student-active-switch"
+                      data-id="${profile.id}"
+                      ${
+                        profile.is_active
+                          ? "checked"
+                          : ""
+                      }
+                    >
+
+                    <span class="slider">
+                    </span>
+
+                  </span>
+
+                </div>
+
+
+                <div class="course-access-list">
+
+                  ${courseSwitches}
+
+                </div>
+              `
+          }
+
+        </div>
+      `;
+
+    }).join("");
+
+
+/* =========================================================
+   BLOQUEAR / DESBLOQUEAR ESTUDIANTE
+   ========================================================= */
 
   document
-    .querySelectorAll(".student-active-switch")
+    .querySelectorAll(
+      ".student-active-switch"
+    )
     .forEach(input => {
 
       input.addEventListener(
@@ -475,42 +961,87 @@ async function loadUsers() {
           const nextState =
             input.checked;
 
+
+          /*
+            DESACTIVAR INTERRUPTOR
+            MIENTRAS GUARDA
+          */
+
           input.disabled = true;
 
-          const { error } =
-            await supabase
-              .from("profiles")
-              .update({
-                is_active: nextState
-              })
-              .eq("id", userId);
+
+          /*
+            LLAMAR FUNCIÓN SEGURA
+            DE SUPABASE
+          */
+
+          const {
+            error
+          } =
+            await supabase.rpc(
+              "set_student_active",
+              {
+
+                target_user:
+                  userId,
+
+                active:
+                  nextState
+              }
+            );
+
+
+          /*
+            SI FALLA
+          */
 
           if (error) {
 
-            console.error(error);
+            console.error(
+              "Error al cambiar estado:",
+              error
+            );
+
 
             input.checked =
               !nextState;
 
+
             alert(
-              "No se pudo cambiar el estado de la cuenta."
+              "No se pudo bloquear o desbloquear la cuenta."
             );
+
+
+            input.disabled =
+              false;
+
+
+            return;
           }
 
-          input.disabled = false;
+
+          /*
+            RECARGAR PANEL
+          */
+
+          input.disabled =
+            false;
+
 
           await loadUsers();
         }
       );
     });
 
-  /*
-    DAR / QUITAR
-    ACCESO A CURSOS
-  */
+
+/* =========================================================
+   DAR / QUITAR ACCESO A CURSOS
+   ========================================================= */
 
   document
-    .querySelectorAll(".course-access-switch")
+    .querySelectorAll(
+      ".course-access-switch"
+    )
     .forEach(input => {
 
       input.addEventListener(
@@ -526,50 +1057,92 @@ async function loadUsers() {
           const shouldHaveAccess =
             input.checked;
 
-          input.disabled = true;
+
+          input.disabled =
+            true;
+
 
           let error = null;
+
+
+          /*
+            DAR ACCESO
+          */
 
           if (shouldHaveAccess) {
 
             const result =
               await supabase
-                .from("course_access")
+                .from(
+                  "course_access"
+                )
                 .insert({
-                  user_id: userId,
-                  course_code: courseCode
+
+                  user_id:
+                    userId,
+
+                  course_code:
+                    courseCode
                 });
 
-            error = result.error;
 
-          } else {
+            error =
+              result.error;
+
+          }
+
+
+          /*
+            QUITAR ACCESO
+          */
+
+          else {
 
             const result =
               await supabase
-                .from("course_access")
+                .from(
+                  "course_access"
+                )
                 .delete()
-                .eq("user_id", userId)
+                .eq(
+                  "user_id",
+                  userId
+                )
                 .eq(
                   "course_code",
                   courseCode
                 );
 
-            error = result.error;
+
+            error =
+              result.error;
           }
+
+
+          /*
+            ERROR
+          */
 
           if (error) {
 
-            console.error(error);
+            console.error(
+              error
+            );
+
 
             input.checked =
               !shouldHaveAccess;
+
 
             alert(
               "No se pudo cambiar el acceso al curso."
             );
           }
 
-          input.disabled = false;
+
+          input.disabled =
+            false;
+
 
           await loadUsers();
         }
@@ -577,96 +1150,169 @@ async function loadUsers() {
     });
 }
 
+
+/* =========================================================
+   BOTÓN ACTUALIZAR USUARIOS
+   ========================================================= */
+
 $("refreshUsers").onclick =
   loadUsers;
 
+
+/* =========================================================
+   SEGURIDAD HTML
+   ========================================================= */
+
 function escapeHtml(s) {
 
-  return String(s ?? "")
-    .replace(
-      /[&<>"']/g,
-      c => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      }[c])
-    );
+  return String(
+    s ?? ""
+  ).replace(
+    /[&<>"']/g,
+    c => ({
+
+      "&": "&amp;",
+
+      "<": "&lt;",
+
+      ">": "&gt;",
+
+      '"': "&quot;",
+
+      "'": "&#039;"
+
+    }[c])
+  );
 }
+
+
+/* =========================================================
+   CAMBIOS DE AUTENTICACIÓN
+   ========================================================= */
 
 supabase.auth.onAuthStateChange(
   (_event, session) => {
 
     if (!session) {
 
-      currentProfile = null;
+      currentProfile =
+        null;
+
 
       $("logoutBtn")
         .classList
         .add("hidden");
 
-      showOnly("authView");
+
+      showOnly(
+        "authView"
+      );
     }
   }
 );
 
-/*
-  REVISIÓN AUTOMÁTICA
-  DEL ESTADO DEL ESTUDIANTE
 
-  Si tú bloqueas al estudiante
-  mientras ya está dentro,
-  en un máximo aproximado de
-  10 segundos pierde acceso.
+/* =========================================================
+   REVISIÓN AUTOMÁTICA
+   DE CUENTA BLOQUEADA
+   ========================================================= */
+
+/*
+  Cada 10 segundos revisa
+  si el estudiante continúa activo.
+
+  Si tú lo bloqueas desde
+  el panel administrador,
+  aunque ya esté dentro,
+  pierde acceso.
 */
 
-setInterval(async () => {
+setInterval(
+  async () => {
 
-  const {
-    data: { session }
-  } =
-    await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } =
+      await supabase.auth
+        .getSession();
 
-  if (
-    !session ||
-    currentProfile?.is_admin
-  ) {
-    return;
-  }
 
-  const {
-    data: profile,
-    error
-  } =
-    await supabase
-      .from("profiles")
-      .select("is_active")
-      .eq(
-        "id",
-        session.user.id
-      )
-      .single();
+    if (!session) {
+      return;
+    }
 
-  if (error) {
-    return;
-  }
 
-  if (!profile.is_active) {
+    /*
+      NO REVISAR
+      CUENTA ADMIN
+    */
 
-    $("courseView")
-      .classList
-      .add("hidden");
+    if (
+      currentProfile?.is_admin
+    ) {
+      return;
+    }
 
-    $("courseFrame")
-      .removeAttribute("srcdoc");
 
-    $("courseFrame").src =
-      "about:blank";
+    const {
+      data: profile,
+      error
+    } =
+      await supabase
+        .from("profiles")
+        .select(
+          "is_active"
+        )
+        .eq(
+          "id",
+          session.user.id
+        )
+        .single();
 
-    showOnly("pendingView");
-  }
 
-}, 10000);
+    if (error) {
+      return;
+    }
+
+
+    /*
+      SI FUE BLOQUEADO
+    */
+
+    if (
+      !profile.is_active
+    ) {
+
+      $("courseView")
+        .classList
+        .add("hidden");
+
+
+      $("courseFrame")
+        .removeAttribute(
+          "srcdoc"
+        );
+
+
+      $("courseFrame").src =
+        "about:blank";
+
+
+      showOnly(
+        "pendingView"
+      );
+    }
+
+  },
+
+  10000
+);
+
+
+/* =========================================================
+   INICIAR PORTAL
+   ========================================================= */
 
 await loadSession();
