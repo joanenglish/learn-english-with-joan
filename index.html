@@ -14,9 +14,7 @@
     content="#13203a"
   >
 
-  <title>
-    Learn English with Joan
-  </title>
+  <title>Learn English with Joan</title>
 
   <link
     rel="stylesheet"
@@ -24,13 +22,7 @@
   >
 </head>
 
-
 <body>
-
-
-  <!-- =========================================
-       BARRA SUPERIOR
-       ========================================= -->
 
   <header class="topbar">
 
@@ -46,7 +38,6 @@
 
     </div>
 
-
     <button
       id="logoutBtn"
       class="ghost hidden"
@@ -57,25 +48,12 @@
 
   </header>
 
-
-  <!-- =========================================
-       CONTENIDO PRINCIPAL
-       ========================================= -->
-
   <main class="container">
-
-
-    <!-- =======================================
-         LOGIN / CREAR CUENTA
-         ======================================= -->
 
     <section
       id="authView"
       class="auth-grid"
     >
-
-
-      <!-- PRESENTACIÓN -->
 
       <div class="hero">
 
@@ -84,23 +62,17 @@
         </span>
 
         <h1>
-          Inglés práctico,
-          organizado y privado.
+          Inglés práctico, organizado y privado.
         </h1>
 
         <p>
-          Entra con tu cuenta para acceder
-          únicamente a los cursos que Joan
-          haya autorizado.
+          Entra con tu cuenta para acceder únicamente
+          a los cursos que Joan haya autorizado.
         </p>
 
       </div>
 
-
-      <!-- LOGIN -->
-
       <div class="auth-card">
-
 
         <div class="tabs">
 
@@ -112,7 +84,6 @@
             Entrar
           </button>
 
-
           <button
             id="signupTab"
             class="tab"
@@ -123,18 +94,13 @@
 
         </div>
 
-
-        <!-- FORMULARIO LOGIN -->
-
         <form id="loginForm">
 
           <h2>
             Iniciar sesión
           </h2>
 
-
           <label>
-
             Correo
 
             <input
@@ -143,12 +109,9 @@
               autocomplete="email"
               required
             >
-
           </label>
 
-
           <label>
-
             Contraseña
 
             <input
@@ -157,9 +120,7 @@
               autocomplete="current-password"
               required
             >
-
           </label>
-
 
           <button
             class="primary full"
@@ -168,16 +129,12 @@
             Entrar
           </button>
 
-
           <p
             id="loginMsg"
             class="msg"
           ></p>
 
         </form>
-
-
-        <!-- FORMULARIO REGISTRO -->
 
         <form
           id="signupForm"
@@ -188,16 +145,12 @@
             Crear cuenta
           </h2>
 
-
           <p class="small">
-            Después de registrarte,
-            Joan debe activar tu cuenta
-            y asignarte el curso.
+            Después de registrarte, Joan debe activar
+            tu cuenta y asignarte el curso.
           </p>
 
-
           <label>
-
             Nombre
 
             <input
@@ -206,12 +159,9 @@
               autocomplete="name"
               required
             >
-
           </label>
 
-
           <label>
-
             Correo
 
             <input
@@ -220,12 +170,9 @@
               autocomplete="email"
               required
             >
-
           </label>
 
-
           <label>
-
             Contraseña
 
             <input
@@ -235,9 +182,7 @@
               minlength="6"
               required
             >
-
           </label>
-
 
           <button
             class="primary full"
@@ -245,7 +190,6 @@
           >
             Crear cuenta
           </button>
-
 
           <p
             id="signupMsg"
@@ -258,11 +202,6 @@
 
     </section>
 
-
-    <!-- =======================================
-         CUENTA PENDIENTE / BLOQUEADA
-         ======================================= -->
-
     <section
       id="pendingView"
       class="panel hidden"
@@ -272,31 +211,21 @@
         Cuenta pendiente
       </span>
 
-
       <h1>
         Tu cuenta todavía no está autorizada.
       </h1>
 
-
       <p>
-        Joan debe activarla antes de que
-        puedas abrir el contenido.
+        Joan debe activarla antes de que puedas abrir
+        el contenido.
       </p>
 
     </section>
-
-
-    <!-- =======================================
-         PORTAL
-         ======================================= -->
 
     <section
       id="portalView"
       class="hidden"
     >
-
-
-      <!-- BIENVENIDA -->
 
       <div class="panel welcome">
 
@@ -309,20 +238,15 @@
             Estudiante
           </span>
 
-
           <h1 id="welcomeTitle">
             Bienvenido
           </h1>
-
 
           <p id="welcomeEmail"></p>
 
         </div>
 
       </div>
-
-
-      <!-- CURSOS -->
 
       <section class="panel">
 
@@ -335,14 +259,13 @@
             </h2>
 
             <p>
-              Solo aparecen los cursos
-              autorizados para esta cuenta.
+              Solo aparecen los cursos autorizados
+              para esta cuenta.
             </p>
 
           </div>
 
         </div>
-
 
         <div
           id="courseGrid"
@@ -350,11 +273,6 @@
         ></div>
 
       </section>
-
-
-      <!-- =====================================
-           ADMINISTRADOR
-           ===================================== -->
 
       <section
         id="adminPanel"
@@ -371,12 +289,10 @@
             </h2>
 
             <p>
-              Activa, bloquea y asigna
-              acceso a los cursos.
+              Activa, bloquea y asigna acceso a los cursos.
             </p>
 
           </div>
-
 
           <button
             id="refreshUsers"
@@ -388,16 +304,10 @@
 
         </div>
 
-
-        <!-- ESTADÍSTICAS -->
-
         <div
           id="adminStats"
           class="stats"
         ></div>
-
-
-        <!-- LISTA DE ESTUDIANTES -->
 
         <div
           id="usersList"
@@ -409,11 +319,6 @@
     </section>
 
   </main>
-
-
-  <!-- =========================================
-       VISOR DEL CURSO
-       ========================================= -->
 
   <section
     id="courseView"
@@ -430,18 +335,15 @@
         ← Volver al portal
       </button>
 
-
       <strong>
         Curso
       </strong>
-
 
       <span id="courseStatus">
         Cargando...
       </span>
 
     </div>
-
 
     <iframe
       id="courseFrame"
@@ -450,16 +352,10 @@
 
   </section>
 
-
-  <!-- =========================================
-       JAVASCRIPT
-       ========================================= -->
-
   <script
     type="module"
     src="app.js"
   ></script>
-
 
 </body>
 
