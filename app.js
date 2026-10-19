@@ -14,6 +14,10 @@ const supabase = createClient(
 const $ = id => document.getElementById(id);
 
 
+/* ============================================================
+   CURSOS
+   ============================================================ */
+
 const COURSES = [
   {
     code: "CHUNKS",
@@ -41,7 +45,7 @@ let currentProfile = null;
 
 
 /* ============================================================
-   CAMBIAR LOGIN / REGISTRO
+   LOGIN / REGISTRO
    ============================================================ */
 
 function setAuthTab(mode) {
@@ -51,19 +55,31 @@ function setAuthTab(mode) {
 
   $("loginForm")
     .classList
-    .toggle("hidden", !login);
+    .toggle(
+      "hidden",
+      !login
+    );
 
   $("signupForm")
     .classList
-    .toggle("hidden", login);
+    .toggle(
+      "hidden",
+      login
+    );
 
   $("loginTab")
     .classList
-    .toggle("active", login);
+    .toggle(
+      "active",
+      login
+    );
 
   $("signupTab")
     .classList
-    .toggle("active", !login);
+    .toggle(
+      "active",
+      !login
+    );
 }
 
 
@@ -95,7 +111,7 @@ function showOnly(view) {
 
 
 /* ============================================================
-   OBTENER PERFIL
+   PERFIL
    ============================================================ */
 
 async function getProfile(userId) {
@@ -109,7 +125,10 @@ async function getProfile(userId) {
       .select(
         "id,email,display_name,is_admin,is_active"
       )
-      .eq("id", userId)
+      .eq(
+        "id",
+        userId
+      )
       .single();
 
 
@@ -145,7 +164,9 @@ async function loadSession() {
       .classList
       .add("hidden");
 
-    showOnly("authView");
+    showOnly(
+      "authView"
+    );
 
     return;
   }
@@ -165,12 +186,16 @@ async function loadSession() {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
     await supabase.auth
       .signOut();
 
-    showOnly("authView");
+    showOnly(
+      "authView"
+    );
 
     return;
   }
@@ -178,7 +203,9 @@ async function loadSession() {
 
   /* CUENTA BLOQUEADA */
 
-  if (!currentProfile.is_active) {
+  if (
+    !currentProfile.is_active
+  ) {
 
     showOnly(
       "pendingView"
@@ -225,7 +252,9 @@ async function loadSession() {
   await renderCourses();
 
 
-  if (currentProfile.is_admin) {
+  if (
+    currentProfile.is_admin
+  ) {
 
     $("adminPanel")
       .classList
@@ -243,7 +272,7 @@ async function loadSession() {
 
 
 /* ============================================================
-   LOGIN
+   INICIAR SESIÓN
    ============================================================ */
 
 $("loginForm")
@@ -252,6 +281,7 @@ $("loginForm")
     async event => {
 
       event.preventDefault();
+
 
       $("loginMsg").textContent =
         "Entrando...";
@@ -271,6 +301,7 @@ $("loginForm")
             password:
               $("loginPassword")
                 .value
+
           });
 
 
@@ -293,7 +324,7 @@ $("loginForm")
 
 
 /* ============================================================
-   REGISTRO
+   CREAR CUENTA
    ============================================================ */
 
 $("signupForm")
@@ -336,6 +367,7 @@ $("signupForm")
                     .trim()
               }
             }
+
           });
 
 
@@ -383,8 +415,12 @@ async function getMyCourseAccess() {
     error
   } =
     await supabase
-      .from("course_access")
-      .select("course_code")
+      .from(
+        "course_access"
+      )
+      .select(
+        "course_code"
+      )
       .eq(
         "user_id",
         currentProfile.id
@@ -393,14 +429,15 @@ async function getMyCourseAccess() {
 
   if (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
     return new Set();
   }
 
 
   return new Set(
-
     (data || [])
       .map(
         item =>
@@ -434,15 +471,23 @@ async function renderCourses() {
         <article class="course-card">
 
           <span class="status active">
-            ${escapeHtml(course.badge)}
+            ${escapeHtml(
+              course.badge
+            )}
           </span>
 
+
           <h3>
-            ${escapeHtml(course.title)}
+            ${escapeHtml(
+              course.title
+            )}
           </h3>
 
+
           <p>
-            ${escapeHtml(course.description)}
+            ${escapeHtml(
+              course.description
+            )}
           </p>
 
 
@@ -509,18 +554,19 @@ async function openCourse(courseCode) {
   }
 
 
-  /*
-    VERIFICAR QUE
-    SIGA ACTIVO
-  */
+  /* VERIFICAR CUENTA */
 
   const {
-    data: profile,
+    data: freshProfile,
     error: profileError
   } =
     await supabase
-      .from("profiles")
-      .select("is_active")
+      .from(
+        "profiles"
+      )
+      .select(
+        "is_active"
+      )
       .eq(
         "id",
         currentProfile.id
@@ -530,7 +576,7 @@ async function openCourse(courseCode) {
 
   if (
     profileError ||
-    !profile?.is_active
+    !freshProfile?.is_active
   ) {
 
     $("courseView")
@@ -559,7 +605,9 @@ async function openCourse(courseCode) {
     error
   } =
     await supabase.storage
-      .from("courses")
+      .from(
+        "courses"
+      )
       .download(
         course.file
       );
@@ -567,7 +615,9 @@ async function openCourse(courseCode) {
 
   if (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
     $("courseStatus").textContent =
       "No se pudo abrir el curso.";
@@ -576,33 +626,49 @@ async function openCourse(courseCode) {
   }
 
 
-  const htmlText =
-    await data.text();
+  try {
+
+    const htmlText =
+      await data.text();
 
 
-  $("courseFrame")
-    .removeAttribute("src");
+    $("courseFrame")
+      .removeAttribute(
+        "src"
+      );
 
 
-  $("courseFrame").srcdoc =
-    htmlText;
+    $("courseFrame").srcdoc =
+      htmlText;
 
 
-  const title =
-    document.querySelector(
-      ".course-toolbar strong"
+    const title =
+      document.querySelector(
+        ".course-toolbar strong"
+      );
+
+
+    if (title) {
+
+      title.textContent =
+        course.title;
+    }
+
+
+    $("courseStatus").textContent =
+      "Curso cargado";
+
+
+  } catch (error) {
+
+    console.error(
+      error
     );
 
 
-  if (title) {
-
-    title.textContent =
-      course.title;
+    $("courseStatus").textContent =
+      "Error al preparar el curso.";
   }
-
-
-  $("courseStatus").textContent =
-    "Curso cargado";
 }
 
 
@@ -640,7 +706,9 @@ async function loadUsers() {
     error
   } =
     await supabase
-      .from("profiles")
+      .from(
+        "profiles"
+      )
       .select(
         "id,email,display_name,is_admin,is_active,created_at"
       )
@@ -654,7 +722,9 @@ async function loadUsers() {
 
   if (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
     $("usersList").innerHTML =
       "<p>No se pudieron cargar los estudiantes.</p>";
@@ -668,7 +738,9 @@ async function loadUsers() {
     error: accessError
   } =
     await supabase
-      .from("course_access")
+      .from(
+        "course_access"
+      )
       .select(
         "user_id,course_code"
       );
@@ -705,7 +777,9 @@ async function loadUsers() {
 
 
     accessMap
-      .get(row.user_id)
+      .get(
+        row.user_id
+      )
       .add(
         row.course_code
       );
@@ -719,7 +793,9 @@ async function loadUsers() {
     );
 
 
-  /* ESTADÍSTICAS */
+/* ============================================================
+   ESTADÍSTICAS
+   ============================================================ */
 
   $("adminStats").innerHTML = `
 
@@ -777,7 +853,9 @@ async function loadUsers() {
   `;
 
 
-  /* TARJETAS */
+/* ============================================================
+   CREAR TARJETAS
+   ============================================================ */
 
   $("usersList").innerHTML =
     profiles.map(profile => {
@@ -810,6 +888,7 @@ async function loadUsers() {
                   )}
                 </strong>
 
+
                 <span>
 
                   ${
@@ -823,7 +902,7 @@ async function loadUsers() {
               </div>
 
 
-              <span class="switch">
+              <label class="switch">
 
                 <input
                   type="checkbox"
@@ -844,7 +923,7 @@ async function loadUsers() {
 
                 <span class="slider"></span>
 
-              </span>
+              </label>
 
             </label>
           `;
@@ -941,8 +1020,7 @@ async function loadUsers() {
                   </div>
 
 
-                  <span class="switch">
-
+                  <label class="switch">
 
                     <input
                       type="checkbox"
@@ -955,12 +1033,9 @@ async function loadUsers() {
                       }
                     >
 
+                    <span class="slider"></span>
 
-                    <span class="slider">
-                    </span>
-
-
-                  </span>
+                  </label>
 
 
                 </div>
@@ -982,9 +1057,9 @@ async function loadUsers() {
     }).join("");
 
 
-  /* =========================================================
-     BLOQUEAR / DESBLOQUEAR
-     ========================================================= */
+/* ============================================================
+   BLOQUEAR / DESBLOQUEAR ESTUDIANTE
+   ============================================================ */
 
   document
     .querySelectorAll(
@@ -996,7 +1071,6 @@ async function loadUsers() {
         "change",
         async () => {
 
-
           const userId =
             input.dataset.id;
 
@@ -1007,6 +1081,14 @@ async function loadUsers() {
 
           input.disabled =
             true;
+
+
+          console.log(
+            "Cambiando estudiante:",
+            userId,
+            "Estado:",
+            newStatus
+          );
 
 
           const {
@@ -1030,7 +1112,7 @@ async function loadUsers() {
           if (error) {
 
             console.error(
-              "ERROR BLOQUEANDO:",
+              "ERROR AL BLOQUEAR:",
               error
             );
 
@@ -1044,7 +1126,7 @@ async function loadUsers() {
 
 
             alert(
-              "ERROR: no se pudo cambiar el estado del estudiante. Revisa Supabase."
+              "No se pudo bloquear o desbloquear la cuenta."
             );
 
 
@@ -1053,45 +1135,9 @@ async function loadUsers() {
 
 
           console.log(
-            "Nuevo estado:",
+            "Estado cambiado correctamente:",
             data
           );
-
-
-          /*
-            VOLVER A LEER LOS DATOS
-            DIRECTAMENTE DE SUPABASE
-          */
-
-          const {
-            data: updatedProfile,
-            error: verifyError
-          } =
-            await supabase
-              .from("profiles")
-              .select(
-                "is_active"
-              )
-              .eq(
-                "id",
-                userId
-              )
-              .single();
-
-
-          if (verifyError) {
-
-            console.error(
-              verifyError
-            );
-
-          } else {
-
-            console.log(
-              "Estado guardado:",
-              updatedProfile.is_active
-            );
-          }
 
 
           input.disabled =
@@ -1104,9 +1150,9 @@ async function loadUsers() {
     });
 
 
-  /* =========================================================
-     CURSOS
-     ========================================================= */
+/* ============================================================
+   DAR / QUITAR CURSOS
+   ============================================================ */
 
   document
     .querySelectorAll(
@@ -1135,10 +1181,13 @@ async function loadUsers() {
             true;
 
 
-          let error = null;
+          let error =
+            null;
 
 
-          if (giveAccess) {
+          if (
+            giveAccess
+          ) {
 
             const result =
               await supabase
@@ -1152,6 +1201,7 @@ async function loadUsers() {
 
                   course_code:
                     courseCode
+
                 });
 
 
@@ -1184,7 +1234,10 @@ async function loadUsers() {
 
           if (error) {
 
-            console.error(error);
+            console.error(
+              error
+            );
+
 
             input.checked =
               !giveAccess;
@@ -1208,7 +1261,7 @@ async function loadUsers() {
 
 
 /* ============================================================
-   ACTUALIZAR
+   BOTÓN ACTUALIZAR
    ============================================================ */
 
 $("refreshUsers").onclick =
@@ -1245,7 +1298,7 @@ function escapeHtml(value) {
 
 
 /* ============================================================
-   CAMBIO DE AUTENTICACIÓN
+   CAMBIO DE SESIÓN
    ============================================================ */
 
 supabase.auth
@@ -1275,7 +1328,7 @@ supabase.auth
 
 
 /* ============================================================
-   REVISAR BLOQUEO CADA 5 SEGUNDOS
+   REVISAR SI ESTUDIANTE FUE BLOQUEADO
    ============================================================ */
 
 setInterval(
@@ -1309,7 +1362,9 @@ setInterval(
       error
     } =
       await supabase
-        .from("profiles")
+        .from(
+          "profiles"
+        )
         .select(
           "is_active"
         )
@@ -1357,7 +1412,7 @@ setInterval(
 
 
 /* ============================================================
-   INICIAR
+   INICIAR PORTAL
    ============================================================ */
 
 await loadSession();
