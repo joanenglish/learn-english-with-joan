@@ -1,109 +1,466 @@
+<!doctype html>
+<html lang="es">
 
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+<head>
+  <meta charset="utf-8">
 
-const SUPABASE_URL = "https://ggdrcklhyzmacpwctblv.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_L-kS8DGmd07cfw-UZdBvSg_G_OWhQUK";
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
 
-const COURSE_CODE = "CHUNKS";
-const COURSE_FILE = "english_chunks.html";
-const $ = id => document.getElementById(id);
-let currentProfile = null;
-let courseBlobUrl = null;
+  <meta
+    name="theme-color"
+    content="#13203a"
+  >
 
-function setAuthTab(mode) {
-  const login = mode === "login";
-  $("loginForm").classList.toggle("hidden", !login);
-  $("signupForm").classList.toggle("hidden", login);
-  $("loginTab").classList.toggle("active", login);
-  $("signupTab").classList.toggle("active", !login);
-}
-$("loginTab").onclick = () => setAuthTab("login");
-$("signupTab").onclick = () => setAuthTab("signup");
+  <title>
+    Learn English with Joan
+  </title>
 
-function showOnly(view) {
-  ["authView","pendingView","portalView"].forEach(id => $(id).classList.add("hidden"));
-  $(view).classList.remove("hidden");
-}
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+</head>
 
-async function getProfile(userId) {
-  const { data, error } = await supabase.from("profiles")
-    .select("id,email,display_name,is_admin,is_active")
-    .eq("id", userId).single();
-  if (error) throw error;
-  return data;
-}
 
-async function loadSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    currentProfile = null;
-    $("logoutBtn").classList.add("hidden");
-    showOnly("authView");
-    return;
-  }
+<body>
 
-  $("logoutBtn").classList.remove("hidden");
-  try {
-    currentProfile = await getProfile(session.user.id);
-  } catch (err) {
-    console.error(err);
-    await supabase.auth.signOut();
-    showOnly("authView");
-    return;
-  }
 
-  if (!currentProfile.is_active) {
-    showOnly("pendingView");
-    return;
-  }
+  <!-- =========================================
+       BARRA SUPERIOR
+       ========================================= -->
 
-  showOnly("portalView");
-  $("roleBadge").textContent = currentProfile.is_admin ? "Administrador" : "Estudiante";
-  $("roleBadge").className = "status " + (currentProfile.is_admin ? "admin" : "active");
-  $("welcomeTitle").textContent = "Hola, " + (currentProfile.display_name || currentProfile.email);
-  $("welcomeEmail").textContent = currentProfile.email;
+  <header class="topbar">
 
-  await renderCourses();
-  if (currentProfile.is_admin) {
-    $("adminPanel").classList.remove("hidden");
-    await loadUsers();
-  } else {
-    $("adminPanel").classList.add("hidden");
-  }
-}
+    <div>
 
-$("loginForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  $("loginMsg").textContent = "Entrando...";
-  const { error } = await supabase.auth.signInWithPassword({
-    email: $("loginEmail").value.trim(),
-    password: $("loginPassword").value
-  });
-  $("loginMsg").textContent = error ? "Correo o contraseña incorrectos." : "";
-  if (!error) await loadSession();
-});
+      <div class="brand">
+        Learn English with Joan
+      </div>
 
-$("signupForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  $("signupMsg").className = "msg";
-  $("signupMsg").textContent = "Creando cuenta...";
-  const { data, error } = await supabase.auth.signUp({
-    email: $("signupEmail").value.trim(),
-    password: $("signupPassword").value,
-    options: { data: { display_name: $("signupName").value.trim() } }
-  });
+      <div class="subbrand">
+        Portal privado de estudio
+      </div>
 
-  if (error) {
-    $("signupMsg").textContent = error.message;
-    return;
-  }
-  $("signupMsg").className = "msg ok";
-  $("signupMsg").textContent = data.session
-    ? "Cuenta creada. Joan debe activarla y asignarte el curso."
-    : "Cuenta creada. Revisa tu correo si te pide confirmación; luego Joan debe activarla.";
-});
+    </div>
 
-$("logoutBtn").onclick = async () => {
-  await supabase.auth.signOut();
-  if (courseBlobUrl) URL.revokeObj
+
+    <button
+      id="logoutBtn"
+      class="ghost hidden"
+      type="button"
+    >
+      Cerrar sesión
+    </button>
+
+  </header>
+
+
+  <!-- =========================================
+       CONTENIDO PRINCIPAL
+       ========================================= -->
+
+  <main class="container">
+
+
+    <!-- =======================================
+         LOGIN / CREAR CUENTA
+         ======================================= -->
+
+    <section
+      id="authView"
+      class="auth-grid"
+    >
+
+
+      <!-- PRESENTACIÓN -->
+
+      <div class="hero">
+
+        <span class="eyebrow">
+          PRIVATE STUDENT PORTAL
+        </span>
+
+        <h1>
+          Inglés práctico,
+          organizado y privado.
+        </h1>
+
+        <p>
+          Entra con tu cuenta para acceder
+          únicamente a los cursos que Joan
+          haya autorizado.
+        </p>
+
+      </div>
+
+
+      <!-- LOGIN -->
+
+      <div class="auth-card">
+
+
+        <div class="tabs">
+
+          <button
+            id="loginTab"
+            class="tab active"
+            type="button"
+          >
+            Entrar
+          </button>
+
+
+          <button
+            id="signupTab"
+            class="tab"
+            type="button"
+          >
+            Crear cuenta
+          </button>
+
+        </div>
+
+
+        <!-- FORMULARIO LOGIN -->
+
+        <form id="loginForm">
+
+          <h2>
+            Iniciar sesión
+          </h2>
+
+
+          <label>
+
+            Correo
+
+            <input
+              id="loginEmail"
+              type="email"
+              autocomplete="email"
+              required
+            >
+
+          </label>
+
+
+          <label>
+
+            Contraseña
+
+            <input
+              id="loginPassword"
+              type="password"
+              autocomplete="current-password"
+              required
+            >
+
+          </label>
+
+
+          <button
+            class="primary full"
+            type="submit"
+          >
+            Entrar
+          </button>
+
+
+          <p
+            id="loginMsg"
+            class="msg"
+          ></p>
+
+        </form>
+
+
+        <!-- FORMULARIO REGISTRO -->
+
+        <form
+          id="signupForm"
+          class="hidden"
+        >
+
+          <h2>
+            Crear cuenta
+          </h2>
+
+
+          <p class="small">
+            Después de registrarte,
+            Joan debe activar tu cuenta
+            y asignarte el curso.
+          </p>
+
+
+          <label>
+
+            Nombre
+
+            <input
+              id="signupName"
+              type="text"
+              autocomplete="name"
+              required
+            >
+
+          </label>
+
+
+          <label>
+
+            Correo
+
+            <input
+              id="signupEmail"
+              type="email"
+              autocomplete="email"
+              required
+            >
+
+          </label>
+
+
+          <label>
+
+            Contraseña
+
+            <input
+              id="signupPassword"
+              type="password"
+              autocomplete="new-password"
+              minlength="6"
+              required
+            >
+
+          </label>
+
+
+          <button
+            class="primary full"
+            type="submit"
+          >
+            Crear cuenta
+          </button>
+
+
+          <p
+            id="signupMsg"
+            class="msg"
+          ></p>
+
+        </form>
+
+      </div>
+
+    </section>
+
+
+    <!-- =======================================
+         CUENTA PENDIENTE / BLOQUEADA
+         ======================================= -->
+
+    <section
+      id="pendingView"
+      class="panel hidden"
+    >
+
+      <span class="status pending">
+        Cuenta pendiente
+      </span>
+
+
+      <h1>
+        Tu cuenta todavía no está autorizada.
+      </h1>
+
+
+      <p>
+        Joan debe activarla antes de que
+        puedas abrir el contenido.
+      </p>
+
+    </section>
+
+
+    <!-- =======================================
+         PORTAL
+         ======================================= -->
+
+    <section
+      id="portalView"
+      class="hidden"
+    >
+
+
+      <!-- BIENVENIDA -->
+
+      <div class="panel welcome">
+
+        <div>
+
+          <span
+            id="roleBadge"
+            class="status"
+          >
+            Estudiante
+          </span>
+
+
+          <h1 id="welcomeTitle">
+            Bienvenido
+          </h1>
+
+
+          <p id="welcomeEmail"></p>
+
+        </div>
+
+      </div>
+
+
+      <!-- CURSOS -->
+
+      <section class="panel">
+
+        <div class="section-head">
+
+          <div>
+
+            <h2>
+              Mis cursos
+            </h2>
+
+            <p>
+              Solo aparecen los cursos
+              autorizados para esta cuenta.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="courseGrid"
+          class="course-grid"
+        ></div>
+
+      </section>
+
+
+      <!-- =====================================
+           ADMINISTRADOR
+           ===================================== -->
+
+      <section
+        id="adminPanel"
+        class="panel hidden"
+        style="margin-top:18px;"
+      >
+
+        <div class="section-head">
+
+          <div>
+
+            <h2>
+              Administrar estudiantes
+            </h2>
+
+            <p>
+              Activa, bloquea y asigna
+              acceso a los cursos.
+            </p>
+
+          </div>
+
+
+          <button
+            id="refreshUsers"
+            class="secondary"
+            type="button"
+          >
+            Actualizar
+          </button>
+
+        </div>
+
+
+        <!-- ESTADÍSTICAS -->
+
+        <div
+          id="adminStats"
+          class="stats"
+        ></div>
+
+
+        <!-- LISTA DE ESTUDIANTES -->
+
+        <div
+          id="usersList"
+          class="users-list"
+        ></div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+
+  <!-- =========================================
+       VISOR DEL CURSO
+       ========================================= -->
+
+  <section
+    id="courseView"
+    class="course-view hidden"
+  >
+
+    <div class="course-toolbar">
+
+      <button
+        id="backToPortal"
+        class="secondary"
+        type="button"
+      >
+        ← Volver al portal
+      </button>
+
+
+      <strong>
+        Curso
+      </strong>
+
+
+      <span id="courseStatus">
+        Cargando...
+      </span>
+
+    </div>
+
+
+    <iframe
+      id="courseFrame"
+      title="Curso privado"
+    ></iframe>
+
+  </section>
+
+
+  <!-- =========================================
+       JAVASCRIPT
+       ========================================= -->
+
+  <script
+    type="module"
+    src="app.js"
+  ></script>
+
+
+</body>
+
+</html>
