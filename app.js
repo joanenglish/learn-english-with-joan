@@ -47,7 +47,7 @@ const COURSES = [
       "1,000 collocations · flashcards · ejemplos · pronunciación americana · modo automático.",
     file: "english_collocations.html",
     badge: "American English"
-  }
+  },
 
   {
   code: "LISTENING",
