@@ -11,7 +11,8 @@ const supabase = createClient(
   SUPABASE_PUBLISHABLE_KEY
 );
 
-const $ = id => document.getElementById(id);
+const $ = id =>
+  document.getElementById(id);
 
 
 /* ============================================================
@@ -28,6 +29,7 @@ const COURSES = [
     file: "english_chunks.html",
     badge: "American English"
   },
+
   {
     code: "CONNECTORS",
     title: "English Connectors in Context",
@@ -37,6 +39,7 @@ const COURSES = [
     file: "english_connectors.html",
     badge: "A2–C1"
   },
+
   {
     code: "COLLOCATIONS",
     title: "1000 English Collocations",
@@ -46,6 +49,7 @@ const COURSES = [
     file: "english_collocations.html",
     badge: "American English"
   },
+
   {
     code: "LISTENING",
     title: "American Listening Lab",
@@ -54,26 +58,39 @@ const COURSES = [
       "7,000 ejercicios de listening organizados por niveles A1, A2, B1 y B2.",
     file: "listening_index.html",
     badge: "A1–B2"
+  },
+
+  {
+    code: "IRREGULARS",
+    title: "Irregular Verbs — American English",
+    shortTitle: "Irregular Verbs",
+    description:
+      "200 verbos irregulares · base, pasado y participio · audio · ejemplos · traducción · flashcards.",
+    file: "english_irregular_verbs.html",
+    badge: "American English"
   }
 ];
 
 
 /* ============================================================
-   LISTENING
+   ARCHIVOS DE LISTENING
    ============================================================ */
 
-const LISTENING_FILES = new Set([
-  "listening_index.html",
-  "listening_a1_v1.html",
-  "listening_a1_v2.html",
-  "listening_a2_v1.html",
-  "listening_a2_v2.html",
-  "listening_b1_v1.html",
-  "listening_b1_v2.html",
-  "listening_b2_v1.html"
-]);
+const LISTENING_FILES =
+  new Set([
+    "listening_index.html",
+    "listening_a1_v1.html",
+    "listening_a1_v2.html",
+    "listening_a2_v1.html",
+    "listening_a2_v2.html",
+    "listening_b1_v1.html",
+    "listening_b1_v2.html",
+    "listening_b2_v1.html"
+  ]);
+
 
 const LISTENING_TITLES = {
+
   "listening_index.html":
     "American Listening Lab",
 
@@ -104,27 +121,49 @@ let currentProfile = null;
 
 
 /* ============================================================
-   ACTIVIDAD DE ESTUDIO
+   SISTEMA DE ACTIVIDAD DE ESTUDIO
    ============================================================ */
 
-const STUDY_HEARTBEAT_MS = 15000;
+const STUDY_HEARTBEAT_MS =
+  15000;
 
 const STUDY_IDLE_LIMIT_MS =
   3 * 60 * 1000;
 
-let studySessionId = null;
 
-let studyActiveSeconds = 0;
+let studySessionId =
+  null;
 
-let studyLastTick = Date.now();
+let studyActiveSeconds =
+  0;
 
-let studyLastInteraction = Date.now();
+let studyLastTick =
+  Date.now();
 
+let studyLastInteraction =
+  Date.now();
+
+let studyCourseCode =
+  null;
+
+let studySectionName =
+  null;
+
+
+/* ============================================================
+   MARCAR ACTIVIDAD
+   ============================================================ */
 
 function markStudyActivity() {
-  studyLastInteraction = Date.now();
+
+  studyLastInteraction =
+    Date.now();
 }
 
+
+/* ============================================================
+   CERRAR SESIONES ANTIGUAS
+   ============================================================ */
 
 async function closeOldStudySessions() {
 
@@ -135,12 +174,14 @@ async function closeOldStudySessions() {
     return;
   }
 
+
   const { error } =
     await supabase
       .from("study_activity")
       .update({
         ended_at:
-          new Date().toISOString()
+          new Date()
+            .toISOString()
       })
       .eq(
         "user_id",
@@ -151,14 +192,20 @@ async function closeOldStudySessions() {
         null
       );
 
+
   if (error) {
+
     console.error(
-      "Error cerrando sesiones antiguas:",
+      "No se pudieron cerrar sesiones anteriores:",
       error
     );
   }
 }
 
+
+/* ============================================================
+   INICIAR SESIÓN DE ESTUDIO
+   ============================================================ */
 
 async function startStudySession(
   courseCode,
@@ -172,11 +219,25 @@ async function startStudySession(
     return;
   }
 
+
   await finishStudySession();
 
-  studyActiveSeconds = 0;
-  studyLastTick = Date.now();
-  studyLastInteraction = Date.now();
+
+  studyCourseCode =
+    courseCode;
+
+  studySectionName =
+    sectionName;
+
+  studyActiveSeconds =
+    0;
+
+  studyLastTick =
+    Date.now();
+
+  studyLastInteraction =
+    Date.now();
+
 
   const {
     data,
@@ -200,20 +261,29 @@ async function startStudySession(
       .select("id")
       .single();
 
+
   if (error) {
+
     console.error(
-      "Error iniciando actividad:",
+      "No se pudo iniciar la sesión de estudio:",
       error
     );
 
-    studySessionId = null;
+    studySessionId =
+      null;
 
     return;
   }
 
-  studySessionId = data.id;
+
+  studySessionId =
+    data.id;
 }
 
+
+/* ============================================================
+   GUARDAR TIEMPO
+   ============================================================ */
 
 async function saveStudyTime() {
 
@@ -224,6 +294,7 @@ async function saveStudyTime() {
   ) {
     return;
   }
+
 
   const { error } =
     await supabase
@@ -241,14 +312,20 @@ async function saveStudyTime() {
         currentProfile.id
       );
 
+
   if (error) {
+
     console.error(
-      "Error guardando tiempo:",
+      "No se pudo guardar el tiempo:",
       error
     );
   }
 }
 
+
+/* ============================================================
+   FINALIZAR SESIÓN DE ESTUDIO
+   ============================================================ */
 
 async function finishStudySession() {
 
@@ -257,47 +334,67 @@ async function finishStudySession() {
     !currentProfile ||
     currentProfile.is_admin
   ) {
-    studySessionId = null;
+
+    studySessionId =
+      null;
+
     return;
   }
 
-  const sessionId =
+
+  const sessionToClose =
     studySessionId;
 
-  studySessionId = null;
+
+  studySessionId =
+    null;
+
 
   const { error } =
     await supabase
       .from("study_activity")
       .update({
+
         active_seconds:
           studyActiveSeconds,
 
         ended_at:
-          new Date().toISOString()
+          new Date()
+            .toISOString()
+
       })
       .eq(
         "id",
-        sessionId
+        sessionToClose
       )
       .eq(
         "user_id",
         currentProfile.id
       );
 
+
   if (error) {
+
     console.error(
-      "Error finalizando actividad:",
+      "No se pudo finalizar la sesión:",
       error
     );
   }
 
-  studyActiveSeconds = 0;
+
+  studyActiveSeconds =
+    0;
+
+  studyCourseCode =
+    null;
+
+  studySectionName =
+    null;
 }
 
 
 /* ============================================================
-   CONTADOR DE TIEMPO
+   CONTADOR DE TIEMPO ACTIVO
    ============================================================ */
 
 setInterval(
@@ -306,7 +403,8 @@ setInterval(
     const now =
       Date.now();
 
-    const elapsed =
+
+    const elapsedSeconds =
       Math.max(
         0,
         Math.floor(
@@ -317,34 +415,42 @@ setInterval(
         )
       );
 
+
     studyLastTick =
       now;
 
-    if (!studySessionId) {
+
+    if (
+      !studySessionId
+    ) {
       return;
     }
 
-    const visible =
+
+    const pageVisible =
       !document.hidden;
 
-    const active =
+
+    const recentlyActive =
       (
         now -
         studyLastInteraction
       ) <=
       STUDY_IDLE_LIMIT_MS;
 
+
     if (
-      visible &&
-      active
+      pageVisible &&
+      recentlyActive
     ) {
 
       studyActiveSeconds +=
         Math.min(
-          elapsed,
+          elapsedSeconds,
           20
         );
     }
+
 
     await saveStudyTime();
 
@@ -355,7 +461,7 @@ setInterval(
 
 
 /* ============================================================
-   DETECTAR ACTIVIDAD
+   ACTIVIDAD EN EL PORTAL
    ============================================================ */
 
 [
@@ -385,7 +491,10 @@ document.addEventListener(
     studyLastTick =
       Date.now();
 
-    if (!document.hidden) {
+    if (
+      !document.hidden
+    ) {
+
       markStudyActivity();
     }
   }
@@ -401,12 +510,14 @@ function setAuthTab(mode) {
   const login =
     mode === "login";
 
+
   $("loginForm")
     .classList
     .toggle(
       "hidden",
       !login
     );
+
 
   $("signupForm")
     .classList
@@ -415,12 +526,14 @@ function setAuthTab(mode) {
       login
     );
 
+
   $("loginTab")
     .classList
     .toggle(
       "active",
       login
     );
+
 
   $("signupTab")
     .classList
@@ -433,12 +546,16 @@ function setAuthTab(mode) {
 
 $("loginTab").onclick =
   () =>
-    setAuthTab("login");
+    setAuthTab(
+      "login"
+    );
 
 
 $("signupTab").onclick =
   () =>
-    setAuthTab("signup");
+    setAuthTab(
+      "signup"
+    );
 
 
 function showOnly(view) {
@@ -454,6 +571,7 @@ function showOnly(view) {
       .classList
       .add("hidden");
   });
+
 
   $(view)
     .classList
@@ -484,16 +602,19 @@ async function getProfile(
       )
       .single();
 
+
   if (error) {
+
     throw error;
   }
+
 
   return data;
 }
 
 
 /* ============================================================
-   SESIÓN
+   CARGAR SESIÓN
    ============================================================ */
 
 async function loadSession() {
@@ -506,25 +627,31 @@ async function loadSession() {
     await supabase.auth
       .getSession();
 
+
   if (!session) {
 
     currentProfile =
       null;
 
+
     $("logoutBtn")
       .classList
       .add("hidden");
+
 
     showOnly(
       "authView"
     );
 
+
     return;
   }
+
 
   $("logoutBtn")
     .classList
     .remove("hidden");
+
 
   try {
 
@@ -535,17 +662,23 @@ async function loadSession() {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     await supabase.auth
       .signOut();
+
 
     showOnly(
       "authView"
     );
 
+
     return;
   }
+
 
   if (
     !currentProfile.is_active
@@ -555,17 +688,21 @@ async function loadSession() {
       "pendingView"
     );
 
+
     return;
   }
+
 
   showOnly(
     "portalView"
   );
 
+
   $("roleBadge").textContent =
     currentProfile.is_admin
       ? "Administrador"
       : "Estudiante";
+
 
   $("roleBadge").className =
     "status " +
@@ -575,6 +712,7 @@ async function loadSession() {
         : "active"
     );
 
+
   $("welcomeTitle").textContent =
     "Hola, " +
     (
@@ -582,10 +720,13 @@ async function loadSession() {
       currentProfile.email
     );
 
+
   $("welcomeEmail").textContent =
     currentProfile.email;
 
+
   await renderCourses();
+
 
   if (
     currentProfile.is_admin
@@ -595,6 +736,7 @@ async function loadSession() {
       .classList
       .remove("hidden");
 
+
     await loadUsers();
 
   } else {
@@ -603,7 +745,9 @@ async function loadSession() {
       .classList
       .add("hidden");
 
+
     await closeOldStudySessions();
+
 
     await startStudySession(
       "PORTAL",
@@ -614,7 +758,7 @@ async function loadSession() {
 
 
 /* ============================================================
-   LOGIN
+   INICIAR SESIÓN
    ============================================================ */
 
 $("loginForm")
@@ -624,8 +768,10 @@ $("loginForm")
 
       event.preventDefault();
 
+
       $("loginMsg").textContent =
         "Entrando...";
+
 
       const {
         error
@@ -643,16 +789,20 @@ $("loginForm")
                 .value
           });
 
+
       if (error) {
 
         $("loginMsg").textContent =
           "Correo o contraseña incorrectos.";
 
+
         return;
       }
 
+
       $("loginMsg").textContent =
         "";
+
 
       await loadSession();
     }
@@ -660,7 +810,7 @@ $("loginForm")
 
 
 /* ============================================================
-   REGISTRO
+   CREAR CUENTA
    ============================================================ */
 
 $("signupForm")
@@ -670,11 +820,14 @@ $("signupForm")
 
       event.preventDefault();
 
+
       $("signupMsg").className =
         "msg";
 
+
       $("signupMsg").textContent =
         "Creando cuenta...";
+
 
       const {
         error
@@ -703,16 +856,20 @@ $("signupForm")
             }
           });
 
+
       if (error) {
 
         $("signupMsg").textContent =
           error.message;
 
+
         return;
       }
 
+
       $("signupMsg").className =
         "msg ok";
+
 
       $("signupMsg").textContent =
         "Cuenta creada. Joan debe activarla y darte acceso al curso.";
@@ -721,7 +878,7 @@ $("signupForm")
 
 
 /* ============================================================
-   LOGOUT
+   CERRAR SESIÓN
    ============================================================ */
 
 $("logoutBtn").onclick =
@@ -729,15 +886,17 @@ $("logoutBtn").onclick =
 
     await finishStudySession();
 
+
     await supabase.auth
       .signOut();
+
 
     location.reload();
   };
 
 
 /* ============================================================
-   ACCESO A CURSOS
+   OBTENER CURSOS DEL USUARIO
    ============================================================ */
 
 async function getMyCourseAccess() {
@@ -747,19 +906,28 @@ async function getMyCourseAccess() {
     error
   } =
     await supabase
-      .from("course_access")
-      .select("course_code")
+      .from(
+        "course_access"
+      )
+      .select(
+        "course_code"
+      )
       .eq(
         "user_id",
         currentProfile.id
       );
 
+
   if (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     return new Set();
   }
+
 
   return new Set(
     (data || [])
@@ -780,81 +948,88 @@ async function renderCourses() {
   const accessSet =
     await getMyCourseAccess();
 
+
   $("courseGrid").innerHTML =
-    COURSES.map(course => {
+    COURSES.map(
+      course => {
 
-      const allowed =
-        accessSet.has(
-          course.code
-        );
+        const allowed =
+          accessSet.has(
+            course.code
+          );
 
-      return `
 
-        <article class="course-card">
+        return `
 
-          <span class="status active">
-            ${escapeHtml(
-              course.badge
-            )}
-          </span>
+          <article class="course-card">
 
-          <h3>
-            ${escapeHtml(
-              course.title
-            )}
-          </h3>
+            <span class="status active">
+              ${escapeHtml(
+                course.badge
+              )}
+            </span>
 
-          <p>
-            ${escapeHtml(
-              course.description
-            )}
-          </p>
+            <h3>
+              ${escapeHtml(
+                course.title
+              )}
+            </h3>
 
-          ${
-            allowed
+            <p>
+              ${escapeHtml(
+                course.description
+              )}
+            </p>
 
-              ? `
+            ${
+              allowed
 
-                  <button
-                    class="primary open-course"
-                    data-code="${course.code}"
-                  >
-                    Abrir curso
-                  </button>
+                ? `
 
-                `
+                    <button
+                      class="primary open-course"
+                      data-code="${course.code}"
+                    >
+                      Abrir curso
+                    </button>
 
-              : `
+                  `
 
-                  <span class="status pending">
-                    Sin acceso asignado
-                  </span>
+                : `
 
-                `
-          }
+                    <span class="status pending">
+                      Sin acceso asignado
+                    </span>
 
-        </article>
-      `;
+                  `
+            }
 
-    }).join("");
+          </article>
+        `;
+      }
+    )
+    .join("");
+
 
   document
     .querySelectorAll(
       ".open-course"
     )
-    .forEach(button => {
+    .forEach(
+      button => {
 
-      button.onclick =
-        () =>
-          openCourse(
-            button.dataset.code
-          );
-    });
+        button.onclick =
+          () =>
+            openCourse(
+              button.dataset.code
+            );
+      }
+    );
 }
 
 
 /* ============================================================
-   REVISAR CUENTA
+   REVISAR CUENTA ACTIVA
    ============================================================ */
 
 async function ensureCurrentAccountIsActive() {
@@ -872,6 +1047,7 @@ async function ensureCurrentAccountIsActive() {
       )
       .single();
 
+
   if (
     error ||
     !data?.is_active
@@ -881,12 +1057,15 @@ async function ensureCurrentAccountIsActive() {
       .classList
       .add("hidden");
 
+
     showOnly(
       "pendingView"
     );
 
+
     return false;
   }
+
 
   return true;
 }
@@ -907,25 +1086,33 @@ async function openCourse(
         courseCode
     );
 
+
   if (!course) {
+
     return;
   }
+
 
   const active =
     await ensureCurrentAccountIsActive();
 
+
   if (!active) {
+
     return;
   }
+
 
   $("courseView")
     .classList
     .remove("hidden");
 
+
   await startStudySession(
     course.code,
     course.title
   );
+
 
   await loadPrivateCourseFile(
     course.file,
@@ -936,7 +1123,7 @@ async function openCourse(
 
 
 /* ============================================================
-   CARGAR ARCHIVO PRIVADO
+   DESCARGAR CONTENIDO PRIVADO
    ============================================================ */
 
 async function loadPrivateCourseFile(
@@ -948,6 +1135,7 @@ async function loadPrivateCourseFile(
   $("courseStatus").textContent =
     "Cargando contenido privado...";
 
+
   const {
     data,
     error
@@ -958,20 +1146,27 @@ async function loadPrivateCourseFile(
         fileName
       );
 
+
   if (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     $("courseStatus").textContent =
       "No se pudo abrir el contenido.";
 
+
     return;
   }
+
 
   try {
 
     let htmlText =
       await data.text();
+
 
     htmlText =
       preparePrivateCourseHtml(
@@ -979,20 +1174,25 @@ async function loadPrivateCourseFile(
         fileName
       );
 
+
     const frame =
       $("courseFrame");
+
 
     frame.removeAttribute(
       "src"
     );
 
+
     frame.srcdoc =
       htmlText;
+
 
     const title =
       document.querySelector(
         ".course-toolbar strong"
       );
+
 
     if (title) {
 
@@ -1000,12 +1200,17 @@ async function loadPrivateCourseFile(
         titleText;
     }
 
+
     $("courseStatus").textContent =
       "Curso cargado";
 
+
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     $("courseStatus").textContent =
       "Error al preparar el curso.";
@@ -1014,7 +1219,7 @@ async function loadPrivateCourseFile(
 
 
 /* ============================================================
-   PREPARAR HTML
+   PREPARAR HTML DEL CURSO
    ============================================================ */
 
 function preparePrivateCourseHtml(
@@ -1025,14 +1230,13 @@ function preparePrivateCourseHtml(
   const parser =
     new DOMParser();
 
+
   const doc =
     parser.parseFromString(
       htmlText,
       "text/html"
     );
 
-
-  /* LINKS DE LISTENING */
 
   if (
     LISTENING_FILES.has(
@@ -1044,63 +1248,71 @@ function preparePrivateCourseHtml(
       .querySelectorAll(
         "a[href]"
       )
-      .forEach(link => {
+      .forEach(
+        link => {
 
-        const originalHref =
-          (
-            link.getAttribute(
-              "href"
-            ) ||
-            ""
-          ).trim();
-
-        const cleanHref =
-          originalHref
-            .split("?")[0]
-            .split("#")[0]
-            .replace(
-              /^\.\//,
+          const originalHref =
+            (
+              link.getAttribute(
+                "href"
+              ) ||
               ""
-            );
+            )
+            .trim();
 
-        const fileName =
-          cleanHref
-            .split("/")
-            .pop();
 
-        if (
-          !LISTENING_FILES.has(
+          const cleanHref =
+            originalHref
+              .split("?")[0]
+              .split("#")[0]
+              .replace(
+                /^\.\//,
+                ""
+              );
+
+
+          const fileName =
+            cleanHref
+              .split("/")
+              .pop();
+
+
+          if (
+            !LISTENING_FILES.has(
+              fileName
+            )
+          ) {
+
+            return;
+          }
+
+
+          link.setAttribute(
+            "href",
+            "#"
+          );
+
+
+          link.setAttribute(
+            "data-private-listening-file",
             fileName
-          )
-        ) {
-          return;
+          );
         }
-
-        link.setAttribute(
-          "href",
-          "#"
-        );
-
-        link.setAttribute(
-          "data-private-listening-file",
-          fileName
-        );
-      });
+      );
   }
 
 
-  /* PUENTE PARA DETECTAR ACTIVIDAD */
-
-  const script =
+  const activityScript =
     doc.createElement(
       "script"
     );
 
-  script.textContent = `
+
+  activityScript.textContent = `
 
     (function () {
 
-      function activity() {
+      function notifyActivity() {
 
         parent.postMessage(
           {
@@ -1125,7 +1337,7 @@ function preparePrivateCourseHtml(
 
           document.addEventListener(
             eventName,
-            activity,
+            notifyActivity,
             {
               passive: true
             }
@@ -1143,13 +1355,17 @@ function preparePrivateCourseHtml(
               "a[data-private-listening-file]"
             );
 
+
           if (!link) {
+
             return;
           }
+
 
           event.preventDefault();
 
           event.stopPropagation();
+
 
           parent.postMessage(
             {
@@ -1165,30 +1381,40 @@ function preparePrivateCourseHtml(
           );
 
         },
+
         true
+      );
+
+
+      document.addEventListener(
+        "visibilitychange",
+        notifyActivity
       );
 
     })();
 
   `;
 
+
   (
     doc.body ||
     doc.documentElement
   )
   .appendChild(
-    script
+    activityScript
   );
+
 
   return (
     "<!doctype html>\n" +
-    doc.documentElement.outerHTML
+    doc.documentElement
+      .outerHTML
   );
 }
 
 
 /* ============================================================
-   MENSAJES DE LOS CURSOS
+   MENSAJES DESDE LOS CURSOS
    ============================================================ */
 
 window.addEventListener(
@@ -1198,18 +1424,23 @@ window.addEventListener(
     const frame =
       $("courseFrame");
 
+
     if (
       !frame ||
       event.source !==
         frame.contentWindow
     ) {
+
       return;
     }
+
 
     const message =
       event.data;
 
+
     if (!message) {
+
       return;
     }
 
@@ -1229,8 +1460,10 @@ window.addEventListener(
       message.type !==
       "OPEN_PRIVATE_LISTENING_FILE"
     ) {
+
       return;
     }
+
 
     const fileName =
       String(
@@ -1238,20 +1471,26 @@ window.addEventListener(
         ""
       );
 
+
     if (
       !LISTENING_FILES.has(
         fileName
       )
     ) {
+
       return;
     }
+
 
     const active =
       await ensureCurrentAccountIsActive();
 
+
     if (!active) {
+
       return;
     }
+
 
     const sectionName =
       LISTENING_TITLES[
@@ -1259,10 +1498,12 @@ window.addEventListener(
       ] ||
       "American Listening Lab";
 
+
     await startStudySession(
       "LISTENING",
       sectionName
     );
+
 
     await loadPrivateCourseFile(
       fileName,
@@ -1282,17 +1523,21 @@ $("backToPortal").onclick =
 
     await finishStudySession();
 
+
     $("courseView")
       .classList
       .add("hidden");
+
 
     $("courseFrame")
       .removeAttribute(
         "srcdoc"
       );
 
+
     $("courseFrame").src =
       "about:blank";
+
 
     if (
       currentProfile &&
@@ -1308,137 +1553,84 @@ $("backToPortal").onclick =
 
 
 /* ============================================================
-   FUNCIONES PARA ESTADÍSTICAS
+   UTILIDADES DE ESTADÍSTICAS
    ============================================================ */
 
 function startOfToday() {
-
-  const d =
-    new Date();
-
-  d.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
   return d;
 }
 
 
 function startOfLast7Days() {
-
-  const d =
-    startOfToday();
-
-  d.setDate(
-    d.getDate() -
-    6
-  );
-
+  const d = startOfToday();
+  d.setDate(d.getDate() - 6);
   return d;
 }
 
 
 function localDayKey(value) {
-
-  const d =
-    new Date(value);
+  const d = new Date(value);
 
   return [
     d.getFullYear(),
-
-    String(
-      d.getMonth() + 1
-    )
-    .padStart(
-      2,
-      "0"
-    ),
-
-    String(
-      d.getDate()
-    )
-    .padStart(
-      2,
-      "0"
-    )
-  ]
-  .join("-");
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0")
+  ].join("-");
 }
 
 
-function formatStudyTime(
-  totalSeconds
-) {
-
+function formatStudyTime(totalSeconds) {
   const seconds =
     Math.max(
       0,
-      Number(
-        totalSeconds
-      ) ||
-      0
+      Number(totalSeconds) || 0
     );
 
   const hours =
     Math.floor(
-      seconds /
-      3600
+      seconds / 3600
     );
 
   const minutes =
     Math.floor(
-      (
-        seconds %
-        3600
-      ) /
-      60
+      (seconds % 3600) / 60
     );
 
   if (
-    hours >
-    0
+    hours > 0
   ) {
 
-    return (
-      hours +
-      " h " +
-      minutes +
-      " min"
-    );
+    return `${hours} h ${minutes} min`;
   }
+
 
   if (
-    minutes >
-    0
+    minutes > 0
   ) {
 
-    return (
-      minutes +
-      " min"
-    );
+    return `${minutes} min`;
   }
 
-  return (
-    seconds +
-    " s"
-  );
+
+  return `${seconds} s`;
 }
 
 
-function formatDateTime(
-  value
-) {
+function formatDateTime(value) {
 
-  if (!value) {
+  if (
+    !value
+  ) {
 
     return "Sin actividad";
   }
 
+
   const date =
     new Date(value);
+
 
   if (
     Number.isNaN(
@@ -1448,6 +1640,7 @@ function formatDateTime(
 
     return "Sin actividad";
   }
+
 
   return new Intl.DateTimeFormat(
     "es-DO",
@@ -1459,21 +1652,21 @@ function formatDateTime(
         "short"
     }
   )
-  .format(date);
+  .format(
+    date
+  );
 }
 
 
-function courseDisplayName(
-  code
-) {
+function courseDisplayName(code) {
 
   if (
-    code ===
-    "PORTAL"
+    code === "PORTAL"
   ) {
 
     return "Portal";
   }
+
 
   const course =
     COURSES.find(
@@ -1482,19 +1675,14 @@ function courseDisplayName(
         code
     );
 
+
   return course
     ? course.shortTitle
     : code;
 }
 
 
-/* ============================================================
-   RESUMEN DE ACTIVIDAD
-   ============================================================ */
-
-function buildStudySummary(
-  rows
-) {
+function buildStudySummary(rows) {
 
   const allRows =
     [...rows]
@@ -1603,7 +1791,6 @@ function buildStudySummary(
 
     perCourse.set(
       row.course_code,
-
       (
         perCourse.get(
           row.course_code
@@ -1644,39 +1831,28 @@ function buildStudySummary(
   }
 
 
+  const recent =
+    studyRows.slice(
+      0,
+      5
+    );
+
+
   return {
-
     lastEntry,
-
     todaySeconds,
-
     weekSeconds,
-
     totalSeconds,
-
     activeDays:
       activeDays.size,
-
     topCourseCode,
-
     topCourseSeconds,
-
-    recent:
-      studyRows.slice(
-        0,
-        5
-      )
+    recent
   };
 }
 
 
-/* ============================================================
-   DIBUJAR ESTADÍSTICAS
-   ============================================================ */
-
-function renderStudyStats(
-  summary
-) {
+function renderStudyStats(summary) {
 
   const recentHtml =
     summary.recent.length
@@ -1684,83 +1860,54 @@ function renderStudyStats(
       ? summary.recent
           .map(
             row => `
-
-              <div
-                style="
-                  display:flex;
-                  justify-content:space-between;
-                  gap:12px;
-                  padding:8px 0;
-                  border-top:1px solid rgba(148,163,184,.18);
-                "
-              >
-
-                <div>
-
-                  <strong
-                    style="
-                      display:block;
-                    "
-                  >
-
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                gap:12px;
+                padding:8px 0;
+                border-top:1px solid rgba(148,163,184,.18);
+              ">
+                <div style="min-width:0;">
+                  <strong style="display:block;">
                     ${escapeHtml(
                       row.section_name ||
                       courseDisplayName(
                         row.course_code
                       )
                     )}
-
                   </strong>
 
-                  <span
-                    class="small"
-                  >
-
+                  <span class="small">
                     ${escapeHtml(
                       formatDateTime(
                         row.started_at
                       )
                     )}
-
                   </span>
-
                 </div>
 
-
-                <strong
-                  style="
-                    white-space:nowrap;
-                  "
-                >
-
+                <strong style="white-space:nowrap;">
                   ${escapeHtml(
                     formatStudyTime(
                       row.active_seconds
                     )
                   )}
-
                 </strong>
-
               </div>
-
             `
           )
           .join("")
 
       : `
-
-          <div
-            class="small"
-          >
+          <div class="small">
             Todavía no hay sesiones de estudio registradas.
           </div>
-
         `;
 
 
   return `
-
     <div
+      class="student-study-stats"
       style="
         margin-top:14px;
         padding:14px;
@@ -1770,187 +1917,108 @@ function renderStudyStats(
       "
     >
 
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px;
-          flex-wrap:wrap;
-          margin-bottom:10px;
-        "
-      >
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-bottom:10px;
+      ">
+        <strong>📊 Estadísticas de estudio</strong>
 
-        <strong>
-          📊 Estadísticas de estudio
-        </strong>
-
-        <span
-          class="small"
-        >
-
+        <span class="small">
           Última entrada:
-
           ${escapeHtml(
             formatDateTime(
               summary.lastEntry
             )
           )}
-
         </span>
-
       </div>
 
 
-      <div
-        style="
-          display:grid;
-          grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-          gap:8px;
-          margin-bottom:12px;
-        "
-      >
+      <div style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+        gap:8px;
+        margin-bottom:12px;
+      ">
 
-
-        <div
-          class="stat"
-        >
-
+        <div class="stat">
           <strong>
-
             ${escapeHtml(
               formatStudyTime(
                 summary.todaySeconds
               )
             )}
-
           </strong>
-
-          <span>
-            Hoy
-          </span>
-
+          <span>Hoy</span>
         </div>
 
 
-        <div
-          class="stat"
-        >
-
+        <div class="stat">
           <strong>
-
             ${escapeHtml(
               formatStudyTime(
                 summary.weekSeconds
               )
             )}
-
           </strong>
-
-          <span>
-            Últimos 7 días
-          </span>
-
+          <span>Últimos 7 días</span>
         </div>
 
 
-        <div
-          class="stat"
-        >
-
+        <div class="stat">
           <strong>
-
             ${summary.activeDays}
-
           </strong>
-
-          <span>
-            Días activos
-          </span>
-
+          <span>Días activos</span>
         </div>
 
 
-        <div
-          class="stat"
-        >
-
+        <div class="stat">
           <strong>
-
             ${escapeHtml(
               formatStudyTime(
                 summary.totalSeconds
               )
             )}
-
           </strong>
-
-          <span>
-            Total estudiado
-          </span>
-
+          <span>Total estudiado</span>
         </div>
 
       </div>
 
 
-      <div
-        class="small"
-        style="
-          margin-bottom:8px;
-        "
-      >
-
-        <strong>
-          Curso más estudiado:
-        </strong>
-
+      <div class="small" style="margin-bottom:8px;">
+        <strong>Curso más estudiado:</strong>
         ${
           summary.topCourseCode
-
             ? `
-
                 ${escapeHtml(
                   courseDisplayName(
                     summary.topCourseCode
                   )
                 )}
-
                 ·
-
                 ${escapeHtml(
                   formatStudyTime(
                     summary.topCourseSeconds
                   )
                 )}
-
               `
-
             : "Sin datos todavía"
         }
-
       </div>
 
 
-      <div
-        style="
-          margin-top:10px;
-        "
-      >
-
-        <strong
-          style="
-            font-size:14px;
-          "
-        >
-
+      <div style="margin-top:10px;">
+        <strong style="font-size:14px;">
           Actividad reciente
-
         </strong>
 
-
         ${recentHtml}
-
       </div>
 
     </div>
@@ -1969,7 +2037,9 @@ async function loadUsers() {
     error
   } =
     await supabase
-      .from("profiles")
+      .from(
+        "profiles"
+      )
       .select(
         "id,email,display_name,is_admin,is_active,created_at"
       )
@@ -1984,10 +2054,14 @@ async function loadUsers() {
 
   if (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     $("usersList").innerHTML =
       "<p>No se pudieron cargar los estudiantes.</p>";
+
 
     return;
   }
@@ -1998,13 +2072,18 @@ async function loadUsers() {
     error: accessError
   } =
     await supabase
-      .from("course_access")
+      .from(
+        "course_access"
+      )
       .select(
         "user_id,course_code"
       );
 
 
-  if (accessError) {
+  if (
+    accessError
+  ) {
+
     console.error(
       accessError
     );
@@ -2016,7 +2095,9 @@ async function loadUsers() {
     error: activityError
   } =
     await supabase
-      .from("study_activity")
+      .from(
+        "study_activity"
+      )
       .select(
         "user_id,course_code,section_name,started_at,ended_at,active_seconds"
       )
@@ -2029,7 +2110,9 @@ async function loadUsers() {
       );
 
 
-  if (activityError) {
+  if (
+    activityError
+  ) {
 
     console.error(
       "No se pudieron cargar las estadísticas:",
@@ -2203,20 +2286,14 @@ async function loadUsers() {
 
               return `
 
-                <div
-                  class="course-switch-row"
-                >
+                <div class="course-switch-row">
 
-                  <div
-                    class="course-switch-copy"
-                  >
+                  <div class="course-switch-copy">
 
                     <strong>
-
                       ${escapeHtml(
                         course.shortTitle
                       )}
-
                     </strong>
 
                     <span>
@@ -2232,37 +2309,40 @@ async function loadUsers() {
                   </div>
 
 
-                  <label
-                    class="switch"
-                  >
+                  <label class="switch">
 
                     <input
+
                       type="checkbox"
+
                       class="course-access-switch"
+
                       data-id="${profile.id}"
+
                       data-code="${course.code}"
+
                       ${
                         hasAccess
                           ? "checked"
                           : ""
                       }
+
                       ${
                         profile.is_admin
                           ? "disabled"
                           : ""
                       }
+
                     >
 
                     <span
-                      class="slider"
-                    >
+                      class="slider">
                     </span>
 
                   </label>
 
                 </div>
               `;
-
             }
           )
           .join("");
@@ -2270,17 +2350,11 @@ async function loadUsers() {
 
         return `
 
-          <div
-            class="student-admin-card"
-          >
+          <div class="student-admin-card">
 
-            <div
-              class="student-admin-head"
-            >
+            <div class="student-admin-head">
 
-              <div
-                class="user-meta"
-              >
+              <div class="user-meta">
 
                 <strong>
 
@@ -2328,9 +2402,7 @@ async function loadUsers() {
 
                 ? `
 
-                    <div
-                      class="admin-account-note"
-                    >
+                    <div class="admin-account-note">
 
                       Cuenta de administrador
 
@@ -2340,9 +2412,7 @@ async function loadUsers() {
 
                 : `
 
-                    <div
-                      class="student-account-control"
-                    >
+                    <div class="student-account-control">
 
                       <div>
 
@@ -2350,9 +2420,7 @@ async function loadUsers() {
                           Cuenta del estudiante
                         </strong>
 
-                        <div
-                          class="small"
-                        >
+                        <div class="small">
 
                           ${
                             profile.is_active
@@ -2365,24 +2433,26 @@ async function loadUsers() {
                       </div>
 
 
-                      <label
-                        class="switch"
-                      >
+                      <label class="switch">
 
                         <input
+
                           type="checkbox"
+
                           class="student-active-switch"
+
                           data-id="${profile.id}"
+
                           ${
                             profile.is_active
                               ? "checked"
                               : ""
                           }
+
                         >
 
                         <span
-                          class="slider"
-                        >
+                          class="slider">
                         </span>
 
                       </label>
@@ -2390,9 +2460,7 @@ async function loadUsers() {
                     </div>
 
 
-                    <div
-                      class="course-access-list"
-                    >
+                    <div class="course-access-list">
 
                       ${courseSwitches}
 
@@ -2408,15 +2476,10 @@ async function loadUsers() {
 
           </div>
         `;
-
       }
     )
     .join("");
 
-
-  /* ============================================================
-     BLOQUEAR / DESBLOQUEAR
-     ============================================================ */
 
   document
     .querySelectorAll(
@@ -2432,8 +2495,10 @@ async function loadUsers() {
             const userId =
               input.dataset.id;
 
+
             const newStatus =
               input.checked;
+
 
             input.disabled =
               true;
@@ -2445,6 +2510,7 @@ async function loadUsers() {
               await supabase.rpc(
                 "set_student_active",
                 {
+
                   p_target_user:
                     userId,
 
@@ -2460,15 +2526,19 @@ async function loadUsers() {
                 error
               );
 
+
               input.checked =
                 !newStatus;
+
 
               input.disabled =
                 false;
 
+
               alert(
                 "No se pudo bloquear o desbloquear la cuenta."
               );
+
 
               return;
             }
@@ -2477,16 +2547,13 @@ async function loadUsers() {
             input.disabled =
               false;
 
+
             await loadUsers();
           }
         );
       }
     );
 
-
-  /* ============================================================
-     DAR / QUITAR CURSOS
-     ============================================================ */
 
   document
     .querySelectorAll(
@@ -2502,11 +2569,14 @@ async function loadUsers() {
             const userId =
               input.dataset.id;
 
+
             const courseCode =
               input.dataset.code;
 
+
             const giveAccess =
               input.checked;
+
 
             input.disabled =
               true;
@@ -2526,12 +2596,14 @@ async function loadUsers() {
                     "course_access"
                   )
                   .insert({
+
                     user_id:
                       userId,
 
                     course_code:
                       courseCode
                   });
+
 
               error =
                 result.error;
@@ -2553,19 +2625,24 @@ async function loadUsers() {
                     courseCode
                   );
 
+
               error =
                 result.error;
             }
 
 
-            if (error) {
+            if (
+              error
+            ) {
 
               console.error(
                 error
               );
 
+
               input.checked =
                 !giveAccess;
+
 
               alert(
                 "No se pudo cambiar el acceso al curso."
@@ -2576,6 +2653,7 @@ async function loadUsers() {
             input.disabled =
               false;
 
+
             await loadUsers();
           }
         );
@@ -2585,7 +2663,7 @@ async function loadUsers() {
 
 
 /* ============================================================
-   ACTUALIZAR ADMIN
+   BOTÓN ACTUALIZAR
    ============================================================ */
 
 $("refreshUsers").onclick =
@@ -2605,10 +2683,12 @@ function escapeHtml(
     ""
   )
   .replace(
+
     /[&<>"']/g,
 
     character =>
       ({
+
         "&":
           "&amp;",
 
@@ -2623,6 +2703,7 @@ function escapeHtml(
 
         "'":
           "&#039;"
+
       }[
         character
       ])
@@ -2636,16 +2717,23 @@ function escapeHtml(
 
 supabase.auth
   .onAuthStateChange(
+
     (_event, session) => {
 
-      if (!session) {
+      if (
+        !session
+      ) {
 
         currentProfile =
           null;
 
+
         $("logoutBtn")
           .classList
-          .add("hidden");
+          .add(
+            "hidden"
+          );
+
 
         showOnly(
           "authView"
@@ -2656,10 +2744,11 @@ supabase.auth
 
 
 /* ============================================================
-   COMPROBAR BLOQUEO
+   REVISAR BLOQUEO
    ============================================================ */
 
 setInterval(
+
   async () => {
 
     const {
@@ -2671,7 +2760,10 @@ setInterval(
         .getSession();
 
 
-    if (!session) {
+    if (
+      !session
+    ) {
+
       return;
     }
 
@@ -2680,17 +2772,25 @@ setInterval(
       currentProfile
         ?.is_admin
     ) {
+
       return;
     }
 
 
     const {
-      data: profile,
+      data:
+        profile,
+
       error
+
     } =
       await supabase
-        .from("profiles")
-        .select("is_active")
+        .from(
+          "profiles"
+        )
+        .select(
+          "is_active"
+        )
         .eq(
           "id",
           session.user.id
@@ -2698,7 +2798,10 @@ setInterval(
         .single();
 
 
-    if (error) {
+    if (
+      error
+    ) {
+
       return;
     }
 
@@ -2712,7 +2815,9 @@ setInterval(
 
       $("courseView")
         .classList
-        .add("hidden");
+        .add(
+          "hidden"
+        );
 
 
       $("courseFrame")
@@ -2737,7 +2842,7 @@ setInterval(
 
 
 /* ============================================================
-   AL SALIR
+   CERRAR / CAMBIAR PÁGINA
    ============================================================ */
 
 window.addEventListener(
