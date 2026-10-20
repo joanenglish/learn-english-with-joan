@@ -28,7 +28,8 @@ const COURSES = [
     description:
       "1,000 chunks, significados, ejemplos y flashcards.",
     file: "english_chunks.html",
-    badge: "American English"
+    badge: "American English",
+    type: "extra"
   },
 
   {
@@ -38,7 +39,8 @@ const COURSES = [
     description:
       "100 conectores · 1,000 ejemplos · traducción · pronunciación americana · uso real.",
     file: "english_connectors.html",
-    badge: "A2–C1"
+    badge: "A2–C1",
+    type: "extra"
   },
 
   {
@@ -48,7 +50,8 @@ const COURSES = [
     description:
       "1,000 collocations · flashcards · ejemplos · pronunciación americana · modo automático.",
     file: "english_collocations.html",
-    badge: "American English"
+    badge: "American English",
+    type: "extra"
   },
 
   {
@@ -58,7 +61,8 @@ const COURSES = [
     description:
       "7,000 ejercicios de listening organizados por niveles A1, A2, B1 y B2.",
     file: "listening_index.html",
-    badge: "A1–B2"
+    badge: "A1–B2",
+    type: "extra"
   },
 
   {
@@ -68,7 +72,8 @@ const COURSES = [
     description:
       "200 verbos irregulares · base, pasado y participio · audio · ejemplos · traducción · flashcards.",
     file: "english_irregular_verbs.html",
-    badge: "American English"
+    badge: "American English",
+    type: "extra"
   },
 
   {
@@ -78,7 +83,8 @@ const COURSES = [
     description:
       "Gramática A1 completa · explicaciones · ejemplos · audio · práctica · Final Review de 120 ejercicios.",
     file: "a1_grammar.html",
-    badge: "A1"
+    badge: "A1",
+    type: "grammar"
   }
 
 ];
@@ -133,7 +139,7 @@ let currentProfile = null;
 
 
 /* ============================================================
-   SISTEMA DE ACTIVIDAD DE ESTUDIO
+   ACTIVIDAD DE ESTUDIO
    ============================================================ */
 
 const STUDY_HEARTBEAT_MS =
@@ -161,10 +167,6 @@ let studySectionName =
   null;
 
 
-/* ============================================================
-   MARCAR ACTIVIDAD
-   ============================================================ */
-
 function markStudyActivity() {
 
   studyLastInteraction =
@@ -191,8 +193,7 @@ async function closeOldStudySessions() {
       .from("study_activity")
       .update({
         ended_at:
-          new Date()
-            .toISOString()
+          new Date().toISOString()
       })
       .eq(
         "user_id",
@@ -269,6 +270,7 @@ async function startStudySession(
 
         active_seconds:
           0
+
       })
       .select("id")
       .single();
@@ -312,8 +314,10 @@ async function saveStudyTime() {
     await supabase
       .from("study_activity")
       .update({
+
         active_seconds:
           studyActiveSeconds
+
       })
       .eq(
         "id",
@@ -336,7 +340,7 @@ async function saveStudyTime() {
 
 
 /* ============================================================
-   FINALIZAR SESIÓN DE ESTUDIO
+   FINALIZAR SESIÓN
    ============================================================ */
 
 async function finishStudySession() {
@@ -357,7 +361,6 @@ async function finishStudySession() {
   const sessionToClose =
     studySessionId;
 
-
   studySessionId =
     null;
 
@@ -371,8 +374,7 @@ async function finishStudySession() {
           studyActiveSeconds,
 
         ended_at:
-          new Date()
-            .toISOString()
+          new Date().toISOString()
 
       })
       .eq(
@@ -406,7 +408,7 @@ async function finishStudySession() {
 
 
 /* ============================================================
-   CONTADOR DE TIEMPO ACTIVO
+   CONTADOR DE TIEMPO
    ============================================================ */
 
 setInterval(
@@ -800,6 +802,7 @@ $("loginForm")
             password:
               $("loginPassword")
                 .value
+
           });
 
 
@@ -865,8 +868,11 @@ $("signupForm")
                   $("signupName")
                     .value
                     .trim()
+
               }
+
             }
+
           });
 
 
@@ -909,7 +915,7 @@ $("logoutBtn").onclick =
 
 
 /* ============================================================
-   OBTENER CURSOS DEL USUARIO
+   OBTENER PERMISOS DEL USUARIO
    ============================================================ */
 
 async function getMyCourseAccess() {
@@ -953,6 +959,73 @@ async function getMyCourseAccess() {
 
 
 /* ============================================================
+   CREAR TARJETA DE CURSO
+   ============================================================ */
+
+function courseCardHtml(
+  course,
+  accessSet
+) {
+
+  const allowed =
+    currentProfile?.is_admin ||
+    accessSet.has(
+      course.code
+    );
+
+
+  return `
+
+    <article class="course-card">
+
+      <span class="status active">
+        ${escapeHtml(
+          course.badge
+        )}
+      </span>
+
+      <h3>
+        ${escapeHtml(
+          course.title
+        )}
+      </h3>
+
+      <p>
+        ${escapeHtml(
+          course.description
+        )}
+      </p>
+
+      ${
+        allowed
+
+          ? `
+
+              <button
+                class="primary open-course"
+                data-code="${course.code}"
+              >
+                Abrir curso
+              </button>
+
+            `
+
+          : `
+
+              <span class="status pending">
+                Sin acceso asignado
+              </span>
+
+            `
+      }
+
+    </article>
+
+  `;
+}
+
+
+/* ============================================================
    MOSTRAR CURSOS
    ============================================================ */
 
@@ -962,67 +1035,44 @@ async function renderCourses() {
     await getMyCourseAccess();
 
 
+  const grammarCourses =
+    COURSES.filter(
+      course =>
+        course.type ===
+        "grammar"
+    );
+
+
+  const extraCourses =
+    COURSES.filter(
+      course =>
+        course.type !==
+        "grammar"
+    );
+
+
+  $("grammarGrid").innerHTML =
+    grammarCourses
+      .map(
+        course =>
+          courseCardHtml(
+            course,
+            accessSet
+          )
+      )
+      .join("");
+
+
   $("courseGrid").innerHTML =
-    COURSES.map(
-      course => {
-
-        const allowed =
-          currentProfile?.is_admin ||
-          accessSet.has(
-            course.code
-          );
-
-
-        return `
-
-          <article class="course-card">
-
-            <span class="status active">
-              ${escapeHtml(
-                course.badge
-              )}
-            </span>
-
-            <h3>
-              ${escapeHtml(
-                course.title
-              )}
-            </h3>
-
-            <p>
-              ${escapeHtml(
-                course.description
-              )}
-            </p>
-
-            ${
-              allowed
-
-                ? `
-
-                    <button
-                      class="primary open-course"
-                      data-code="${course.code}"
-                    >
-                      Abrir curso
-                    </button>
-
-                  `
-
-                : `
-
-                    <span class="status pending">
-                      Sin acceso asignado
-                    </span>
-
-                  `
-            }
-
-          </article>
-        `;
-      }
-    )
-    .join("");
+    extraCourses
+      .map(
+        course =>
+          courseCardHtml(
+            course,
+            accessSet
+          )
+      )
+      .join("");
 
 
   document
@@ -1037,6 +1087,7 @@ async function renderCourses() {
             openCourse(
               button.dataset.code
             );
+
       }
     );
 }
@@ -1117,6 +1168,14 @@ async function openCourse(
   }
 
 
+  /* ----------------------------------------------------------
+     ADMINISTRADOR:
+     acceso automático a todos los cursos.
+
+     ESTUDIANTE:
+     debe tener autorización en course_access.
+     ---------------------------------------------------------- */
+
   if (
     !currentProfile?.is_admin
   ) {
@@ -1160,7 +1219,7 @@ async function openCourse(
 
 
 /* ============================================================
-   DESCARGAR CONTENIDO PRIVADO
+   DESCARGAR CURSO PRIVADO
    ============================================================ */
 
 async function loadPrivateCourseFile(
@@ -1256,7 +1315,7 @@ async function loadPrivateCourseFile(
 
 
 /* ============================================================
-   PREPARAR HTML DEL CURSO
+   PREPARAR HTML PRIVADO
    ============================================================ */
 
 function preparePrivateCourseHtml(
@@ -1274,6 +1333,10 @@ function preparePrivateCourseHtml(
       "text/html"
     );
 
+
+  /* ----------------------------------------------------------
+     ENLACES INTERNOS DEL LISTENING
+     ---------------------------------------------------------- */
 
   if (
     LISTENING_FILES.has(
@@ -1334,10 +1397,15 @@ function preparePrivateCourseHtml(
             "data-private-listening-file",
             fileName
           );
+
         }
       );
   }
 
+
+  /* ----------------------------------------------------------
+     DETECTAR ACTIVIDAD DENTRO DEL IFRAME
+     ---------------------------------------------------------- */
 
   const activityScript =
     doc.createElement(
@@ -1379,6 +1447,7 @@ function preparePrivateCourseHtml(
               passive: true
             }
           );
+
         }
       );
 
@@ -1406,6 +1475,7 @@ function preparePrivateCourseHtml(
 
           parent.postMessage(
             {
+
               type:
                 "OPEN_PRIVATE_LISTENING_FILE",
 
@@ -1413,6 +1483,7 @@ function preparePrivateCourseHtml(
                 link.getAttribute(
                   "data-private-listening-file"
                 )
+
             },
             "*"
           );
@@ -1444,8 +1515,7 @@ function preparePrivateCourseHtml(
 
   return (
     "<!doctype html>\n" +
-    doc.documentElement
-      .outerHTML
+    doc.documentElement.outerHTML
   );
 }
 
@@ -1547,6 +1617,7 @@ window.addEventListener(
       sectionName,
       "LISTENING"
     );
+
   }
 );
 
@@ -1586,6 +1657,7 @@ $("backToPortal").onclick =
         "Portal principal"
       );
     }
+
   };
 
 
@@ -1634,14 +1706,16 @@ function localDayKey(value) {
 
     String(
       d.getMonth() + 1
-    ).padStart(
+    )
+    .padStart(
       2,
       "0"
     ),
 
     String(
       d.getDate()
-    ).padStart(
+    )
+    .padStart(
       2,
       "0"
     )
@@ -1657,7 +1731,8 @@ function formatStudyTime(
   const seconds =
     Math.max(
       0,
-      Number(totalSeconds) || 0
+      Number(totalSeconds) ||
+      0
     );
 
 
@@ -1669,7 +1744,11 @@ function formatStudyTime(
 
   const minutes =
     Math.floor(
-      (seconds % 3600) / 60
+      (
+        seconds %
+        3600
+      ) /
+      60
     );
 
 
@@ -1695,9 +1774,7 @@ function formatStudyTime(
 
 function formatDateTime(value) {
 
-  if (
-    !value
-  ) {
+  if (!value) {
 
     return "Sin actividad";
   }
@@ -1720,11 +1797,13 @@ function formatDateTime(value) {
   return new Intl.DateTimeFormat(
     "es-DO",
     {
+
       dateStyle:
         "medium",
 
       timeStyle:
         "short"
+
     }
   )
   .format(
@@ -1736,7 +1815,8 @@ function formatDateTime(value) {
 function courseDisplayName(code) {
 
   if (
-    code === "PORTAL"
+    code ===
+    "PORTAL"
   ) {
 
     return "Portal";
@@ -1756,6 +1836,10 @@ function courseDisplayName(code) {
     : code;
 }
 
+
+/* ============================================================
+   RESUMEN DE ESTUDIO
+   ============================================================ */
 
 function buildStudySummary(rows) {
 
@@ -1931,9 +2015,14 @@ function buildStudySummary(rows) {
     topCourseSeconds,
 
     recent
+
   };
 }
 
+
+/* ============================================================
+   MOSTRAR ESTADÍSTICAS
+   ============================================================ */
 
 function renderStudyStats(summary) {
 
@@ -1983,6 +2072,7 @@ function renderStudyStats(summary) {
                 </strong>
 
               </div>
+
             `
           )
           .join("")
@@ -2023,12 +2113,15 @@ function renderStudyStats(summary) {
         </strong>
 
         <span class="small">
+
           Última entrada:
+
           ${escapeHtml(
             formatDateTime(
               summary.lastEntry
             )
           )}
+
         </span>
 
       </div>
@@ -2120,17 +2213,21 @@ function renderStudyStats(summary) {
           summary.topCourseCode
 
             ? `
+
                 ${escapeHtml(
                   courseDisplayName(
                     summary.topCourseCode
                   )
                 )}
+
                 ·
+
                 ${escapeHtml(
                   formatStudyTime(
                     summary.topCourseSeconds
                   )
                 )}
+
               `
 
             : "Sin datos todavía"
@@ -2150,6 +2247,7 @@ function renderStudyStats(summary) {
       </div>
 
     </div>
+
   `;
 }
 
@@ -2208,9 +2306,7 @@ async function loadUsers() {
       );
 
 
-  if (
-    accessError
-  ) {
+  if (accessError) {
 
     console.error(
       accessError
@@ -2238,9 +2334,7 @@ async function loadUsers() {
       );
 
 
-  if (
-    activityError
-  ) {
+  if (activityError) {
 
     console.error(
       "No se pudieron cargar las estadísticas:",
@@ -2375,6 +2469,7 @@ async function loadUsers() {
       </span>
 
     </div>
+
   `;
 
 
@@ -2440,13 +2535,9 @@ async function loadUsers() {
                   <label class="switch">
 
                     <input
-
                       type="checkbox"
-
                       class="course-access-switch"
-
                       data-id="${profile.id}"
-
                       data-code="${course.code}"
 
                       ${
@@ -2460,16 +2551,16 @@ async function loadUsers() {
                           ? "disabled"
                           : ""
                       }
-
                     >
 
                     <span
-                      class="slider">
-                    </span>
+                      class="slider"
+                    ></span>
 
                   </label>
 
                 </div>
+
               `;
             }
           )
@@ -2564,11 +2655,8 @@ async function loadUsers() {
                       <label class="switch">
 
                         <input
-
                           type="checkbox"
-
                           class="student-active-switch"
-
                           data-id="${profile.id}"
 
                           ${
@@ -2576,12 +2664,11 @@ async function loadUsers() {
                               ? "checked"
                               : ""
                           }
-
                         >
 
                         <span
-                          class="slider">
-                        </span>
+                          class="slider"
+                        ></span>
 
                       </label>
 
@@ -2603,11 +2690,16 @@ async function loadUsers() {
             }
 
           </div>
+
         `;
       }
     )
     .join("");
 
+
+  /* ----------------------------------------------------------
+     ACTIVAR / BLOQUEAR ESTUDIANTE
+     ---------------------------------------------------------- */
 
   document
     .querySelectorAll(
@@ -2644,6 +2736,7 @@ async function loadUsers() {
 
                   p_active:
                     newStatus
+
                 }
               );
 
@@ -2677,11 +2770,17 @@ async function loadUsers() {
 
 
             await loadUsers();
+
           }
         );
+
       }
     );
 
+
+  /* ----------------------------------------------------------
+     PERMISOS DE CURSOS
+     ---------------------------------------------------------- */
 
   document
     .querySelectorAll(
@@ -2730,6 +2829,7 @@ async function loadUsers() {
 
                     course_code:
                       courseCode
+
                   });
 
 
@@ -2759,9 +2859,7 @@ async function loadUsers() {
             }
 
 
-            if (
-              error
-            ) {
+            if (error) {
 
               console.error(
                 error
@@ -2775,6 +2873,7 @@ async function loadUsers() {
               alert(
                 "No se pudo cambiar el acceso al curso."
               );
+
             }
 
 
@@ -2783,15 +2882,17 @@ async function loadUsers() {
 
 
             await loadUsers();
+
           }
         );
+
       }
     );
 }
 
 
 /* ============================================================
-   BOTÓN ACTUALIZAR
+   ACTUALIZAR ESTUDIANTES
    ============================================================ */
 
 $("refreshUsers").onclick =
@@ -2802,18 +2903,14 @@ $("refreshUsers").onclick =
    ESCAPAR HTML
    ============================================================ */
 
-function escapeHtml(
-  value
-) {
+function escapeHtml(value) {
 
   return String(
     value ??
     ""
   )
   .replace(
-
     /[&<>"']/g,
-
     character =>
       ({
 
@@ -2867,12 +2964,13 @@ supabase.auth
           "authView"
         );
       }
+
     }
   );
 
 
 /* ============================================================
-   REVISAR BLOQUEO
+   REVISAR SI EL ESTUDIANTE FUE BLOQUEADO
    ============================================================ */
 
 setInterval(
@@ -2926,9 +3024,7 @@ setInterval(
         .single();
 
 
-    if (
-      error
-    ) {
+    if (error) {
 
       return;
     }
