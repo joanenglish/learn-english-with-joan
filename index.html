@@ -14,8 +14,6 @@
     content="#13203a"
   >
 
- 
-
   <link
     rel="stylesheet"
     href="styles.css"
@@ -28,9 +26,9 @@
 
     <div>
 
-  <div class="brand crystal-brand">
-  Learn English with Joan
-</div>
+      <div class="brand crystal-brand">
+        Learn English with Joan
+      </div>
 
       <div class="subbrand">
         Portal privado de estudio
@@ -49,6 +47,10 @@
   </header>
 
   <main class="container">
+
+    <!-- ======================================================
+         LOGIN / REGISTRO
+         ====================================================== -->
 
     <section
       id="authView"
@@ -202,6 +204,11 @@
 
     </section>
 
+
+    <!-- ======================================================
+         CUENTA PENDIENTE
+         ====================================================== -->
+
     <section
       id="pendingView"
       class="panel hidden"
@@ -222,10 +229,17 @@
 
     </section>
 
+
+    <!-- ======================================================
+         PORTAL
+         ====================================================== -->
+
     <section
       id="portalView"
       class="hidden"
     >
+
+      <!-- BIENVENIDA -->
 
       <div class="panel welcome">
 
@@ -248,7 +262,53 @@
 
       </div>
 
-      <section class="panel">
+
+      <!-- ====================================================
+           GRAMMAR COURSE
+           ==================================================== -->
+
+      <section
+        class="panel"
+        style="margin-top:18px;"
+      >
+
+        <div class="section-head">
+
+          <div>
+
+            <span class="eyebrow">
+              ENGLISH GRAMMAR
+            </span>
+
+            <h2>
+              Grammar Course
+            </h2>
+
+            <p>
+              Programa de gramática organizado por niveles,
+              desde A1 hasta C2.
+            </p>
+
+          </div>
+
+        </div>
+
+        <div
+          id="grammarGrid"
+          class="course-grid"
+        ></div>
+
+      </section>
+
+
+      <!-- ====================================================
+           OTROS CURSOS
+           ==================================================== -->
+
+      <section
+        class="panel"
+        style="margin-top:18px;"
+      >
 
         <div class="section-head">
 
@@ -259,7 +319,7 @@
             </h2>
 
             <p>
-              Solo aparecen los cursos autorizados
+              Materiales adicionales autorizados
               para esta cuenta.
             </p>
 
@@ -273,6 +333,11 @@
         ></div>
 
       </section>
+
+
+      <!-- ====================================================
+           PANEL ADMINISTRADOR
+           ==================================================== -->
 
       <section
         id="adminPanel"
@@ -320,6 +385,11 @@
 
   </main>
 
+
+  <!-- ========================================================
+       VISOR DEL CURSO
+       ======================================================== -->
+
   <section
     id="courseView"
     class="course-view hidden"
@@ -351,6 +421,7 @@
     ></iframe>
 
   </section>
+
 
   <script
     type="module"
