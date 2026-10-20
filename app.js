@@ -20,6 +20,7 @@ const $ = id =>
    ============================================================ */
 
 const COURSES = [
+
   {
     code: "CHUNKS",
     title: "1000 English Chunks",
@@ -68,7 +69,18 @@ const COURSES = [
       "200 verbos irregulares · base, pasado y participio · audio · ejemplos · traducción · flashcards.",
     file: "english_irregular_verbs.html",
     badge: "American English"
+  },
+
+  {
+    code: "A1",
+    title: "A1 — Beginner",
+    shortTitle: "A1 — Beginner",
+    description:
+      "Gramática A1 completa · explicaciones · ejemplos · audio · práctica · Final Review de 120 ejercicios.",
+    file: "a1_grammar.html",
+    badge: "A1"
   }
+
 ];
 
 
@@ -129,7 +141,6 @@ const STUDY_HEARTBEAT_MS =
 
 const STUDY_IDLE_LIMIT_MS =
   3 * 60 * 1000;
-
 
 let studySessionId =
   null;
@@ -246,6 +257,7 @@ async function startStudySession(
     await supabase
       .from("study_activity")
       .insert({
+
         user_id:
           currentProfile.id,
 
@@ -398,6 +410,7 @@ async function finishStudySession() {
    ============================================================ */
 
 setInterval(
+
   async () => {
 
     const now =
@@ -1557,46 +1570,84 @@ $("backToPortal").onclick =
    ============================================================ */
 
 function startOfToday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
+
+  const d =
+    new Date();
+
+  d.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
   return d;
 }
 
 
 function startOfLast7Days() {
-  const d = startOfToday();
-  d.setDate(d.getDate() - 6);
+
+  const d =
+    startOfToday();
+
+  d.setDate(
+    d.getDate() - 6
+  );
+
   return d;
 }
 
 
 function localDayKey(value) {
-  const d = new Date(value);
+
+  const d =
+    new Date(value);
+
 
   return [
+
     d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, "0"),
-    String(d.getDate()).padStart(2, "0")
+
+    String(
+      d.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    ),
+
+    String(
+      d.getDate()
+    ).padStart(
+      2,
+      "0"
+    )
+
   ].join("-");
 }
 
 
-function formatStudyTime(totalSeconds) {
+function formatStudyTime(
+  totalSeconds
+) {
+
   const seconds =
     Math.max(
       0,
       Number(totalSeconds) || 0
     );
 
+
   const hours =
     Math.floor(
       seconds / 3600
     );
 
+
   const minutes =
     Math.floor(
       (seconds % 3600) / 60
     );
+
 
   if (
     hours > 0
@@ -1839,14 +1890,22 @@ function buildStudySummary(rows) {
 
 
   return {
+
     lastEntry,
+
     todaySeconds,
+
     weekSeconds,
+
     totalSeconds,
+
     activeDays:
       activeDays.size,
+
     topCourseCode,
+
     topCourseSeconds,
+
     recent
   };
 }
@@ -1860,6 +1919,7 @@ function renderStudyStats(summary) {
       ? summary.recent
           .map(
             row => `
+
               <div style="
                 display:flex;
                 justify-content:space-between;
@@ -1867,7 +1927,9 @@ function renderStudyStats(summary) {
                 padding:8px 0;
                 border-top:1px solid rgba(148,163,184,.18);
               ">
+
                 <div style="min-width:0;">
+
                   <strong style="display:block;">
                     ${escapeHtml(
                       row.section_name ||
@@ -1884,7 +1946,9 @@ function renderStudyStats(summary) {
                       )
                     )}
                   </span>
+
                 </div>
+
 
                 <strong style="white-space:nowrap;">
                   ${escapeHtml(
@@ -1893,19 +1957,23 @@ function renderStudyStats(summary) {
                     )
                   )}
                 </strong>
+
               </div>
             `
           )
           .join("")
 
       : `
+
           <div class="small">
             Todavía no hay sesiones de estudio registradas.
           </div>
+
         `;
 
 
   return `
+
     <div
       class="student-study-stats"
       style="
@@ -1925,7 +1993,10 @@ function renderStudyStats(summary) {
         flex-wrap:wrap;
         margin-bottom:10px;
       ">
-        <strong>📊 Estadísticas de estudio</strong>
+
+        <strong>
+          📊 Estadísticas de estudio
+        </strong>
 
         <span class="small">
           Última entrada:
@@ -1935,6 +2006,7 @@ function renderStudyStats(summary) {
             )
           )}
         </span>
+
       </div>
 
 
@@ -1946,6 +2018,7 @@ function renderStudyStats(summary) {
       ">
 
         <div class="stat">
+
           <strong>
             ${escapeHtml(
               formatStudyTime(
@@ -1953,11 +2026,16 @@ function renderStudyStats(summary) {
               )
             )}
           </strong>
-          <span>Hoy</span>
+
+          <span>
+            Hoy
+          </span>
+
         </div>
 
 
         <div class="stat">
+
           <strong>
             ${escapeHtml(
               formatStudyTime(
@@ -1965,19 +2043,29 @@ function renderStudyStats(summary) {
               )
             )}
           </strong>
-          <span>Últimos 7 días</span>
+
+          <span>
+            Últimos 7 días
+          </span>
+
         </div>
 
 
         <div class="stat">
+
           <strong>
             ${summary.activeDays}
           </strong>
-          <span>Días activos</span>
+
+          <span>
+            Días activos
+          </span>
+
         </div>
 
 
         <div class="stat">
+
           <strong>
             ${escapeHtml(
               formatStudyTime(
@@ -1985,16 +2073,28 @@ function renderStudyStats(summary) {
               )
             )}
           </strong>
-          <span>Total estudiado</span>
+
+          <span>
+            Total estudiado
+          </span>
+
         </div>
 
       </div>
 
 
-      <div class="small" style="margin-bottom:8px;">
-        <strong>Curso más estudiado:</strong>
+      <div
+        class="small"
+        style="margin-bottom:8px;"
+      >
+
+        <strong>
+          Curso más estudiado:
+        </strong>
+
         ${
           summary.topCourseCode
+
             ? `
                 ${escapeHtml(
                   courseDisplayName(
@@ -2008,17 +2108,21 @@ function renderStudyStats(summary) {
                   )
                 )}
               `
+
             : "Sin datos todavía"
         }
+
       </div>
 
 
       <div style="margin-top:10px;">
+
         <strong style="font-size:14px;">
           Actividad reciente
         </strong>
 
         ${recentHtml}
+
       </div>
 
     </div>
