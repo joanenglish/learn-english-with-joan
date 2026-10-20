@@ -1,4 +1,4 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL =
   "https://ggdrcklhyzmacpwctblv.supabase.co";
@@ -18,7 +18,7 @@ const $ = id => document.getElementById(id);
    CURSOS
    ============================================================ */
 
-const COURSES = [
+const COURSES = [ 
   {
     code: "CHUNKS",
     title: "1000 English Chunks",
@@ -48,6 +48,16 @@ const COURSES = [
     file: "english_collocations.html",
     badge: "American English"
   }
+
+  {
+  code: "LISTENING",
+  title: "American Listening Lab",
+  shortTitle: "Listening Lab",
+  description:
+    "7,000 ejercicios de listening organizados por niveles A1, A2, B1 y B2.",
+  file: "listening_index.html",
+  badge: "A1–B2"
+},
 ];
 
 
