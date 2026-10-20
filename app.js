@@ -11,8 +11,7 @@ const supabase = createClient(
   SUPABASE_PUBLISHABLE_KEY
 );
 
-const $ = id =>
-  document.getElementById(id);
+const $ = id => document.getElementById(id);
 
 
 /* ============================================================
@@ -29,7 +28,6 @@ const COURSES = [
     file: "english_chunks.html",
     badge: "American English"
   },
-
   {
     code: "CONNECTORS",
     title: "English Connectors in Context",
@@ -39,7 +37,6 @@ const COURSES = [
     file: "english_connectors.html",
     badge: "A2–C1"
   },
-
   {
     code: "COLLOCATIONS",
     title: "1000 English Collocations",
@@ -49,7 +46,6 @@ const COURSES = [
     file: "english_collocations.html",
     badge: "American English"
   },
-
   {
     code: "LISTENING",
     title: "American Listening Lab",
@@ -63,24 +59,21 @@ const COURSES = [
 
 
 /* ============================================================
-   ARCHIVOS DE LISTENING
+   LISTENING
    ============================================================ */
 
-const LISTENING_FILES =
-  new Set([
-    "listening_index.html",
-    "listening_a1_v1.html",
-    "listening_a1_v2.html",
-    "listening_a2_v1.html",
-    "listening_a2_v2.html",
-    "listening_b1_v1.html",
-    "listening_b1_v2.html",
-    "listening_b2_v1.html"
-  ]);
-
+const LISTENING_FILES = new Set([
+  "listening_index.html",
+  "listening_a1_v1.html",
+  "listening_a1_v2.html",
+  "listening_a2_v1.html",
+  "listening_a2_v2.html",
+  "listening_b1_v1.html",
+  "listening_b1_v2.html",
+  "listening_b2_v1.html"
+]);
 
 const LISTENING_TITLES = {
-
   "listening_index.html":
     "American Listening Lab",
 
@@ -111,49 +104,27 @@ let currentProfile = null;
 
 
 /* ============================================================
-   SISTEMA DE ACTIVIDAD DE ESTUDIO
+   ACTIVIDAD DE ESTUDIO
    ============================================================ */
 
-const STUDY_HEARTBEAT_MS =
-  15000;
+const STUDY_HEARTBEAT_MS = 15000;
 
 const STUDY_IDLE_LIMIT_MS =
   3 * 60 * 1000;
 
+let studySessionId = null;
 
-let studySessionId =
-  null;
+let studyActiveSeconds = 0;
 
-let studyActiveSeconds =
-  0;
+let studyLastTick = Date.now();
 
-let studyLastTick =
-  Date.now();
+let studyLastInteraction = Date.now();
 
-let studyLastInteraction =
-  Date.now();
-
-let studyCourseCode =
-  null;
-
-let studySectionName =
-  null;
-
-
-/* ============================================================
-   MARCAR ACTIVIDAD
-   ============================================================ */
 
 function markStudyActivity() {
-
-  studyLastInteraction =
-    Date.now();
+  studyLastInteraction = Date.now();
 }
 
-
-/* ============================================================
-   CERRAR SESIONES ANTIGUAS
-   ============================================================ */
 
 async function closeOldStudySessions() {
 
@@ -164,14 +135,12 @@ async function closeOldStudySessions() {
     return;
   }
 
-
   const { error } =
     await supabase
       .from("study_activity")
       .update({
         ended_at:
-          new Date()
-            .toISOString()
+          new Date().toISOString()
       })
       .eq(
         "user_id",
@@ -182,20 +151,14 @@ async function closeOldStudySessions() {
         null
       );
 
-
   if (error) {
-
     console.error(
-      "No se pudieron cerrar sesiones anteriores:",
+      "Error cerrando sesiones antiguas:",
       error
     );
   }
 }
 
-
-/* ============================================================
-   INICIAR SESIÓN DE ESTUDIO
-   ============================================================ */
 
 async function startStudySession(
   courseCode,
@@ -209,25 +172,11 @@ async function startStudySession(
     return;
   }
 
-
   await finishStudySession();
 
-
-  studyCourseCode =
-    courseCode;
-
-  studySectionName =
-    sectionName;
-
-  studyActiveSeconds =
-    0;
-
-  studyLastTick =
-    Date.now();
-
-  studyLastInteraction =
-    Date.now();
-
+  studyActiveSeconds = 0;
+  studyLastTick = Date.now();
+  studyLastInteraction = Date.now();
 
   const {
     data,
@@ -251,29 +200,20 @@ async function startStudySession(
       .select("id")
       .single();
 
-
   if (error) {
-
     console.error(
-      "No se pudo iniciar la sesión de estudio:",
+      "Error iniciando actividad:",
       error
     );
 
-    studySessionId =
-      null;
+    studySessionId = null;
 
     return;
   }
 
-
-  studySessionId =
-    data.id;
+  studySessionId = data.id;
 }
 
-
-/* ============================================================
-   GUARDAR TIEMPO
-   ============================================================ */
 
 async function saveStudyTime() {
 
@@ -284,7 +224,6 @@ async function saveStudyTime() {
   ) {
     return;
   }
-
 
   const { error } =
     await supabase
@@ -302,20 +241,14 @@ async function saveStudyTime() {
         currentProfile.id
       );
 
-
   if (error) {
-
     console.error(
-      "No se pudo guardar el tiempo:",
+      "Error guardando tiempo:",
       error
     );
   }
 }
 
-
-/* ============================================================
-   FINALIZAR SESIÓN DE ESTUDIO
-   ============================================================ */
 
 async function finishStudySession() {
 
@@ -324,67 +257,47 @@ async function finishStudySession() {
     !currentProfile ||
     currentProfile.is_admin
   ) {
-
-    studySessionId =
-      null;
-
+    studySessionId = null;
     return;
   }
 
-
-  const sessionToClose =
+  const sessionId =
     studySessionId;
 
-
-  studySessionId =
-    null;
-
+  studySessionId = null;
 
   const { error } =
     await supabase
       .from("study_activity")
       .update({
-
         active_seconds:
           studyActiveSeconds,
 
         ended_at:
-          new Date()
-            .toISOString()
-
+          new Date().toISOString()
       })
       .eq(
         "id",
-        sessionToClose
+        sessionId
       )
       .eq(
         "user_id",
         currentProfile.id
       );
 
-
   if (error) {
-
     console.error(
-      "No se pudo finalizar la sesión:",
+      "Error finalizando actividad:",
       error
     );
   }
 
-
-  studyActiveSeconds =
-    0;
-
-  studyCourseCode =
-    null;
-
-  studySectionName =
-    null;
+  studyActiveSeconds = 0;
 }
 
 
 /* ============================================================
-   CONTADOR DE TIEMPO ACTIVO
+   CONTADOR DE TIEMPO
    ============================================================ */
 
 setInterval(
@@ -393,8 +306,7 @@ setInterval(
     const now =
       Date.now();
 
-
-    const elapsedSeconds =
+    const elapsed =
       Math.max(
         0,
         Math.floor(
@@ -405,42 +317,34 @@ setInterval(
         )
       );
 
-
     studyLastTick =
       now;
 
-
-    if (
-      !studySessionId
-    ) {
+    if (!studySessionId) {
       return;
     }
 
-
-    const pageVisible =
+    const visible =
       !document.hidden;
 
-
-    const recentlyActive =
+    const active =
       (
         now -
         studyLastInteraction
       ) <=
       STUDY_IDLE_LIMIT_MS;
 
-
     if (
-      pageVisible &&
-      recentlyActive
+      visible &&
+      active
     ) {
 
       studyActiveSeconds +=
         Math.min(
-          elapsedSeconds,
+          elapsed,
           20
         );
     }
-
 
     await saveStudyTime();
 
@@ -451,7 +355,7 @@ setInterval(
 
 
 /* ============================================================
-   ACTIVIDAD EN EL PORTAL
+   DETECTAR ACTIVIDAD
    ============================================================ */
 
 [
@@ -481,10 +385,7 @@ document.addEventListener(
     studyLastTick =
       Date.now();
 
-    if (
-      !document.hidden
-    ) {
-
+    if (!document.hidden) {
       markStudyActivity();
     }
   }
@@ -500,14 +401,12 @@ function setAuthTab(mode) {
   const login =
     mode === "login";
 
-
   $("loginForm")
     .classList
     .toggle(
       "hidden",
       !login
     );
-
 
   $("signupForm")
     .classList
@@ -516,14 +415,12 @@ function setAuthTab(mode) {
       login
     );
 
-
   $("loginTab")
     .classList
     .toggle(
       "active",
       login
     );
-
 
   $("signupTab")
     .classList
@@ -536,16 +433,12 @@ function setAuthTab(mode) {
 
 $("loginTab").onclick =
   () =>
-    setAuthTab(
-      "login"
-    );
+    setAuthTab("login");
 
 
 $("signupTab").onclick =
   () =>
-    setAuthTab(
-      "signup"
-    );
+    setAuthTab("signup");
 
 
 function showOnly(view) {
@@ -561,7 +454,6 @@ function showOnly(view) {
       .classList
       .add("hidden");
   });
-
 
   $(view)
     .classList
@@ -592,19 +484,16 @@ async function getProfile(
       )
       .single();
 
-
   if (error) {
-
     throw error;
   }
-
 
   return data;
 }
 
 
 /* ============================================================
-   CARGAR SESIÓN
+   SESIÓN
    ============================================================ */
 
 async function loadSession() {
@@ -617,31 +506,25 @@ async function loadSession() {
     await supabase.auth
       .getSession();
 
-
   if (!session) {
 
     currentProfile =
       null;
 
-
     $("logoutBtn")
       .classList
       .add("hidden");
-
 
     showOnly(
       "authView"
     );
 
-
     return;
   }
-
 
   $("logoutBtn")
     .classList
     .remove("hidden");
-
 
   try {
 
@@ -652,23 +535,17 @@ async function loadSession() {
 
   } catch (error) {
 
-    console.error(
-      error
-    );
-
+    console.error(error);
 
     await supabase.auth
       .signOut();
-
 
     showOnly(
       "authView"
     );
 
-
     return;
   }
-
 
   if (
     !currentProfile.is_active
@@ -678,21 +555,17 @@ async function loadSession() {
       "pendingView"
     );
 
-
     return;
   }
-
 
   showOnly(
     "portalView"
   );
 
-
   $("roleBadge").textContent =
     currentProfile.is_admin
       ? "Administrador"
       : "Estudiante";
-
 
   $("roleBadge").className =
     "status " +
@@ -702,7 +575,6 @@ async function loadSession() {
         : "active"
     );
 
-
   $("welcomeTitle").textContent =
     "Hola, " +
     (
@@ -710,13 +582,10 @@ async function loadSession() {
       currentProfile.email
     );
 
-
   $("welcomeEmail").textContent =
     currentProfile.email;
 
-
   await renderCourses();
-
 
   if (
     currentProfile.is_admin
@@ -726,7 +595,6 @@ async function loadSession() {
       .classList
       .remove("hidden");
 
-
     await loadUsers();
 
   } else {
@@ -735,9 +603,7 @@ async function loadSession() {
       .classList
       .add("hidden");
 
-
     await closeOldStudySessions();
-
 
     await startStudySession(
       "PORTAL",
@@ -748,7 +614,7 @@ async function loadSession() {
 
 
 /* ============================================================
-   INICIAR SESIÓN
+   LOGIN
    ============================================================ */
 
 $("loginForm")
@@ -758,10 +624,8 @@ $("loginForm")
 
       event.preventDefault();
 
-
       $("loginMsg").textContent =
         "Entrando...";
-
 
       const {
         error
@@ -779,20 +643,16 @@ $("loginForm")
                 .value
           });
 
-
       if (error) {
 
         $("loginMsg").textContent =
           "Correo o contraseña incorrectos.";
 
-
         return;
       }
 
-
       $("loginMsg").textContent =
         "";
-
 
       await loadSession();
     }
@@ -800,7 +660,7 @@ $("loginForm")
 
 
 /* ============================================================
-   CREAR CUENTA
+   REGISTRO
    ============================================================ */
 
 $("signupForm")
@@ -810,14 +670,11 @@ $("signupForm")
 
       event.preventDefault();
 
-
       $("signupMsg").className =
         "msg";
 
-
       $("signupMsg").textContent =
         "Creando cuenta...";
-
 
       const {
         error
@@ -846,20 +703,16 @@ $("signupForm")
             }
           });
 
-
       if (error) {
 
         $("signupMsg").textContent =
           error.message;
 
-
         return;
       }
 
-
       $("signupMsg").className =
         "msg ok";
-
 
       $("signupMsg").textContent =
         "Cuenta creada. Joan debe activarla y darte acceso al curso.";
@@ -868,7 +721,7 @@ $("signupForm")
 
 
 /* ============================================================
-   CERRAR SESIÓN
+   LOGOUT
    ============================================================ */
 
 $("logoutBtn").onclick =
@@ -876,17 +729,15 @@ $("logoutBtn").onclick =
 
     await finishStudySession();
 
-
     await supabase.auth
       .signOut();
-
 
     location.reload();
   };
 
 
 /* ============================================================
-   OBTENER CURSOS DEL USUARIO
+   ACCESO A CURSOS
    ============================================================ */
 
 async function getMyCourseAccess() {
@@ -896,28 +747,19 @@ async function getMyCourseAccess() {
     error
   } =
     await supabase
-      .from(
-        "course_access"
-      )
-      .select(
-        "course_code"
-      )
+      .from("course_access")
+      .select("course_code")
       .eq(
         "user_id",
         currentProfile.id
       );
 
-
   if (error) {
 
-    console.error(
-      error
-    );
-
+    console.error(error);
 
     return new Set();
   }
-
 
   return new Set(
     (data || [])
@@ -938,88 +780,81 @@ async function renderCourses() {
   const accessSet =
     await getMyCourseAccess();
 
-
   $("courseGrid").innerHTML =
-    COURSES.map(
-      course => {
+    COURSES.map(course => {
 
-        const allowed =
-          accessSet.has(
-            course.code
-          );
+      const allowed =
+        accessSet.has(
+          course.code
+        );
 
+      return `
 
-        return `
+        <article class="course-card">
 
-          <article class="course-card">
+          <span class="status active">
+            ${escapeHtml(
+              course.badge
+            )}
+          </span>
 
-            <span class="status active">
-              ${escapeHtml(
-                course.badge
-              )}
-            </span>
+          <h3>
+            ${escapeHtml(
+              course.title
+            )}
+          </h3>
 
-            <h3>
-              ${escapeHtml(
-                course.title
-              )}
-            </h3>
+          <p>
+            ${escapeHtml(
+              course.description
+            )}
+          </p>
 
-            <p>
-              ${escapeHtml(
-                course.description
-              )}
-            </p>
+          ${
+            allowed
 
-            ${
-              allowed
+              ? `
 
-                ? `
+                  <button
+                    class="primary open-course"
+                    data-code="${course.code}"
+                  >
+                    Abrir curso
+                  </button>
 
-                    <button
-                      class="primary open-course"
-                      data-code="${course.code}"
-                    >
-                      Abrir curso
-                    </button>
+                `
 
-                  `
+              : `
 
-                : `
+                  <span class="status pending">
+                    Sin acceso asignado
+                  </span>
 
-                    <span class="status pending">
-                      Sin acceso asignado
-                    </span>
+                `
+          }
 
-                  `
-            }
+        </article>
+      `;
 
-          </article>
-        `;
-      }
-    )
-    .join("");
-
+    }).join("");
 
   document
     .querySelectorAll(
       ".open-course"
     )
-    .forEach(
-      button => {
+    .forEach(button => {
 
-        button.onclick =
-          () =>
-            openCourse(
-              button.dataset.code
-            );
-      }
-    );
+      button.onclick =
+        () =>
+          openCourse(
+            button.dataset.code
+          );
+    });
 }
 
 
 /* ============================================================
-   REVISAR CUENTA ACTIVA
+   REVISAR CUENTA
    ============================================================ */
 
 async function ensureCurrentAccountIsActive() {
@@ -1037,7 +872,6 @@ async function ensureCurrentAccountIsActive() {
       )
       .single();
 
-
   if (
     error ||
     !data?.is_active
@@ -1047,15 +881,12 @@ async function ensureCurrentAccountIsActive() {
       .classList
       .add("hidden");
 
-
     showOnly(
       "pendingView"
     );
 
-
     return false;
   }
-
 
   return true;
 }
@@ -1076,33 +907,25 @@ async function openCourse(
         courseCode
     );
 
-
   if (!course) {
-
     return;
   }
-
 
   const active =
     await ensureCurrentAccountIsActive();
 
-
   if (!active) {
-
     return;
   }
-
 
   $("courseView")
     .classList
     .remove("hidden");
 
-
   await startStudySession(
     course.code,
     course.title
   );
-
 
   await loadPrivateCourseFile(
     course.file,
@@ -1113,7 +936,7 @@ async function openCourse(
 
 
 /* ============================================================
-   DESCARGAR CONTENIDO PRIVADO
+   CARGAR ARCHIVO PRIVADO
    ============================================================ */
 
 async function loadPrivateCourseFile(
@@ -1125,7 +948,6 @@ async function loadPrivateCourseFile(
   $("courseStatus").textContent =
     "Cargando contenido privado...";
 
-
   const {
     data,
     error
@@ -1136,27 +958,20 @@ async function loadPrivateCourseFile(
         fileName
       );
 
-
   if (error) {
 
-    console.error(
-      error
-    );
-
+    console.error(error);
 
     $("courseStatus").textContent =
       "No se pudo abrir el contenido.";
 
-
     return;
   }
-
 
   try {
 
     let htmlText =
       await data.text();
-
 
     htmlText =
       preparePrivateCourseHtml(
@@ -1164,25 +979,20 @@ async function loadPrivateCourseFile(
         fileName
       );
 
-
     const frame =
       $("courseFrame");
-
 
     frame.removeAttribute(
       "src"
     );
 
-
     frame.srcdoc =
       htmlText;
-
 
     const title =
       document.querySelector(
         ".course-toolbar strong"
       );
-
 
     if (title) {
 
@@ -1190,17 +1000,12 @@ async function loadPrivateCourseFile(
         titleText;
     }
 
-
     $("courseStatus").textContent =
       "Curso cargado";
 
-
   } catch (error) {
 
-    console.error(
-      error
-    );
-
+    console.error(error);
 
     $("courseStatus").textContent =
       "Error al preparar el curso.";
@@ -1209,7 +1014,7 @@ async function loadPrivateCourseFile(
 
 
 /* ============================================================
-   PREPARAR HTML DEL CURSO
+   PREPARAR HTML
    ============================================================ */
 
 function preparePrivateCourseHtml(
@@ -1220,7 +1025,6 @@ function preparePrivateCourseHtml(
   const parser =
     new DOMParser();
 
-
   const doc =
     parser.parseFromString(
       htmlText,
@@ -1228,7 +1032,7 @@ function preparePrivateCourseHtml(
     );
 
 
-  /* LISTENING: enlaces internos */
+  /* LINKS DE LISTENING */
 
   if (
     LISTENING_FILES.has(
@@ -1240,73 +1044,63 @@ function preparePrivateCourseHtml(
       .querySelectorAll(
         "a[href]"
       )
-      .forEach(
-        link => {
+      .forEach(link => {
 
-          const originalHref =
-            (
-              link.getAttribute(
-                "href"
-              ) ||
+        const originalHref =
+          (
+            link.getAttribute(
+              "href"
+            ) ||
+            ""
+          ).trim();
+
+        const cleanHref =
+          originalHref
+            .split("?")[0]
+            .split("#")[0]
+            .replace(
+              /^\.\//,
               ""
-            )
-            .trim();
+            );
 
+        const fileName =
+          cleanHref
+            .split("/")
+            .pop();
 
-          const cleanHref =
-            originalHref
-              .split("?")[0]
-              .split("#")[0]
-              .replace(
-                /^\.\//,
-                ""
-              );
-
-
-          const fileName =
-            cleanHref
-              .split("/")
-              .pop();
-
-
-          if (
-            !LISTENING_FILES.has(
-              fileName
-            )
-          ) {
-
-            return;
-          }
-
-
-          link.setAttribute(
-            "href",
-            "#"
-          );
-
-
-          link.setAttribute(
-            "data-private-listening-file",
+        if (
+          !LISTENING_FILES.has(
             fileName
-          );
+          )
+        ) {
+          return;
         }
-      );
+
+        link.setAttribute(
+          "href",
+          "#"
+        );
+
+        link.setAttribute(
+          "data-private-listening-file",
+          fileName
+        );
+      });
   }
 
 
-  /* PUENTE DE ACTIVIDAD */
+  /* PUENTE PARA DETECTAR ACTIVIDAD */
 
-  const activityScript =
+  const script =
     doc.createElement(
       "script"
     );
 
-
-  activityScript.textContent = `
+  script.textContent = `
 
     (function () {
 
-      function notifyActivity() {
+      function activity() {
 
         parent.postMessage(
           {
@@ -1331,7 +1125,7 @@ function preparePrivateCourseHtml(
 
           document.addEventListener(
             eventName,
-            notifyActivity,
+            activity,
             {
               passive: true
             }
@@ -1349,17 +1143,13 @@ function preparePrivateCourseHtml(
               "a[data-private-listening-file]"
             );
 
-
           if (!link) {
-
             return;
           }
-
 
           event.preventDefault();
 
           event.stopPropagation();
-
 
           parent.postMessage(
             {
@@ -1375,40 +1165,30 @@ function preparePrivateCourseHtml(
           );
 
         },
-
         true
-      );
-
-
-      document.addEventListener(
-        "visibilitychange",
-        notifyActivity
       );
 
     })();
 
   `;
 
-
   (
     doc.body ||
     doc.documentElement
   )
   .appendChild(
-    activityScript
+    script
   );
-
 
   return (
     "<!doctype html>\n" +
-    doc.documentElement
-      .outerHTML
+    doc.documentElement.outerHTML
   );
 }
 
 
 /* ============================================================
-   MENSAJES DESDE LOS CURSOS
+   MENSAJES DE LOS CURSOS
    ============================================================ */
 
 window.addEventListener(
@@ -1418,28 +1198,21 @@ window.addEventListener(
     const frame =
       $("courseFrame");
 
-
     if (
       !frame ||
       event.source !==
         frame.contentWindow
     ) {
-
       return;
     }
-
 
     const message =
       event.data;
 
-
     if (!message) {
-
       return;
     }
 
-
-    /* ACTIVIDAD DEL ESTUDIANTE */
 
     if (
       message.type ===
@@ -1452,16 +1225,12 @@ window.addEventListener(
     }
 
 
-    /* LISTENING */
-
     if (
       message.type !==
       "OPEN_PRIVATE_LISTENING_FILE"
     ) {
-
       return;
     }
-
 
     const fileName =
       String(
@@ -1469,26 +1238,20 @@ window.addEventListener(
         ""
       );
 
-
     if (
       !LISTENING_FILES.has(
         fileName
       )
     ) {
-
       return;
     }
-
 
     const active =
       await ensureCurrentAccountIsActive();
 
-
     if (!active) {
-
       return;
     }
-
 
     const sectionName =
       LISTENING_TITLES[
@@ -1496,12 +1259,10 @@ window.addEventListener(
       ] ||
       "American Listening Lab";
 
-
     await startStudySession(
       "LISTENING",
       sectionName
     );
-
 
     await loadPrivateCourseFile(
       fileName,
@@ -1521,21 +1282,17 @@ $("backToPortal").onclick =
 
     await finishStudySession();
 
-
     $("courseView")
       .classList
       .add("hidden");
-
 
     $("courseFrame")
       .removeAttribute(
         "srcdoc"
       );
 
-
     $("courseFrame").src =
       "about:blank";
-
 
     if (
       currentProfile &&
@@ -1551,6 +1308,657 @@ $("backToPortal").onclick =
 
 
 /* ============================================================
+   FUNCIONES PARA ESTADÍSTICAS
+   ============================================================ */
+
+function startOfToday() {
+
+  const d =
+    new Date();
+
+  d.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  return d;
+}
+
+
+function startOfLast7Days() {
+
+  const d =
+    startOfToday();
+
+  d.setDate(
+    d.getDate() -
+    6
+  );
+
+  return d;
+}
+
+
+function localDayKey(value) {
+
+  const d =
+    new Date(value);
+
+  return [
+    d.getFullYear(),
+
+    String(
+      d.getMonth() + 1
+    )
+    .padStart(
+      2,
+      "0"
+    ),
+
+    String(
+      d.getDate()
+    )
+    .padStart(
+      2,
+      "0"
+    )
+  ]
+  .join("-");
+}
+
+
+function formatStudyTime(
+  totalSeconds
+) {
+
+  const seconds =
+    Math.max(
+      0,
+      Number(
+        totalSeconds
+      ) ||
+      0
+    );
+
+  const hours =
+    Math.floor(
+      seconds /
+      3600
+    );
+
+  const minutes =
+    Math.floor(
+      (
+        seconds %
+        3600
+      ) /
+      60
+    );
+
+  if (
+    hours >
+    0
+  ) {
+
+    return (
+      hours +
+      " h " +
+      minutes +
+      " min"
+    );
+  }
+
+  if (
+    minutes >
+    0
+  ) {
+
+    return (
+      minutes +
+      " min"
+    );
+  }
+
+  return (
+    seconds +
+    " s"
+  );
+}
+
+
+function formatDateTime(
+  value
+) {
+
+  if (!value) {
+
+    return "Sin actividad";
+  }
+
+  const date =
+    new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+
+    return "Sin actividad";
+  }
+
+  return new Intl.DateTimeFormat(
+    "es-DO",
+    {
+      dateStyle:
+        "medium",
+
+      timeStyle:
+        "short"
+    }
+  )
+  .format(date);
+}
+
+
+function courseDisplayName(
+  code
+) {
+
+  if (
+    code ===
+    "PORTAL"
+  ) {
+
+    return "Portal";
+  }
+
+  const course =
+    COURSES.find(
+      item =>
+        item.code ===
+        code
+    );
+
+  return course
+    ? course.shortTitle
+    : code;
+}
+
+
+/* ============================================================
+   RESUMEN DE ACTIVIDAD
+   ============================================================ */
+
+function buildStudySummary(
+  rows
+) {
+
+  const allRows =
+    [...rows]
+      .sort(
+        (a, b) =>
+          new Date(
+            b.started_at
+          ) -
+          new Date(
+            a.started_at
+          )
+      );
+
+
+  const lastEntry =
+    allRows[0]
+      ?.started_at ||
+    null;
+
+
+  const studyRows =
+    allRows.filter(
+      row =>
+        row.course_code !==
+        "PORTAL"
+    );
+
+
+  const todayStart =
+    startOfToday();
+
+
+  const weekStart =
+    startOfLast7Days();
+
+
+  let todaySeconds =
+    0;
+
+  let weekSeconds =
+    0;
+
+  let totalSeconds =
+    0;
+
+
+  const activeDays =
+    new Set();
+
+
+  const perCourse =
+    new Map();
+
+
+  for (
+    const row
+    of studyRows
+  ) {
+
+    const seconds =
+      Math.max(
+        0,
+        Number(
+          row.active_seconds
+        ) ||
+        0
+      );
+
+
+    totalSeconds +=
+      seconds;
+
+
+    const started =
+      new Date(
+        row.started_at
+      );
+
+
+    if (
+      started >=
+      todayStart
+    ) {
+
+      todaySeconds +=
+        seconds;
+    }
+
+
+    if (
+      started >=
+      weekStart
+    ) {
+
+      weekSeconds +=
+        seconds;
+
+
+      activeDays.add(
+        localDayKey(
+          row.started_at
+        )
+      );
+    }
+
+
+    perCourse.set(
+      row.course_code,
+
+      (
+        perCourse.get(
+          row.course_code
+        ) ||
+        0
+      ) +
+      seconds
+    );
+  }
+
+
+  let topCourseCode =
+    null;
+
+  let topCourseSeconds =
+    0;
+
+
+  for (
+    const [
+      code,
+      seconds
+    ]
+    of perCourse
+  ) {
+
+    if (
+      seconds >
+      topCourseSeconds
+    ) {
+
+      topCourseCode =
+        code;
+
+      topCourseSeconds =
+        seconds;
+    }
+  }
+
+
+  return {
+
+    lastEntry,
+
+    todaySeconds,
+
+    weekSeconds,
+
+    totalSeconds,
+
+    activeDays:
+      activeDays.size,
+
+    topCourseCode,
+
+    topCourseSeconds,
+
+    recent:
+      studyRows.slice(
+        0,
+        5
+      )
+  };
+}
+
+
+/* ============================================================
+   DIBUJAR ESTADÍSTICAS
+   ============================================================ */
+
+function renderStudyStats(
+  summary
+) {
+
+  const recentHtml =
+    summary.recent.length
+
+      ? summary.recent
+          .map(
+            row => `
+
+              <div
+                style="
+                  display:flex;
+                  justify-content:space-between;
+                  gap:12px;
+                  padding:8px 0;
+                  border-top:1px solid rgba(148,163,184,.18);
+                "
+              >
+
+                <div>
+
+                  <strong
+                    style="
+                      display:block;
+                    "
+                  >
+
+                    ${escapeHtml(
+                      row.section_name ||
+                      courseDisplayName(
+                        row.course_code
+                      )
+                    )}
+
+                  </strong>
+
+                  <span
+                    class="small"
+                  >
+
+                    ${escapeHtml(
+                      formatDateTime(
+                        row.started_at
+                      )
+                    )}
+
+                  </span>
+
+                </div>
+
+
+                <strong
+                  style="
+                    white-space:nowrap;
+                  "
+                >
+
+                  ${escapeHtml(
+                    formatStudyTime(
+                      row.active_seconds
+                    )
+                  )}
+
+                </strong>
+
+              </div>
+
+            `
+          )
+          .join("")
+
+      : `
+
+          <div
+            class="small"
+          >
+            Todavía no hay sesiones de estudio registradas.
+          </div>
+
+        `;
+
+
+  return `
+
+    <div
+      style="
+        margin-top:14px;
+        padding:14px;
+        border:1px solid rgba(148,163,184,.22);
+        border-radius:14px;
+        background:rgba(15,23,42,.22);
+      "
+    >
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          flex-wrap:wrap;
+          margin-bottom:10px;
+        "
+      >
+
+        <strong>
+          📊 Estadísticas de estudio
+        </strong>
+
+        <span
+          class="small"
+        >
+
+          Última entrada:
+
+          ${escapeHtml(
+            formatDateTime(
+              summary.lastEntry
+            )
+          )}
+
+        </span>
+
+      </div>
+
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+          gap:8px;
+          margin-bottom:12px;
+        "
+      >
+
+
+        <div
+          class="stat"
+        >
+
+          <strong>
+
+            ${escapeHtml(
+              formatStudyTime(
+                summary.todaySeconds
+              )
+            )}
+
+          </strong>
+
+          <span>
+            Hoy
+          </span>
+
+        </div>
+
+
+        <div
+          class="stat"
+        >
+
+          <strong>
+
+            ${escapeHtml(
+              formatStudyTime(
+                summary.weekSeconds
+              )
+            )}
+
+          </strong>
+
+          <span>
+            Últimos 7 días
+          </span>
+
+        </div>
+
+
+        <div
+          class="stat"
+        >
+
+          <strong>
+
+            ${summary.activeDays}
+
+          </strong>
+
+          <span>
+            Días activos
+          </span>
+
+        </div>
+
+
+        <div
+          class="stat"
+        >
+
+          <strong>
+
+            ${escapeHtml(
+              formatStudyTime(
+                summary.totalSeconds
+              )
+            )}
+
+          </strong>
+
+          <span>
+            Total estudiado
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="small"
+        style="
+          margin-bottom:8px;
+        "
+      >
+
+        <strong>
+          Curso más estudiado:
+        </strong>
+
+        ${
+          summary.topCourseCode
+
+            ? `
+
+                ${escapeHtml(
+                  courseDisplayName(
+                    summary.topCourseCode
+                  )
+                )}
+
+                ·
+
+                ${escapeHtml(
+                  formatStudyTime(
+                    summary.topCourseSeconds
+                  )
+                )}
+
+              `
+
+            : "Sin datos todavía"
+        }
+
+      </div>
+
+
+      <div
+        style="
+          margin-top:10px;
+        "
+      >
+
+        <strong
+          style="
+            font-size:14px;
+          "
+        >
+
+          Actividad reciente
+
+        </strong>
+
+
+        ${recentHtml}
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* ============================================================
    PANEL ADMINISTRADOR
    ============================================================ */
 
@@ -1561,9 +1969,7 @@ async function loadUsers() {
     error
   } =
     await supabase
-      .from(
-        "profiles"
-      )
+      .from("profiles")
       .select(
         "id,email,display_name,is_admin,is_active,created_at"
       )
@@ -1578,14 +1984,10 @@ async function loadUsers() {
 
   if (error) {
 
-    console.error(
-      error
-    );
-
+    console.error(error);
 
     $("usersList").innerHTML =
       "<p>No se pudieron cargar los estudiantes.</p>";
-
 
     return;
   }
@@ -1596,21 +1998,76 @@ async function loadUsers() {
     error: accessError
   } =
     await supabase
-      .from(
-        "course_access"
-      )
+      .from("course_access")
       .select(
         "user_id,course_code"
       );
 
 
-  if (
-    accessError
-  ) {
-
+  if (accessError) {
     console.error(
       accessError
     );
+  }
+
+
+  const {
+    data: activityRows,
+    error: activityError
+  } =
+    await supabase
+      .from("study_activity")
+      .select(
+        "user_id,course_code,section_name,started_at,ended_at,active_seconds"
+      )
+      .order(
+        "started_at",
+        {
+          ascending:
+            false
+        }
+      );
+
+
+  if (activityError) {
+
+    console.error(
+      "No se pudieron cargar las estadísticas:",
+      activityError
+    );
+  }
+
+
+  const activityMap =
+    new Map();
+
+
+  for (
+    const row
+    of activityRows ||
+    []
+  ) {
+
+    if (
+      !activityMap.has(
+        row.user_id
+      )
+    ) {
+
+      activityMap.set(
+        row.user_id,
+        []
+      );
+    }
+
+
+    activityMap
+      .get(
+        row.user_id
+      )
+      .push(
+        row
+      );
   }
 
 
@@ -1653,8 +2110,6 @@ async function loadUsers() {
         !profile.is_admin
     );
 
-
-  /* ESTADÍSTICAS GENERALES */
 
   $("adminStats").innerHTML = `
 
@@ -1712,8 +2167,6 @@ async function loadUsers() {
   `;
 
 
-  /* TARJETAS */
-
   $("usersList").innerHTML =
     profiles.map(
       profile => {
@@ -1723,6 +2176,19 @@ async function loadUsers() {
             profile.id
           ) ||
           new Set();
+
+
+        const userActivity =
+          activityMap.get(
+            profile.id
+          ) ||
+          [];
+
+
+        const studySummary =
+          buildStudySummary(
+            userActivity
+          );
 
 
         const courseSwitches =
@@ -1737,14 +2203,20 @@ async function loadUsers() {
 
               return `
 
-                <div class="course-switch-row">
+                <div
+                  class="course-switch-row"
+                >
 
-                  <div class="course-switch-copy">
+                  <div
+                    class="course-switch-copy"
+                  >
 
                     <strong>
+
                       ${escapeHtml(
                         course.shortTitle
                       )}
+
                     </strong>
 
                     <span>
@@ -1760,40 +2232,37 @@ async function loadUsers() {
                   </div>
 
 
-                  <label class="switch">
+                  <label
+                    class="switch"
+                  >
 
                     <input
-
                       type="checkbox"
-
                       class="course-access-switch"
-
                       data-id="${profile.id}"
-
                       data-code="${course.code}"
-
                       ${
                         hasAccess
                           ? "checked"
                           : ""
                       }
-
                       ${
                         profile.is_admin
                           ? "disabled"
                           : ""
                       }
-
                     >
 
                     <span
-                      class="slider">
+                      class="slider"
+                    >
                     </span>
 
                   </label>
 
                 </div>
               `;
+
             }
           )
           .join("");
@@ -1801,11 +2270,17 @@ async function loadUsers() {
 
         return `
 
-          <div class="student-admin-card">
+          <div
+            class="student-admin-card"
+          >
 
-            <div class="student-admin-head">
+            <div
+              class="student-admin-head"
+            >
 
-              <div class="user-meta">
+              <div
+                class="user-meta"
+              >
 
                 <strong>
 
@@ -1853,7 +2328,9 @@ async function loadUsers() {
 
                 ? `
 
-                    <div class="admin-account-note">
+                    <div
+                      class="admin-account-note"
+                    >
 
                       Cuenta de administrador
 
@@ -1863,7 +2340,9 @@ async function loadUsers() {
 
                 : `
 
-                    <div class="student-account-control">
+                    <div
+                      class="student-account-control"
+                    >
 
                       <div>
 
@@ -1871,7 +2350,9 @@ async function loadUsers() {
                           Cuenta del estudiante
                         </strong>
 
-                        <div class="small">
+                        <div
+                          class="small"
+                        >
 
                           ${
                             profile.is_active
@@ -1884,26 +2365,24 @@ async function loadUsers() {
                       </div>
 
 
-                      <label class="switch">
+                      <label
+                        class="switch"
+                      >
 
                         <input
-
                           type="checkbox"
-
                           class="student-active-switch"
-
                           data-id="${profile.id}"
-
                           ${
                             profile.is_active
                               ? "checked"
                               : ""
                           }
-
                         >
 
                         <span
-                          class="slider">
+                          class="slider"
+                        >
                         </span>
 
                       </label>
@@ -1911,23 +2390,33 @@ async function loadUsers() {
                     </div>
 
 
-                    <div class="course-access-list">
+                    <div
+                      class="course-access-list"
+                    >
 
                       ${courseSwitches}
 
                     </div>
+
+
+                    ${renderStudyStats(
+                      studySummary
+                    )}
 
                   `
             }
 
           </div>
         `;
+
       }
     )
     .join("");
 
 
-  /* BLOQUEAR / DESBLOQUEAR */
+  /* ============================================================
+     BLOQUEAR / DESBLOQUEAR
+     ============================================================ */
 
   document
     .querySelectorAll(
@@ -1943,10 +2432,8 @@ async function loadUsers() {
             const userId =
               input.dataset.id;
 
-
             const newStatus =
               input.checked;
-
 
             input.disabled =
               true;
@@ -1958,7 +2445,6 @@ async function loadUsers() {
               await supabase.rpc(
                 "set_student_active",
                 {
-
                   p_target_user:
                     userId,
 
@@ -1974,19 +2460,15 @@ async function loadUsers() {
                 error
               );
 
-
               input.checked =
                 !newStatus;
-
 
               input.disabled =
                 false;
 
-
               alert(
                 "No se pudo bloquear o desbloquear la cuenta."
               );
-
 
               return;
             }
@@ -1995,7 +2477,6 @@ async function loadUsers() {
             input.disabled =
               false;
 
-
             await loadUsers();
           }
         );
@@ -2003,7 +2484,9 @@ async function loadUsers() {
     );
 
 
-  /* DAR / QUITAR CURSOS */
+  /* ============================================================
+     DAR / QUITAR CURSOS
+     ============================================================ */
 
   document
     .querySelectorAll(
@@ -2019,14 +2502,11 @@ async function loadUsers() {
             const userId =
               input.dataset.id;
 
-
             const courseCode =
               input.dataset.code;
 
-
             const giveAccess =
               input.checked;
-
 
             input.disabled =
               true;
@@ -2046,14 +2526,12 @@ async function loadUsers() {
                     "course_access"
                   )
                   .insert({
-
                     user_id:
                       userId,
 
                     course_code:
                       courseCode
                   });
-
 
               error =
                 result.error;
@@ -2075,24 +2553,19 @@ async function loadUsers() {
                     courseCode
                   );
 
-
               error =
                 result.error;
             }
 
 
-            if (
-              error
-            ) {
+            if (error) {
 
               console.error(
                 error
               );
 
-
               input.checked =
                 !giveAccess;
-
 
               alert(
                 "No se pudo cambiar el acceso al curso."
@@ -2103,7 +2576,6 @@ async function loadUsers() {
             input.disabled =
               false;
 
-
             await loadUsers();
           }
         );
@@ -2113,7 +2585,7 @@ async function loadUsers() {
 
 
 /* ============================================================
-   BOTÓN ACTUALIZAR
+   ACTUALIZAR ADMIN
    ============================================================ */
 
 $("refreshUsers").onclick =
@@ -2133,12 +2605,10 @@ function escapeHtml(
     ""
   )
   .replace(
-
     /[&<>"']/g,
 
     character =>
       ({
-
         "&":
           "&amp;",
 
@@ -2153,7 +2623,6 @@ function escapeHtml(
 
         "'":
           "&#039;"
-
       }[
         character
       ])
@@ -2167,23 +2636,16 @@ function escapeHtml(
 
 supabase.auth
   .onAuthStateChange(
-
     (_event, session) => {
 
-      if (
-        !session
-      ) {
+      if (!session) {
 
         currentProfile =
           null;
 
-
         $("logoutBtn")
           .classList
-          .add(
-            "hidden"
-          );
-
+          .add("hidden");
 
         showOnly(
           "authView"
@@ -2194,11 +2656,10 @@ supabase.auth
 
 
 /* ============================================================
-   REVISAR BLOQUEO
+   COMPROBAR BLOQUEO
    ============================================================ */
 
 setInterval(
-
   async () => {
 
     const {
@@ -2210,10 +2671,7 @@ setInterval(
         .getSession();
 
 
-    if (
-      !session
-    ) {
-
+    if (!session) {
       return;
     }
 
@@ -2222,25 +2680,17 @@ setInterval(
       currentProfile
         ?.is_admin
     ) {
-
       return;
     }
 
 
     const {
-      data:
-        profile,
-
+      data: profile,
       error
-
     } =
       await supabase
-        .from(
-          "profiles"
-        )
-        .select(
-          "is_active"
-        )
+        .from("profiles")
+        .select("is_active")
         .eq(
           "id",
           session.user.id
@@ -2248,10 +2698,7 @@ setInterval(
         .single();
 
 
-    if (
-      error
-    ) {
-
+    if (error) {
       return;
     }
 
@@ -2265,9 +2712,7 @@ setInterval(
 
       $("courseView")
         .classList
-        .add(
-          "hidden"
-        );
+        .add("hidden");
 
 
       $("courseFrame")
@@ -2292,7 +2737,7 @@ setInterval(
 
 
 /* ============================================================
-   CERRAR / CAMBIAR PÁGINA
+   AL SALIR
    ============================================================ */
 
 window.addEventListener(
