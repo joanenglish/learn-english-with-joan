@@ -3,10 +3,7 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = "https://ggdrcklhyzmacpwctblv.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_L-kS8DGmd07cfw-UZdBvSg_G_OWhQUK";
 
-const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY
-);
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 const $ = id => document.getElementById(id);
 
@@ -74,7 +71,7 @@ const LISTENING_TITLES = {
 let currentProfile = null;
 
 /* ============================================================
-   VISTAS / AUTENTICACIÓN
+   AUTENTICACIÓN / VISTAS
    ============================================================ */
 
 function setAuthTab(mode) {
@@ -105,7 +102,6 @@ async function getProfile(userId) {
     .single();
 
   if (error) throw error;
-
   return data;
 }
 
@@ -127,11 +123,8 @@ async function loadSession() {
     currentProfile = await getProfile(session.user.id);
   } catch (error) {
     console.error(error);
-
     await supabase.auth.signOut();
-
     showOnly("authView");
-
     return;
   }
 
@@ -142,28 +135,17 @@ async function loadSession() {
 
   showOnly("portalView");
 
-  $("roleBadge").textContent =
-    currentProfile.is_admin
-      ? "Administrador"
-      : "Estudiante";
+  $("roleBadge").textContent = currentProfile.is_admin
+    ? "Administrador"
+    : "Estudiante";
 
   $("roleBadge").className =
-    "status " +
-    (
-      currentProfile.is_admin
-        ? "admin"
-        : "active"
-    );
+    "status " + (currentProfile.is_admin ? "admin" : "active");
 
   $("welcomeTitle").textContent =
-    "Hola, " +
-    (
-      currentProfile.display_name ||
-      currentProfile.email
-    );
+    "Hola, " + (currentProfile.display_name || currentProfile.email);
 
-  $("welcomeEmail").textContent =
-    currentProfile.email;
+  $("welcomeEmail").textContent = currentProfile.email;
 
   await renderCourses();
 
@@ -179,130 +161,80 @@ async function loadSession() {
    LOGIN
    ============================================================ */
 
-$("loginForm").addEventListener(
-  "submit",
-  async event => {
-    event.preventDefault();
+$("loginForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
-    $("loginMsg").textContent =
-      "Entrando...";
+  $("loginMsg").textContent = "Entrando...";
 
-    const { error } =
-      await supabase.auth
-        .signInWithPassword({
-          email:
-            $("loginEmail")
-              .value
-              .trim(),
+  const { error } = await supabase.auth.signInWithPassword({
+    email: $("loginEmail").value.trim(),
+    password: $("loginPassword").value
+  });
 
-          password:
-            $("loginPassword")
-              .value
-        });
-
-    if (error) {
-      $("loginMsg").textContent =
-        "Correo o contraseña incorrectos.";
-
-      return;
-    }
-
-    $("loginMsg").textContent = "";
-
-    await loadSession();
+  if (error) {
+    $("loginMsg").textContent = "Correo o contraseña incorrectos.";
+    return;
   }
-);
+
+  $("loginMsg").textContent = "";
+  await loadSession();
+});
 
 /* ============================================================
    REGISTRO
    ============================================================ */
 
-$("signupForm").addEventListener(
-  "submit",
-  async event => {
-    event.preventDefault();
+$("signupForm").addEventListener("submit", async event => {
+  event.preventDefault();
 
-    $("signupMsg").className =
-      "msg";
+  $("signupMsg").className = "msg";
+  $("signupMsg").textContent = "Creando cuenta...";
 
-    $("signupMsg").textContent =
-      "Creando cuenta...";
-
-    const { error } =
-      await supabase.auth
-        .signUp({
-          email:
-            $("signupEmail")
-              .value
-              .trim(),
-
-          password:
-            $("signupPassword")
-              .value,
-
-          options: {
-            data: {
-              display_name:
-                $("signupName")
-                  .value
-                  .trim()
-            }
-          }
-        });
-
-    if (error) {
-      $("signupMsg").textContent =
-        error.message;
-
-      return;
+  const { error } = await supabase.auth.signUp({
+    email: $("signupEmail").value.trim(),
+    password: $("signupPassword").value,
+    options: {
+      data: {
+        display_name: $("signupName").value.trim()
+      }
     }
+  });
 
-    $("signupMsg").className =
-      "msg ok";
-
-    $("signupMsg").textContent =
-      "Cuenta creada. Joan debe activarla y darte acceso al curso.";
+  if (error) {
+    $("signupMsg").textContent = error.message;
+    return;
   }
-);
+
+  $("signupMsg").className = "msg ok";
+  $("signupMsg").textContent =
+    "Cuenta creada. Joan debe activarla y darte acceso al curso.";
+});
 
 /* ============================================================
    LOGOUT
    ============================================================ */
 
-$("logoutBtn").onclick =
-  async () => {
-    await supabase.auth
-      .signOut();
-
-    location.reload();
-  };
+$("logoutBtn").onclick = async () => {
+  await supabase.auth.signOut();
+  location.reload();
+};
 
 /* ============================================================
    ACCESO A CURSOS
    ============================================================ */
 
 async function getMyCourseAccess() {
-  const { data, error } =
-    await supabase
-      .from("course_access")
-      .select("course_code")
-      .eq(
-        "user_id",
-        currentProfile.id
-      );
+  const { data, error } = await supabase
+    .from("course_access")
+    .select("course_code")
+    .eq("user_id", currentProfile.id);
 
   if (error) {
     console.error(error);
     return new Set();
   }
 
-  return new Set(
-    (data || [])
-      .map(
-        item =>
-          item.course_code
-      )
-  );
+  return new Set((data || []).map(item => item.course_code));
 }
 
 /* ============================================================
@@ -310,63 +242,44 @@ async function getMyCourseAccess() {
    ============================================================ */
 
 async function renderCourses() {
-  const accessSet =
-    await getMyCourseAccess();
+  const accessSet = await getMyCourseAccess();
 
-  $("courseGrid").innerHTML =
-    COURSES.map(course => {
-      const allowed =
-        accessSet.has(
-          course.code
-        );
+  $("courseGrid").innerHTML = COURSES.map(course => {
+    const allowed = accessSet.has(course.code);
 
-      return `
-        <article class="course-card">
+    return `
+      <article class="course-card">
+        <span class="status active">
+          ${escapeHtml(course.badge)}
+        </span>
 
-          <span class="status active">
-            ${escapeHtml(course.badge)}
-          </span>
+        <h3>${escapeHtml(course.title)}</h3>
 
-          <h3>
-            ${escapeHtml(course.title)}
-          </h3>
+        <p>${escapeHtml(course.description)}</p>
 
-          <p>
-            ${escapeHtml(course.description)}
-          </p>
+        ${
+          allowed
+            ? `
+              <button
+                class="primary open-course"
+                data-code="${escapeHtml(course.code)}"
+              >
+                Abrir curso
+              </button>
+            `
+            : `
+              <span class="status pending">
+                Sin acceso asignado
+              </span>
+            `
+        }
+      </article>
+    `;
+  }).join("");
 
-          ${
-            allowed
-              ? `
-                  <button
-                    class="primary open-course"
-                    data-code="${escapeHtml(course.code)}"
-                  >
-                    Abrir curso
-                  </button>
-                `
-              : `
-                  <span class="status pending">
-                    Sin acceso asignado
-                  </span>
-                `
-          }
-
-        </article>
-      `;
-    }).join("");
-
-  document
-    .querySelectorAll(
-      ".open-course"
-    )
-    .forEach(button => {
-      button.onclick =
-        () =>
-          openCourse(
-            button.dataset.code
-          );
-    });
+  document.querySelectorAll(".open-course").forEach(button => {
+    button.onclick = () => openCourse(button.dataset.code);
+  });
 }
 
 /* ============================================================
@@ -374,31 +287,15 @@ async function renderCourses() {
    ============================================================ */
 
 async function ensureCurrentAccountIsActive() {
-  const {
-    data: freshProfile,
-    error
-  } =
-    await supabase
-      .from("profiles")
-      .select("is_active")
-      .eq(
-        "id",
-        currentProfile.id
-      )
-      .single();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("is_active")
+    .eq("id", currentProfile.id)
+    .single();
 
-  if (
-    error ||
-    !freshProfile?.is_active
-  ) {
-    $("courseView")
-      .classList
-      .add("hidden");
-
-    showOnly(
-      "pendingView"
-    );
-
+  if (error || !data?.is_active) {
+    $("courseView").classList.add("hidden");
+    showOnly("pendingView");
     return false;
   }
 
@@ -410,26 +307,14 @@ async function ensureCurrentAccountIsActive() {
    ============================================================ */
 
 async function openCourse(courseCode) {
-  const course =
-    COURSES.find(
-      item =>
-        item.code === courseCode
-    );
+  const course = COURSES.find(item => item.code === courseCode);
 
-  if (!course) {
-    return;
-  }
+  if (!course) return;
 
-  const active =
-    await ensureCurrentAccountIsActive();
+  const active = await ensureCurrentAccountIsActive();
+  if (!active) return;
 
-  if (!active) {
-    return;
-  }
-
-  $("courseView")
-    .classList
-    .remove("hidden");
+  $("courseView").classList.remove("hidden");
 
   await loadPrivateCourseFile(
     course.file,
@@ -439,7 +324,7 @@ async function openCourse(courseCode) {
 }
 
 /* ============================================================
-   DESCARGAR ARCHIVO PRIVADO
+   DESCARGAR Y MOSTRAR ARCHIVO PRIVADO
    ============================================================ */
 
 async function loadPrivateCourseFile(
@@ -447,725 +332,451 @@ async function loadPrivateCourseFile(
   titleText,
   courseCode = null
 ) {
-  $("courseStatus").textContent =
-    "Cargando contenido privado...";
+  $("courseStatus").textContent = "Cargando contenido privado...";
 
-  const {
-    data,
-    error
-  } =
-    await supabase.storage
-      .from("courses")
-      .download(fileName);
+  const { data, error } = await supabase.storage
+    .from("courses")
+    .download(fileName);
 
   if (error) {
     console.error(error);
-
-    $("courseStatus").textContent =
-      "No se pudo abrir el contenido.";
-
+    $("courseStatus").textContent = "No se pudo abrir el contenido.";
     return;
   }
 
   try {
-    let htmlText =
-      await data.text();
+    let htmlText = await data.text();
 
     if (
       courseCode === "LISTENING" ||
       LISTENING_FILES.has(fileName)
     ) {
-      htmlText =
-        prepareListeningHtml(
-          htmlText
-        );
+      htmlText = prepareListeningHtml(htmlText);
     }
 
-    $("courseFrame")
-      .removeAttribute("src");
+    const frame = $("courseFrame");
 
-    $("courseFrame").srcdoc =
-      htmlText;
+    frame.removeAttribute("src");
+    frame.srcdoc = htmlText;
 
-    const title =
-      document.querySelector(
-        ".course-toolbar strong"
-      );
+    const title = document.querySelector(".course-toolbar strong");
 
     if (title) {
-      title.textContent =
-        titleText;
+      title.textContent = titleText;
     }
 
-    $("courseStatus").textContent =
-      "Curso cargado";
-
+    $("courseStatus").textContent = "Curso cargado";
   } catch (error) {
     console.error(error);
-
-    $("courseStatus").textContent =
-      "Error al preparar el curso.";
+    $("courseStatus").textContent = "Error al preparar el curso.";
   }
 }
 
 /* ============================================================
-   LISTENING LAB PRIVADO
+   PREPARAR LISTENING LAB
    ============================================================ */
 
 function prepareListeningHtml(htmlText) {
-  const parser =
-    new DOMParser();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlText, "text/html");
 
-  const doc =
-    parser.parseFromString(
-      htmlText,
-      "text/html"
-    );
+  doc.querySelectorAll("a[href]").forEach(link => {
+    const originalHref = (link.getAttribute("href") || "").trim();
 
-  doc
-    .querySelectorAll(
-      "a[href]"
-    )
-    .forEach(link => {
+    const cleanHref = originalHref
+      .split("?")[0]
+      .split("#")[0]
+      .replace(/^\.\//, "");
 
-      const rawHref =
-        (
-          link.getAttribute("href") ||
-          ""
-        )
-          .trim()
-          .replace(
-            /^\.\//,
-            ""
-          );
+    const fileName = cleanHref.split("/").pop();
 
-      if (
-        LISTENING_FILES.has(
-          rawHref
-        )
-      ) {
-        link.setAttribute(
-          "href",
-          "#"
-        );
+    if (!LISTENING_FILES.has(fileName)) {
+      return;
+    }
 
-        link.dataset.privateListeningFile =
-          rawHref;
-      }
-    });
+    link.setAttribute("href", "#");
+    link.setAttribute("data-private-listening-file", fileName);
 
-  const navigationScript =
-    doc.createElement(
-      "script"
-    );
-
-  navigationScript.textContent = `
-    document.addEventListener(
-      "click",
-      event => {
-
-        const link =
-          event.target.closest(
-            "a[data-private-listening-file]"
-          );
-
-        if (!link) {
-          return;
-        }
-
+    link.setAttribute(
+      "onclick",
+      `
         event.preventDefault();
+        event.stopPropagation();
 
         parent.postMessage(
           {
-            type:
-              "OPEN_PRIVATE_LISTENING_FILE",
-
-            file:
-              link.dataset.privateListeningFile
+            type: "OPEN_PRIVATE_LISTENING_FILE",
+            file: "${fileName}"
           },
           "*"
         );
-      }
+
+        return false;
+      `
+    );
+  });
+
+  const fallbackScript = doc.createElement("script");
+
+  fallbackScript.textContent = `
+    document.addEventListener(
+      "click",
+      function(event) {
+        var link = event.target.closest(
+          "a[data-private-listening-file]"
+        );
+
+        if (!link) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        parent.postMessage(
+          {
+            type: "OPEN_PRIVATE_LISTENING_FILE",
+            file: link.getAttribute(
+              "data-private-listening-file"
+            )
+          },
+          "*"
+        );
+      },
+      true
     );
   `;
 
-  (
-    doc.body ||
-    doc.documentElement
-  )
-    .appendChild(
-      navigationScript
-    );
+  (doc.body || doc.documentElement).appendChild(fallbackScript);
 
-  return (
-    "<!doctype html>\n" +
-    doc.documentElement.outerHTML
-  );
+  return "<!doctype html>\n" + doc.documentElement.outerHTML;
 }
 
 /* ============================================================
-   ESCUCHAR CLICS DEL LISTENING
+   RECIBIR CLICS DEL LISTENING LAB
    ============================================================ */
 
-window.addEventListener(
-  "message",
-  async event => {
+window.addEventListener("message", async event => {
+  const frame = $("courseFrame");
 
-    const frame =
-      $("courseFrame");
-
-    if (
-      !frame ||
-      event.source !==
-        frame.contentWindow
-    ) {
-      return;
-    }
-
-    const message =
-      event.data;
-
-    if (
-      !message ||
-      message.type !==
-        "OPEN_PRIVATE_LISTENING_FILE"
-    ) {
-      return;
-    }
-
-    const fileName =
-      String(
-        message.file ||
-        ""
-      );
-
-    if (
-      !LISTENING_FILES.has(
-        fileName
-      )
-    ) {
-      return;
-    }
-
-    const active =
-      await ensureCurrentAccountIsActive();
-
-    if (!active) {
-      return;
-    }
-
-    await loadPrivateCourseFile(
-      fileName,
-      LISTENING_TITLES[fileName] ||
-        "American Listening Lab",
-      "LISTENING"
-    );
+  if (!frame || event.source !== frame.contentWindow) {
+    return;
   }
-);
+
+  const message = event.data;
+
+  if (
+    !message ||
+    message.type !== "OPEN_PRIVATE_LISTENING_FILE"
+  ) {
+    return;
+  }
+
+  const fileName = String(message.file || "");
+
+  if (!LISTENING_FILES.has(fileName)) {
+    return;
+  }
+
+  const active = await ensureCurrentAccountIsActive();
+
+  if (!active) return;
+
+  await loadPrivateCourseFile(
+    fileName,
+    LISTENING_TITLES[fileName] || "American Listening Lab",
+    "LISTENING"
+  );
+});
 
 /* ============================================================
    VOLVER AL PORTAL
    ============================================================ */
 
-$("backToPortal").onclick =
-  () => {
+$("backToPortal").onclick = () => {
+  $("courseView").classList.add("hidden");
 
-    $("courseView")
-      .classList
-      .add("hidden");
-
-    $("courseFrame")
-      .removeAttribute(
-        "srcdoc"
-      );
-
-    $("courseFrame").src =
-      "about:blank";
-  };
+  $("courseFrame").removeAttribute("srcdoc");
+  $("courseFrame").src = "about:blank";
+};
 
 /* ============================================================
    PANEL ADMINISTRADOR
    ============================================================ */
 
 async function loadUsers() {
-  const {
-    data: profiles,
-    error
-  } =
-    await supabase
-      .from("profiles")
-      .select(
-        "id,email,display_name,is_admin,is_active,created_at"
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      );
+  const { data: profiles, error } = await supabase
+    .from("profiles")
+    .select("id,email,display_name,is_admin,is_active,created_at")
+    .order("created_at", {
+      ascending: false
+    });
 
   if (error) {
     console.error(error);
-
     $("usersList").innerHTML =
       "<p>No se pudieron cargar los estudiantes.</p>";
-
     return;
   }
 
   const {
     data: accessRows,
     error: accessError
-  } =
-    await supabase
-      .from("course_access")
-      .select(
-        "user_id,course_code"
-      );
+  } = await supabase
+    .from("course_access")
+    .select("user_id,course_code");
 
   if (accessError) {
-    console.error(
-      accessError
-    );
+    console.error(accessError);
   }
 
-  const accessMap =
-    new Map();
+  const accessMap = new Map();
 
-  for (
-    const row
-    of accessRows || []
-  ) {
-    if (
-      !accessMap.has(
-        row.user_id
-      )
-    ) {
-      accessMap.set(
-        row.user_id,
-        new Set()
-      );
+  for (const row of accessRows || []) {
+    if (!accessMap.has(row.user_id)) {
+      accessMap.set(row.user_id, new Set());
     }
 
     accessMap
-      .get(
-        row.user_id
-      )
-      .add(
-        row.course_code
-      );
+      .get(row.user_id)
+      .add(row.course_code);
   }
 
-  const students =
-    profiles.filter(
-      profile =>
-        !profile.is_admin
-    );
-
-  /* ============================================================
-     ESTADÍSTICAS
-     ============================================================ */
+  const students = profiles.filter(profile => !profile.is_admin);
 
   $("adminStats").innerHTML = `
-
     <div class="stat">
-
-      <strong>
-        ${students.length}
-      </strong>
-
-      <span>
-        Estudiantes
-      </span>
-
+      <strong>${students.length}</strong>
+      <span>Estudiantes</span>
     </div>
 
     <div class="stat">
-
       <strong>
         ${
-          students.filter(
-            student =>
-              student.is_active
-          ).length
+          students.filter(student => student.is_active).length
         }
       </strong>
-
-      <span>
-        Activos
-      </span>
-
+      <span>Activos</span>
     </div>
 
     <div class="stat">
-
       <strong>
         ${
-          students.filter(
-            student =>
-              !student.is_active
-          ).length
+          students.filter(student => !student.is_active).length
         }
       </strong>
-
-      <span>
-        Bloqueados
-      </span>
-
+      <span>Bloqueados</span>
     </div>
   `;
 
-  /* ============================================================
-     TARJETAS DE USUARIOS
-     ============================================================ */
+  $("usersList").innerHTML = profiles.map(profile => {
+    const userCourses =
+      accessMap.get(profile.id) || new Set();
 
-  $("usersList").innerHTML =
-    profiles.map(profile => {
-
-      const userCourses =
-        accessMap.get(
-          profile.id
-        ) ||
-        new Set();
-
-      const courseSwitches =
-        COURSES.map(course => {
-
-          const hasAccess =
-            userCourses.has(
-              course.code
-            );
-
-          return `
-
-            <div class="course-switch-row">
-
-              <div class="course-switch-copy">
-
-                <strong>
-                  ${escapeHtml(
-                    course.shortTitle
-                  )}
-                </strong>
-
-                <span>
-                  ${
-                    hasAccess
-                      ? "Acceso permitido"
-                      : "Sin acceso"
-                  }
-                </span>
-
-              </div>
-
-              <label class="switch">
-
-                <input
-                  type="checkbox"
-                  class="course-access-switch"
-                  data-id="${escapeHtml(profile.id)}"
-                  data-code="${escapeHtml(course.code)}"
-                  ${
-                    hasAccess
-                      ? "checked"
-                      : ""
-                  }
-                  ${
-                    profile.is_admin
-                      ? "disabled"
-                      : ""
-                  }
-                >
-
-                <span class="slider"></span>
-
-              </label>
-
-            </div>
-          `;
-
-        }).join("");
+    const courseSwitches = COURSES.map(course => {
+      const hasAccess = userCourses.has(course.code);
 
       return `
+        <div class="course-switch-row">
 
-        <div class="student-admin-card">
+          <div class="course-switch-copy">
+            <strong>
+              ${escapeHtml(course.shortTitle)}
+            </strong>
 
-          <div class="student-admin-head">
-
-            <div class="user-meta">
-
-              <strong>
-                ${escapeHtml(
-                  profile.display_name ||
-                  "Sin nombre"
-                )}
-              </strong>
-
-              <span>
-                ${escapeHtml(
-                  profile.email
-                )}
-              </span>
-
-            </div>
-
-            <span
-              class="status ${
-                profile.is_active
-                  ? "active"
-                  : "blocked"
-              }"
-            >
+            <span>
               ${
-                profile.is_active
-                  ? "Activo"
-                  : "Bloqueado"
+                hasAccess
+                  ? "Acceso permitido"
+                  : "Sin acceso"
               }
             </span>
-
           </div>
 
-          ${
-            profile.is_admin
+          <label class="switch">
+            <input
+              type="checkbox"
+              class="course-access-switch"
+              data-id="${escapeHtml(profile.id)}"
+              data-code="${escapeHtml(course.code)}"
+              ${hasAccess ? "checked" : ""}
+              ${profile.is_admin ? "disabled" : ""}
+            >
 
-              ? `
-
-                <div class="admin-account-note">
-
-                  Cuenta de administrador
-
-                </div>
-
-              `
-
-              : `
-
-                <div class="student-account-control">
-
-                  <div>
-
-                    <strong>
-                      Cuenta del estudiante
-                    </strong>
-
-                    <div class="small">
-
-                      ${
-                        profile.is_active
-                          ? "Puede entrar a la plataforma"
-                          : "Cuenta bloqueada"
-                      }
-
-                    </div>
-
-                  </div>
-
-                  <label class="switch">
-
-                    <input
-                      type="checkbox"
-                      class="student-active-switch"
-                      data-id="${escapeHtml(profile.id)}"
-                      ${
-                        profile.is_active
-                          ? "checked"
-                          : ""
-                      }
-                    >
-
-                    <span class="slider"></span>
-
-                  </label>
-
-                </div>
-
-                <div class="course-access-list">
-
-                  ${courseSwitches}
-
-                </div>
-
-              `
-          }
+            <span class="slider"></span>
+          </label>
 
         </div>
       `;
-
     }).join("");
 
-  /* ============================================================
-     BLOQUEAR / DESBLOQUEAR
-     ============================================================ */
+    return `
+      <div class="student-admin-card">
 
-  document
-    .querySelectorAll(
-      ".student-active-switch"
-    )
-    .forEach(input => {
+        <div class="student-admin-head">
 
-      input.addEventListener(
-        "change",
-        async () => {
+          <div class="user-meta">
+            <strong>
+              ${escapeHtml(
+                profile.display_name || "Sin nombre"
+              )}
+            </strong>
 
-          const userId =
-            input.dataset.id;
+            <span>
+              ${escapeHtml(profile.email)}
+            </span>
+          </div>
 
-          const newStatus =
-            input.checked;
+          <span
+            class="status ${
+              profile.is_active
+                ? "active"
+                : "blocked"
+            }"
+          >
+            ${
+              profile.is_active
+                ? "Activo"
+                : "Bloqueado"
+            }
+          </span>
 
-          input.disabled =
-            true;
+        </div>
 
-          const {
-            error
-          } =
-            await supabase.rpc(
-              "set_student_active",
-              {
-                p_target_user:
-                  userId,
+        ${
+          profile.is_admin
+            ? `
+              <div class="admin-account-note">
+                Cuenta de administrador
+              </div>
+            `
+            : `
+              <div class="student-account-control">
 
-                p_active:
-                  newStatus
-              }
-            );
+                <div>
+                  <strong>
+                    Cuenta del estudiante
+                  </strong>
 
-          if (error) {
-            console.error(
-              error
-            );
+                  <div class="small">
+                    ${
+                      profile.is_active
+                        ? "Puede entrar a la plataforma"
+                        : "Cuenta bloqueada"
+                    }
+                  </div>
+                </div>
 
-            input.checked =
-              !newStatus;
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    class="student-active-switch"
+                    data-id="${escapeHtml(profile.id)}"
+                    ${profile.is_active ? "checked" : ""}
+                  >
 
-            input.disabled =
-              false;
+                  <span class="slider"></span>
+                </label>
 
-            alert(
-              "No se pudo bloquear o desbloquear la cuenta."
-            );
+              </div>
 
-            return;
-          }
+              <div class="course-access-list">
+                ${courseSwitches}
+              </div>
+            `
+        }
 
-          input.disabled =
-            false;
+      </div>
+    `;
+  }).join("");
 
-          await loadUsers();
+  document.querySelectorAll(".student-active-switch").forEach(input => {
+    input.addEventListener("change", async () => {
+      const userId = input.dataset.id;
+      const newStatus = input.checked;
+
+      input.disabled = true;
+
+      const { error } = await supabase.rpc(
+        "set_student_active",
+        {
+          p_target_user: userId,
+          p_active: newStatus
         }
       );
+
+      if (error) {
+        console.error(error);
+        input.checked = !newStatus;
+        input.disabled = false;
+
+        alert(
+          "No se pudo bloquear o desbloquear la cuenta."
+        );
+
+        return;
+      }
+
+      input.disabled = false;
+      await loadUsers();
     });
+  });
 
-  /* ============================================================
-     DAR / QUITAR ACCESO A CURSOS
-     ============================================================ */
+  document.querySelectorAll(".course-access-switch").forEach(input => {
+    input.addEventListener("change", async () => {
+      const userId = input.dataset.id;
+      const courseCode = input.dataset.code;
+      const giveAccess = input.checked;
 
-  document
-    .querySelectorAll(
-      ".course-access-switch"
-    )
-    .forEach(input => {
+      input.disabled = true;
 
-      input.addEventListener(
-        "change",
-        async () => {
+      let error = null;
 
-          const userId =
-            input.dataset.id;
+      if (giveAccess) {
+        const result = await supabase
+          .from("course_access")
+          .insert({
+            user_id: userId,
+            course_code: courseCode
+          });
 
-          const courseCode =
-            input.dataset.code;
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from("course_access")
+          .delete()
+          .eq("user_id", userId)
+          .eq("course_code", courseCode);
 
-          const giveAccess =
-            input.checked;
+        error = result.error;
+      }
 
-          input.disabled =
-            true;
+      if (error) {
+        console.error(error);
+        input.checked = !giveAccess;
 
-          let error =
-            null;
+        alert(
+          "No se pudo cambiar el acceso al curso."
+        );
+      }
 
-          if (
-            giveAccess
-          ) {
-
-            const result =
-              await supabase
-                .from(
-                  "course_access"
-                )
-                .insert({
-                  user_id:
-                    userId,
-
-                  course_code:
-                    courseCode
-                });
-
-            error =
-              result.error;
-
-          } else {
-
-            const result =
-              await supabase
-                .from(
-                  "course_access"
-                )
-                .delete()
-                .eq(
-                  "user_id",
-                  userId
-                )
-                .eq(
-                  "course_code",
-                  courseCode
-                );
-
-            error =
-              result.error;
-          }
-
-          if (error) {
-            console.error(
-              error
-            );
-
-            input.checked =
-              !giveAccess;
-
-            alert(
-              "No se pudo cambiar el acceso al curso."
-            );
-          }
-
-          input.disabled =
-            false;
-
-          await loadUsers();
-        }
-      );
+      input.disabled = false;
+      await loadUsers();
     });
+  });
 }
 
 /* ============================================================
    BOTÓN ACTUALIZAR
    ============================================================ */
 
-$("refreshUsers").onclick =
-  loadUsers;
+$("refreshUsers").onclick = loadUsers;
 
 /* ============================================================
    ESCAPAR HTML
    ============================================================ */
 
 function escapeHtml(value) {
-
-  return String(
-    value ?? ""
-  ).replace(
+  return String(value ?? "").replace(
     /[&<>"']/g,
-
     character => ({
       "&": "&amp;",
       "<": "&lt;",
@@ -1180,99 +791,48 @@ function escapeHtml(value) {
    CAMBIO DE SESIÓN
    ============================================================ */
 
-supabase.auth
-  .onAuthStateChange(
-    (_event, session) => {
-
-      if (!session) {
-
-        currentProfile =
-          null;
-
-        $("logoutBtn")
-          .classList
-          .add("hidden");
-
-        showOnly(
-          "authView"
-        );
-      }
-
+supabase.auth.onAuthStateChange(
+  (_event, session) => {
+    if (!session) {
+      currentProfile = null;
+      $("logoutBtn").classList.add("hidden");
+      showOnly("authView");
     }
-  );
+  }
+);
 
 /* ============================================================
    REVISAR BLOQUEO
    ============================================================ */
 
-setInterval(
+setInterval(async () => {
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
 
-  async () => {
+  if (!session) return;
 
-    const {
-      data: {
-        session
-      }
-    } =
-      await supabase.auth
-        .getSession();
+  if (currentProfile?.is_admin) {
+    return;
+  }
 
-    if (!session) {
-      return;
-    }
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("is_active")
+    .eq("id", session.user.id)
+    .single();
 
-    if (
-      currentProfile?.is_admin
-    ) {
-      return;
-    }
+  if (error) return;
 
-    const {
-      data: profile,
-      error
-    } =
-      await supabase
-        .from(
-          "profiles"
-        )
-        .select(
-          "is_active"
-        )
-        .eq(
-          "id",
-          session.user.id
-        )
-        .single();
+  if (!profile.is_active) {
+    $("courseView").classList.add("hidden");
 
-    if (error) {
-      return;
-    }
+    $("courseFrame").removeAttribute("srcdoc");
+    $("courseFrame").src = "about:blank";
 
-    if (
-      !profile.is_active
-    ) {
-
-      $("courseView")
-        .classList
-        .add("hidden");
-
-      $("courseFrame")
-        .removeAttribute(
-          "srcdoc"
-        );
-
-      $("courseFrame").src =
-        "about:blank";
-
-      showOnly(
-        "pendingView"
-      );
-    }
-
-  },
-
-  5000
-);
+    showOnly("pendingView");
+  }
+}, 5000);
 
 /* ============================================================
    INICIAR
