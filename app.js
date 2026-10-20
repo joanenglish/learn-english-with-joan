@@ -967,6 +967,7 @@ async function renderCourses() {
       course => {
 
         const allowed =
+          currentProfile?.is_admin ||
           accessSet.has(
             course.code
           );
@@ -1113,6 +1114,29 @@ async function openCourse(
   if (!active) {
 
     return;
+  }
+
+
+  if (
+    !currentProfile?.is_admin
+  ) {
+
+    const accessSet =
+      await getMyCourseAccess();
+
+
+    if (
+      !accessSet.has(
+        course.code
+      )
+    ) {
+
+      alert(
+        "No tienes acceso autorizado a este curso."
+      );
+
+      return;
+    }
   }
 
 
