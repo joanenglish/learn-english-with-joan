@@ -16,6 +16,97 @@ const $ = id =>
 
 
 /* ============================================================
+   ESTILOS RESPONSIVE PARA CELULAR
+   ============================================================ */
+
+const responsiveStyle =
+  document.createElement("style");
+
+responsiveStyle.textContent = `
+
+  .student-overview-layout {
+    width: 100%;
+  }
+
+  #dailyGoalCard,
+  #motivationCard {
+    box-sizing: border-box;
+  }
+
+  @media (max-width: 700px) {
+
+    .student-overview-layout {
+      display: block !important;
+      grid-template-columns: 1fr !important;
+      width: 100% !important;
+    }
+
+    #dailyGoalCard,
+    #motivationCard {
+      display: block !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      margin: 16px 0 !important;
+      padding: 18px !important;
+      grid-column: 1 / -1 !important;
+      box-sizing: border-box !important;
+    }
+
+    #dailyGoalContent,
+    #streakContent,
+    #rankingContent {
+      width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+    }
+
+    #dailyGoalCard * ,
+    #motivationCard * {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    #dailyGoalCard {
+      font-size: 15px !important;
+    }
+
+    #motivationCard {
+      font-size: 15px !important;
+    }
+
+    #dailyGoalCard strong,
+    #motivationCard strong {
+      word-break: normal !important;
+      overflow-wrap: normal !important;
+    }
+
+    #dailyGoalCard > div,
+    #motivationCard > div {
+      min-width: 0 !important;
+    }
+
+    #dailyGoalContent > div:first-child {
+      display: block !important;
+    }
+
+    #dailyGoalContent > div:first-child > strong {
+      display: block !important;
+      margin-top: 12px !important;
+      text-align: left !important;
+      font-size: 18px !important;
+    }
+
+  }
+
+`;
+
+document.head.appendChild(
+  responsiveStyle
+);
+
+
+/* ============================================================
    CONFIGURACIÓN
    ============================================================ */
 
@@ -313,7 +404,10 @@ function formatRankingMinutes(
       value / 60
     );
 
-  if (minutes < 1 && value > 0) {
+  if (
+    minutes < 1 &&
+    value > 0
+  ) {
 
     return "< 1 min";
   }
@@ -470,13 +564,10 @@ function getDominicanDateParts(
       {
         timeZone:
           "America/Santo_Domingo",
-
         year:
           "numeric",
-
         month:
           "2-digit",
-
         day:
           "2-digit"
       }
@@ -531,16 +622,10 @@ function dominicanDateKey(
     parts.year,
     String(
       parts.month
-    ).padStart(
-      2,
-      "0"
-    ),
+    ).padStart(2, "0"),
     String(
       parts.day
-    ).padStart(
-      2,
-      "0"
-    )
+    ).padStart(2, "0")
   ].join("-");
 }
 
@@ -570,16 +655,10 @@ function dominicanDateKeyOffset(
     date.getUTCFullYear(),
     String(
       date.getUTCMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    ),
+    ).padStart(2, "0"),
     String(
       date.getUTCDate()
-    ).padStart(
-      2,
-      "0"
-    )
+    ).padStart(2, "0")
   ].join("-");
 }
 
@@ -1059,11 +1138,19 @@ function ensureDailyGoalCard() {
     welcomeArea.parentElement
   ) {
 
-    welcomeArea.parentElement
-      .insertBefore(
-        card,
-        welcomeArea.nextSibling
-      );
+    const parent =
+      welcomeArea.parentElement;
+
+
+    parent.classList.add(
+      "student-overview-layout"
+    );
+
+
+    parent.insertBefore(
+      card,
+      welcomeArea.nextSibling
+    );
 
   } else {
 
@@ -1158,6 +1245,7 @@ async function loadDailyGoal() {
   if (error) {
 
     console.error(
+      "Error cargando meta diaria:",
       error
     );
 
@@ -1327,9 +1415,9 @@ async function loadDailyGoal() {
     safetyMessage =
       `Te faltan ${formatGoalMinutes(
         missing24h
-      )} de estudio. Tu período inicial termina aproximadamente en ${formatRemainingInitialTime(
+      )} de estudio. ⏱ ${formatRemainingInitialTime(
         initialRemainingMs
-      )}.`;
+      )} restantes.`;
 
   } else {
 
@@ -1340,7 +1428,7 @@ async function loadDailyGoal() {
       "Riesgo de bloqueo";
 
     safetyMessage =
-      `Tienes menos de 20 minutos en las últimas 24 horas. Estudia ${formatGoalMinutes(
+      `Te faltan ${formatGoalMinutes(
         missing24h
       )} para volver a estar al día.`;
   }
@@ -1384,6 +1472,7 @@ async function loadDailyGoal() {
       <strong
         style="
           font-size:18px;
+          white-space:nowrap;
         "
       >
 
@@ -1425,7 +1514,8 @@ async function loadDailyGoal() {
 
     <div
       style="
-        margin-top:8px;
+        margin-top:10px;
+        line-height:1.5;
       "
     >
 
@@ -1445,7 +1535,7 @@ async function loadDailyGoal() {
                   missingToday
                 )}
               </strong>
-              para completar tu meta de hoy.
+              para completar tu meta.
             `
       }
 
@@ -1466,6 +1556,7 @@ async function loadDailyGoal() {
           justify-content:space-between;
           gap:12px;
           flex-wrap:wrap;
+          align-items:center;
         "
       >
 
@@ -1477,7 +1568,11 @@ async function loadDailyGoal() {
           🛡️ Últimas 24 horas
         </strong>
 
-        <strong>
+        <strong
+          style="
+            white-space:nowrap;
+          "
+        >
 
           ${formatGoalMinutes(
             seconds24h
@@ -1508,6 +1603,7 @@ async function loadDailyGoal() {
                 ? "#22c55e"
                 : "#f59e0b"
             };
+            border-radius:999px;
           "
         ></div>
 
@@ -1526,6 +1622,7 @@ async function loadDailyGoal() {
                 ? "rgba(245,158,11,.08)"
                 : "rgba(239,68,68,.08)"
           };
+          line-height:1.5;
         "
       >
 
@@ -1537,7 +1634,6 @@ async function loadDailyGoal() {
         <div
           style="
             margin-top:5px;
-            line-height:1.5;
           "
         >
           ${safetyMessage}
@@ -1619,6 +1715,13 @@ function ensureMotivationCard() {
     dailyCard.parentElement
   ) {
 
+    dailyCard.parentElement
+      .classList
+      .add(
+        "student-overview-layout"
+      );
+
+
     dailyCard.insertAdjacentElement(
       "afterend",
       card
@@ -1635,7 +1738,7 @@ function ensureMotivationCard() {
 
 
 /* ============================================================
-   CARGAR RACHA
+   RACHA
    ============================================================ */
 
 async function loadStreak() {
@@ -1694,9 +1797,7 @@ async function loadStreak() {
       );
 
 
-  if (
-    error
-  ) {
+  if (error) {
 
     console.error(
       "Error cargando racha:",
@@ -1801,14 +1902,14 @@ async function loadStreak() {
           index
         ) => {
 
-          const offset =
+          const dayOffset =
             index -
             mondayDistance;
 
 
           const key =
             dominicanDateKeyOffset(
-              offset
+              dayOffset
             );
 
 
@@ -1820,7 +1921,7 @@ async function loadStreak() {
 
           if (
             studied &&
-            offset <= 0
+            dayOffset <= 0
           ) {
 
             completedThisWeek +=
@@ -1829,7 +1930,7 @@ async function loadStreak() {
 
 
           const future =
-            offset > 0;
+            dayOffset > 0;
 
 
           return `
@@ -1837,7 +1938,8 @@ async function loadStreak() {
             <div
               style="
                 text-align:center;
-                min-width:38px;
+                min-width:36px;
+                flex:1;
               "
             >
 
@@ -1853,8 +1955,9 @@ async function loadStreak() {
 
               <div
                 style="
-                  width:36px;
-                  height:36px;
+                  width:34px;
+                  height:34px;
+                  margin:0 auto;
                   border-radius:50%;
                   display:flex;
                   align-items:center;
@@ -1921,8 +2024,7 @@ async function loadStreak() {
             opacity:.8;
           "
         >
-          Un día cuenta cuando realmente estudias
-          un curso.
+          Cada día que estudias mantiene tu racha.
         </div>
 
       </div>
@@ -1965,8 +2067,9 @@ async function loadStreak() {
       style="
         margin-top:18px;
         display:flex;
-        gap:8px;
-        flex-wrap:wrap;
+        justify-content:space-between;
+        gap:4px;
+        width:100%;
       "
     >
 
@@ -1996,7 +2099,7 @@ async function loadStreak() {
 
 
 /* ============================================================
-   CARGAR RANKING SEMANAL
+   RANKING SEMANAL
    ============================================================ */
 
 async function loadWeeklyRanking() {
@@ -2131,10 +2234,10 @@ async function loadWeeklyRanking() {
               style="
                 display:grid;
                 grid-template-columns:
-                  48px minmax(0,1fr) auto;
-                gap:10px;
+                  42px minmax(0,1fr) auto;
+                gap:8px;
                 align-items:center;
-                padding:11px 12px;
+                padding:11px 10px;
                 margin-top:7px;
                 border-radius:12px;
                 background:${
@@ -2176,7 +2279,7 @@ async function loadWeeklyRanking() {
                     ? `
                         <span
                           style="
-                            margin-left:6px;
+                            margin-left:5px;
                             font-size:11px;
                             opacity:.75;
                           "
@@ -2193,6 +2296,7 @@ async function loadWeeklyRanking() {
               <strong
                 style="
                   white-space:nowrap;
+                  font-size:14px;
                 "
               >
 
@@ -2234,10 +2338,10 @@ async function loadWeeklyRanking() {
           style="
             display:grid;
             grid-template-columns:
-              48px minmax(0,1fr) auto;
-            gap:10px;
+              42px minmax(0,1fr) auto;
+            gap:8px;
             align-items:center;
-            padding:11px 12px;
+            padding:11px 10px;
             border-radius:12px;
             background:rgba(59,130,246,.15);
             border:1px solid rgba(59,130,246,.30);
@@ -2248,23 +2352,38 @@ async function loadWeeklyRanking() {
             ${me.position}.
           </strong>
 
-          <div>
+          <div
+            style="
+              min-width:0;
+              overflow:hidden;
+              text-overflow:ellipsis;
+              white-space:nowrap;
+            "
+          >
+
             ${escapeHtml(
               me.display_name ||
               "Estudiante"
             )}
+
             <span
               style="
-                margin-left:6px;
+                margin-left:5px;
                 font-size:11px;
                 opacity:.75;
               "
             >
               ← Tú
             </span>
+
           </div>
 
-          <strong>
+          <strong
+            style="
+              white-space:nowrap;
+              font-size:14px;
+            "
+          >
             ${formatRankingMinutes(
               me.active_seconds
             )}
@@ -2307,8 +2426,7 @@ async function loadWeeklyRanking() {
             opacity:.8;
           "
         >
-          Se ordena por minutos reales de estudio
-          de lunes a domingo.
+          Ranking por minutos de estudio.
         </div>
 
       </div>
@@ -2363,8 +2481,7 @@ async function loadWeeklyRanking() {
               opacity:.7;
             "
           >
-            Todavía no hay tiempo de estudio
-            registrado esta semana.
+            Todavía no hay tiempo de estudio registrado.
           </div>
         `
       }
@@ -2377,10 +2494,6 @@ async function loadWeeklyRanking() {
 }
 
 
-/* ============================================================
-   MOTIVACIÓN COMPLETA
-   ============================================================ */
-
 async function loadMotivationPanel() {
 
   if (
@@ -2389,15 +2502,8 @@ async function loadMotivationPanel() {
     !currentProfile.is_active
   ) {
 
-    const card =
-      $("motivationCard");
-
-
-    if (card) {
-
-      card.remove();
-    }
-
+    $("motivationCard")
+      ?.remove();
 
     return;
   }
@@ -3014,7 +3120,7 @@ $("logoutBtn").onclick =
 
 
 /* ============================================================
-   PERMISOS DEL USUARIO
+   PERMISOS
    ============================================================ */
 
 async function getMyCourseAccess() {
@@ -3598,7 +3704,7 @@ function preparePrivateCourseHtml(
 
 
 /* ============================================================
-   MENSAJES DEL IFRAME
+   MENSAJES DEL CURSO
    ============================================================ */
 
 window.addEventListener(
@@ -4901,7 +5007,7 @@ $("refreshUsers").onclick =
 
 
 /* ============================================================
-   CAMBIOS DE AUTH
+   AUTH
    ============================================================ */
 
 supabase.auth
