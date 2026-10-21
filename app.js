@@ -85,7 +85,7 @@ const COURSES = [
     file: "a1_grammar.html",
     badge: "A1",
     type: "grammar"
-  }
+  },
 
   {
   code: "A2",
