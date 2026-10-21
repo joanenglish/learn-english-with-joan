@@ -16,7 +16,7 @@ const $ = id =>
 
 
 /* ============================================================
-   META DIARIA
+   CONFIGURACIÓN
    ============================================================ */
 
 const DAILY_GOAL_SECONDS =
@@ -30,6 +30,12 @@ const SAFETY_WINDOW_MS =
   60 *
   60 *
   1000;
+
+const STUDY_HEARTBEAT_MS =
+  15000;
+
+const STUDY_IDLE_LIMIT_MS =
+  3 * 60 * 1000;
 
 
 /* ============================================================
@@ -130,7 +136,7 @@ const COURSES = [
 
 
 /* ============================================================
-   ARCHIVOS DE LISTENING
+   LISTENING
    ============================================================ */
 
 const LISTENING_FILES =
@@ -171,22 +177,16 @@ const LISTENING_TITLES = {
 
   "listening_b2_v1.html":
     "Listening B2 — Volumen 1"
+
 };
 
 
-let currentProfile =
-  null;
-
-
 /* ============================================================
-   ACTIVIDAD DE ESTUDIO
+   ESTADO GLOBAL
    ============================================================ */
 
-const STUDY_HEARTBEAT_MS =
-  15000;
-
-const STUDY_IDLE_LIMIT_MS =
-  3 * 60 * 1000;
+let currentProfile =
+  null;
 
 let studySessionId =
   null;
@@ -207,6 +207,420 @@ let studySectionName =
   null;
 
 
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+
+function escapeHtml(value) {
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /[&<>"']/g,
+    character =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[character])
+  );
+}
+
+
+function formatStudyTime(
+  totalSeconds
+) {
+
+  const seconds =
+    Math.max(
+      0,
+      Number(totalSeconds) || 0
+    );
+
+  const hours =
+    Math.floor(
+      seconds / 3600
+    );
+
+  const minutes =
+    Math.floor(
+      (seconds % 3600) / 60
+    );
+
+  if (hours > 0) {
+
+    return `${hours} h ${minutes} min`;
+  }
+
+  if (minutes > 0) {
+
+    return `${minutes} min`;
+  }
+
+  return `${seconds} s`;
+}
+
+
+function formatGoalMinutes(
+  seconds
+) {
+
+  const value =
+    Math.max(
+      0,
+      Number(seconds) || 0
+    );
+
+  const minutes =
+    Math.floor(
+      value / 60
+    );
+
+  const remainingSeconds =
+    Math.floor(
+      value % 60
+    );
+
+  if (minutes <= 0) {
+
+    return `${remainingSeconds} s`;
+  }
+
+  if (remainingSeconds === 0) {
+
+    return `${minutes} min`;
+  }
+
+  return `${minutes} min ${remainingSeconds} s`;
+}
+
+
+function formatRankingMinutes(
+  seconds
+) {
+
+  const value =
+    Math.max(
+      0,
+      Number(seconds) || 0
+    );
+
+  const minutes =
+    Math.floor(
+      value / 60
+    );
+
+  if (minutes < 1 && value > 0) {
+
+    return "< 1 min";
+  }
+
+  return `${minutes} min`;
+}
+
+
+function formatRemainingInitialTime(
+  milliseconds
+) {
+
+  const ms =
+    Math.max(
+      0,
+      milliseconds
+    );
+
+  const totalMinutes =
+    Math.ceil(
+      ms / 60000
+    );
+
+  const hours =
+    Math.floor(
+      totalMinutes / 60
+    );
+
+  const minutes =
+    totalMinutes % 60;
+
+  if (hours > 0) {
+
+    return `${hours} h ${minutes} min`;
+  }
+
+  return `${minutes} min`;
+}
+
+
+function formatDateTime(
+  value
+) {
+
+  if (!value) {
+
+    return "Sin actividad";
+  }
+
+  const date =
+    new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+
+    return "Sin actividad";
+  }
+
+  return new Intl.DateTimeFormat(
+    "es-DO",
+    {
+      dateStyle: "medium",
+      timeStyle: "short"
+    }
+  ).format(date);
+}
+
+
+function startOfToday() {
+
+  const d =
+    new Date();
+
+  d.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  return d;
+}
+
+
+function startOfLast7Days() {
+
+  const d =
+    startOfToday();
+
+  d.setDate(
+    d.getDate() - 6
+  );
+
+  return d;
+}
+
+
+function localDayKey(
+  value
+) {
+
+  const d =
+    new Date(value);
+
+  return [
+    d.getFullYear(),
+    String(
+      d.getMonth() + 1
+    ).padStart(2, "0"),
+    String(
+      d.getDate()
+    ).padStart(2, "0")
+  ].join("-");
+}
+
+
+function courseDisplayName(
+  code
+) {
+
+  if (
+    code === "PORTAL"
+  ) {
+
+    return "Portal";
+  }
+
+  const course =
+    COURSES.find(
+      item =>
+        item.code === code
+    );
+
+  return course
+    ? course.shortTitle
+    : code;
+}
+
+
+/* ============================================================
+   FECHAS REPÚBLICA DOMINICANA
+   ============================================================ */
+
+function getDominicanDateParts(
+  date = new Date()
+) {
+
+  const formatter =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "America/Santo_Domingo",
+
+        year:
+          "numeric",
+
+        month:
+          "2-digit",
+
+        day:
+          "2-digit"
+      }
+    );
+
+
+  const parts =
+    formatter.formatToParts(
+      date
+    );
+
+
+  const result = {};
+
+
+  for (
+    const part
+    of parts
+  ) {
+
+    if (
+      part.type === "year" ||
+      part.type === "month" ||
+      part.type === "day"
+    ) {
+
+      result[
+        part.type
+      ] =
+        Number(
+          part.value
+        );
+    }
+  }
+
+
+  return result;
+}
+
+
+function dominicanDateKey(
+  date
+) {
+
+  const parts =
+    getDominicanDateParts(
+      date
+    );
+
+
+  return [
+    parts.year,
+    String(
+      parts.month
+    ).padStart(
+      2,
+      "0"
+    ),
+    String(
+      parts.day
+    ).padStart(
+      2,
+      "0"
+    )
+  ].join("-");
+}
+
+
+function dominicanDateKeyOffset(
+  offsetDays
+) {
+
+  const parts =
+    getDominicanDateParts();
+
+
+  const date =
+    new Date(
+      Date.UTC(
+        parts.year,
+        parts.month - 1,
+        parts.day + offsetDays,
+        12,
+        0,
+        0
+      )
+    );
+
+
+  return [
+    date.getUTCFullYear(),
+    String(
+      date.getUTCMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    ),
+    String(
+      date.getUTCDate()
+    ).padStart(
+      2,
+      "0"
+    )
+  ].join("-");
+}
+
+
+function getDominicanWeekdayIndex() {
+
+  const key =
+    dominicanDateKeyOffset(
+      0
+    );
+
+
+  const [
+    year,
+    month,
+    day
+  ] =
+    key
+      .split("-")
+      .map(Number);
+
+
+  const date =
+    new Date(
+      Date.UTC(
+        year,
+        month - 1,
+        day,
+        12
+      )
+    );
+
+
+  return date.getUTCDay();
+}
+
+
+/* ============================================================
+   ACTIVIDAD
+   ============================================================ */
+
 function markStudyActivity() {
 
   studyLastInteraction =
@@ -214,8 +628,369 @@ function markStudyActivity() {
 }
 
 
+[
+  "mousedown",
+  "mousemove",
+  "keydown",
+  "touchstart",
+  "scroll",
+  "click"
+]
+.forEach(
+  eventName => {
+
+    document.addEventListener(
+      eventName,
+      markStudyActivity,
+      {
+        passive: true
+      }
+    );
+
+  }
+);
+
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    studyLastTick =
+      Date.now();
+
+    if (
+      !document.hidden
+    ) {
+
+      markStudyActivity();
+    }
+
+  }
+);
+
+
 /* ============================================================
-   TARJETA META DIARIA
+   CERRAR SESIONES ANTIGUAS
+   ============================================================ */
+
+async function closeOldStudySessions() {
+
+  if (
+    !currentProfile ||
+    currentProfile.is_admin
+  ) {
+
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await supabase
+      .from(
+        "study_activity"
+      )
+      .update({
+        ended_at:
+          new Date()
+            .toISOString()
+      })
+      .eq(
+        "user_id",
+        currentProfile.id
+      )
+      .is(
+        "ended_at",
+        null
+      );
+
+
+  if (error) {
+
+    console.error(
+      "No se pudieron cerrar sesiones anteriores:",
+      error
+    );
+  }
+}
+
+
+/* ============================================================
+   INICIAR SESIÓN DE ESTUDIO
+   ============================================================ */
+
+async function startStudySession(
+  courseCode,
+  sectionName
+) {
+
+  if (
+    !currentProfile ||
+    currentProfile.is_admin
+  ) {
+
+    return;
+  }
+
+
+  await finishStudySession();
+
+
+  studyCourseCode =
+    courseCode;
+
+  studySectionName =
+    sectionName;
+
+  studyActiveSeconds =
+    0;
+
+  studyLastTick =
+    Date.now();
+
+  studyLastInteraction =
+    Date.now();
+
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from(
+        "study_activity"
+      )
+      .insert({
+        user_id:
+          currentProfile.id,
+
+        course_code:
+          courseCode,
+
+        section_name:
+          sectionName,
+
+        active_seconds:
+          0
+      })
+      .select(
+        "id"
+      )
+      .single();
+
+
+  if (error) {
+
+    console.error(
+      "No se pudo iniciar la sesión de estudio:",
+      error
+    );
+
+    studySessionId =
+      null;
+
+    return;
+  }
+
+
+  studySessionId =
+    data.id;
+}
+
+
+/* ============================================================
+   GUARDAR TIEMPO
+   ============================================================ */
+
+async function saveStudyTime() {
+
+  if (
+    !studySessionId ||
+    !currentProfile ||
+    currentProfile.is_admin
+  ) {
+
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await supabase
+      .from(
+        "study_activity"
+      )
+      .update({
+        active_seconds:
+          studyActiveSeconds
+      })
+      .eq(
+        "id",
+        studySessionId
+      )
+      .eq(
+        "user_id",
+        currentProfile.id
+      );
+
+
+  if (error) {
+
+    console.error(
+      "No se pudo guardar el tiempo:",
+      error
+    );
+  }
+}
+
+
+/* ============================================================
+   FINALIZAR SESIÓN
+   ============================================================ */
+
+async function finishStudySession() {
+
+  if (
+    !studySessionId ||
+    !currentProfile ||
+    currentProfile.is_admin
+  ) {
+
+    studySessionId =
+      null;
+
+    return;
+  }
+
+
+  const sessionToClose =
+    studySessionId;
+
+
+  studySessionId =
+    null;
+
+
+  const {
+    error
+  } =
+    await supabase
+      .from(
+        "study_activity"
+      )
+      .update({
+        active_seconds:
+          studyActiveSeconds,
+
+        ended_at:
+          new Date()
+            .toISOString()
+      })
+      .eq(
+        "id",
+        sessionToClose
+      )
+      .eq(
+        "user_id",
+        currentProfile.id
+      );
+
+
+  if (error) {
+
+    console.error(
+      "No se pudo finalizar la sesión:",
+      error
+    );
+  }
+
+
+  studyActiveSeconds =
+    0;
+
+  studyCourseCode =
+    null;
+
+  studySectionName =
+    null;
+}
+
+
+/* ============================================================
+   HEARTBEAT
+   ============================================================ */
+
+setInterval(
+
+  async () => {
+
+    const now =
+      Date.now();
+
+
+    const elapsedSeconds =
+      Math.max(
+        0,
+        Math.floor(
+          (
+            now -
+            studyLastTick
+          ) /
+          1000
+        )
+      );
+
+
+    studyLastTick =
+      now;
+
+
+    if (
+      !studySessionId
+    ) {
+
+      return;
+    }
+
+
+    const pageVisible =
+      !document.hidden;
+
+
+    const recentlyActive =
+      (
+        now -
+        studyLastInteraction
+      ) <=
+      STUDY_IDLE_LIMIT_MS;
+
+
+    if (
+      pageVisible &&
+      recentlyActive
+    ) {
+
+      studyActiveSeconds +=
+        Math.min(
+          elapsedSeconds,
+          20
+        );
+    }
+
+
+    await saveStudyTime();
+
+  },
+
+  STUDY_HEARTBEAT_MS
+
+);
+
+
+/* ============================================================
+   META DIARIA
    ============================================================ */
 
 function ensureDailyGoalCard() {
@@ -251,10 +1026,10 @@ function ensureDailyGoalCard() {
 
 
   card.style.cssText = `
-    margin: 18px 0 22px;
-    padding: 20px;
-    border-radius: 20px;
-    border: 1px solid rgba(96,165,250,.25);
+    margin:18px 0 22px;
+    padding:20px;
+    border-radius:20px;
+    border:1px solid rgba(96,165,250,.25);
     background:
       linear-gradient(
         135deg,
@@ -299,103 +1074,6 @@ function ensureDailyGoalCard() {
 }
 
 
-/* ============================================================
-   FORMATEAR MINUTOS
-   ============================================================ */
-
-function formatGoalMinutes(
-  seconds
-) {
-
-  const value =
-    Math.max(
-      0,
-      Number(
-        seconds
-      ) ||
-      0
-    );
-
-
-  const minutes =
-    Math.floor(
-      value / 60
-    );
-
-
-  const remainingSeconds =
-    Math.floor(
-      value % 60
-    );
-
-
-  if (
-    minutes <= 0
-  ) {
-
-    return `${remainingSeconds} s`;
-  }
-
-
-  if (
-    remainingSeconds === 0
-  ) {
-
-    return `${minutes} min`;
-  }
-
-
-  return `${minutes} min ${remainingSeconds} s`;
-}
-
-
-/* ============================================================
-   TIEMPO RESTANTE DEL PERÍODO INICIAL
-   ============================================================ */
-
-function formatRemainingInitialTime(
-  milliseconds
-) {
-
-  const ms =
-    Math.max(
-      0,
-      milliseconds
-    );
-
-
-  const totalMinutes =
-    Math.ceil(
-      ms / 60000
-    );
-
-
-  const hours =
-    Math.floor(
-      totalMinutes / 60
-    );
-
-
-  const minutes =
-    totalMinutes % 60;
-
-
-  if (
-    hours > 0
-  ) {
-
-    return `${hours} h ${minutes} min`;
-  }
-
-
-  return `${minutes} min`;
-}
-
-
-/* ============================================================
-   CARGAR META DIARIA Y ÚLTIMAS 24 HORAS
-   ============================================================ */
-
 async function loadDailyGoal() {
 
   if (
@@ -408,9 +1086,7 @@ async function loadDailyGoal() {
       $("dailyGoalCard");
 
 
-    if (
-      card
-    ) {
+    if (card) {
 
       card.remove();
     }
@@ -433,10 +1109,6 @@ async function loadDailyGoal() {
 
     return;
   }
-
-
-  const now =
-    new Date();
 
 
   const todayStart =
@@ -483,31 +1155,11 @@ async function loadDailyGoal() {
       );
 
 
-  if (
-    error
-  ) {
+  if (error) {
 
     console.error(
-      "No se pudo cargar la meta diaria:",
       error
     );
-
-
-    content.innerHTML = `
-      <strong>
-        🎯 Meta diaria
-      </strong>
-
-      <div
-        style="
-          margin-top:8px;
-          opacity:.75;
-        "
-      >
-        No se pudo cargar el progreso.
-      </div>
-    `;
-
 
     return;
   }
@@ -522,8 +1174,7 @@ async function loadDailyGoal() {
 
   for (
     const row
-    of data ||
-    []
+    of data || []
   ) {
 
     const seconds =
@@ -531,8 +1182,7 @@ async function loadDailyGoal() {
         0,
         Number(
           row.active_seconds
-        ) ||
-        0
+        ) || 0
       );
 
 
@@ -627,7 +1277,7 @@ async function loadDailyGoal() {
 
 
     const elapsed =
-      now.getTime() -
+      Date.now() -
       activated.getTime();
 
 
@@ -639,7 +1289,6 @@ async function loadDailyGoal() {
       initialPeriod =
         true;
 
-
       initialRemainingMs =
         SAFETY_WINDOW_MS -
         elapsed;
@@ -647,16 +1296,9 @@ async function loadDailyGoal() {
   }
 
 
-  let safetyMessage =
-    "";
-
-
-  let safetyIcon =
-    "";
-
-
-  let safetyTitle =
-    "";
+  let safetyIcon;
+  let safetyTitle;
+  let safetyMessage;
 
 
   if (
@@ -666,10 +1308,8 @@ async function loadDailyGoal() {
     safetyIcon =
       "✅";
 
-
     safetyTitle =
       "Cuenta al día";
-
 
     safetyMessage =
       "Ya completaste el mínimo de 20 minutos dentro de las últimas 24 horas.";
@@ -681,10 +1321,8 @@ async function loadDailyGoal() {
     safetyIcon =
       "🟡";
 
-
     safetyTitle =
       "Período inicial";
-
 
     safetyMessage =
       `Te faltan ${formatGoalMinutes(
@@ -698,10 +1336,8 @@ async function loadDailyGoal() {
     safetyIcon =
       "⚠️";
 
-
     safetyTitle =
       "Riesgo de bloqueo";
-
 
     safetyMessage =
       `Tienes menos de 20 minutos en las últimas 24 horas. Estudia ${formatGoalMinutes(
@@ -745,10 +1381,9 @@ async function loadDailyGoal() {
       </div>
 
 
-      <div
+      <strong
         style="
           font-size:18px;
-          font-weight:800;
         "
       >
 
@@ -757,7 +1392,7 @@ async function loadDailyGoal() {
         )}
         / 20 min
 
-      </div>
+      </strong>
 
     </div>
 
@@ -776,13 +1411,12 @@ async function loadDailyGoal() {
         style="
           width:${todayPercent}%;
           height:100%;
-          border-radius:999px;
           background:linear-gradient(
             90deg,
             #3b82f6,
             #22c55e
           );
-          transition:width .3s ease;
+          border-radius:999px;
         "
       ></div>
 
@@ -830,7 +1464,6 @@ async function loadDailyGoal() {
         style="
           display:flex;
           justify-content:space-between;
-          align-items:center;
           gap:12px;
           flex-wrap:wrap;
         "
@@ -860,9 +1493,9 @@ async function loadDailyGoal() {
         style="
           margin-top:10px;
           height:9px;
-          overflow:hidden;
-          border-radius:999px;
           background:rgba(148,163,184,.18);
+          border-radius:999px;
+          overflow:hidden;
         "
       >
 
@@ -870,13 +1503,11 @@ async function loadDailyGoal() {
           style="
             width:${safetyPercent}%;
             height:100%;
-            border-radius:999px;
             background:${
               safe24h
                 ? "#22c55e"
                 : "#f59e0b"
             };
-            transition:width .3s ease;
           "
         ></div>
 
@@ -890,25 +1521,10 @@ async function loadDailyGoal() {
           border-radius:12px;
           background:${
             safe24h
-
               ? "rgba(34,197,94,.08)"
-
               : initialPeriod
-
                 ? "rgba(245,158,11,.08)"
-
                 : "rgba(239,68,68,.08)"
-          };
-          border:1px solid ${
-            safe24h
-
-              ? "rgba(34,197,94,.22)"
-
-              : initialPeriod
-
-                ? "rgba(245,158,11,.22)"
-
-                : "rgba(239,68,68,.22)"
           };
         "
       >
@@ -936,60 +1552,93 @@ async function loadDailyGoal() {
 
 
 /* ============================================================
-   CERRAR SESIONES ANTIGUAS
+   RACHA + RANKING
    ============================================================ */
 
-async function closeOldStudySessions() {
+function ensureMotivationCard() {
 
   if (
-    !currentProfile ||
-    currentProfile.is_admin
+    $("motivationCard")
   ) {
 
     return;
   }
 
 
-  const { error } =
-    await supabase
-      .from(
-        "study_activity"
-      )
-      .update({
-
-        ended_at:
-          new Date()
-            .toISOString()
-
-      })
-      .eq(
-        "user_id",
-        currentProfile.id
-      )
-      .is(
-        "ended_at",
-        null
-      );
-
-
-  if (error) {
-
-    console.error(
-      "No se pudieron cerrar sesiones anteriores:",
-      error
+  const card =
+    document.createElement(
+      "section"
     );
+
+
+  card.id =
+    "motivationCard";
+
+
+  card.style.cssText = `
+    margin:18px 0 22px;
+    padding:20px;
+    border-radius:20px;
+    border:1px solid rgba(251,191,36,.22);
+    background:
+      linear-gradient(
+        135deg,
+        rgba(245,158,11,.08),
+        rgba(59,130,246,.08)
+      );
+  `;
+
+
+  card.innerHTML = `
+
+    <div id="streakContent">
+      Cargando racha...
+    </div>
+
+    <div
+      style="
+        margin:22px 0;
+        border-top:
+          1px solid rgba(148,163,184,.18);
+      "
+    ></div>
+
+    <div id="rankingContent">
+      Cargando ranking...
+    </div>
+
+  `;
+
+
+  const dailyCard =
+    $("dailyGoalCard");
+
+
+  if (
+    dailyCard &&
+    dailyCard.parentElement
+  ) {
+
+    dailyCard.insertAdjacentElement(
+      "afterend",
+      card
+    );
+
+  } else {
+
+    $("portalView")
+      ?.prepend(
+        card
+      );
   }
 }
 
 
 /* ============================================================
-   INICIAR SESIÓN DE ESTUDIO
+   CARGAR RACHA
    ============================================================ */
 
-async function startStudySession(
-  courseCode,
-  sectionName
-) {
+async function loadStreak() {
 
   if (
     !currentProfile ||
@@ -1000,23 +1649,24 @@ async function startStudySession(
   }
 
 
-  await finishStudySession();
+  ensureMotivationCard();
 
 
-  studyCourseCode =
-    courseCode;
+  const container =
+    $("streakContent");
 
-  studySectionName =
-    sectionName;
 
-  studyActiveSeconds =
-    0;
-
-  studyLastTick =
-    Date.now();
-
-  studyLastInteraction =
-    Date.now();
+  const since =
+    new Date(
+      Date.now() -
+      (
+        120 *
+        24 *
+        60 *
+        60 *
+        1000
+      )
+    );
 
 
   const {
@@ -1027,244 +1677,744 @@ async function startStudySession(
       .from(
         "study_activity"
       )
-      .insert({
-
-        user_id:
-          currentProfile.id,
-
-        course_code:
-          courseCode,
-
-        section_name:
-          sectionName,
-
-        active_seconds:
-          0
-
-      })
       .select(
-        "id"
-      )
-      .single();
-
-
-  if (error) {
-
-    console.error(
-      "No se pudo iniciar la sesión de estudio:",
-      error
-    );
-
-
-    studySessionId =
-      null;
-
-
-    return;
-  }
-
-
-  studySessionId =
-    data.id;
-}
-
-
-/* ============================================================
-   GUARDAR TIEMPO
-   ============================================================ */
-
-async function saveStudyTime() {
-
-  if (
-    !studySessionId ||
-    !currentProfile ||
-    currentProfile.is_admin
-  ) {
-
-    return;
-  }
-
-
-  const { error } =
-    await supabase
-      .from(
-        "study_activity"
-      )
-      .update({
-
-        active_seconds:
-          studyActiveSeconds
-
-      })
-      .eq(
-        "id",
-        studySessionId
+        "started_at,active_seconds,course_code"
       )
       .eq(
         "user_id",
         currentProfile.id
+      )
+      .neq(
+        "course_code",
+        "PORTAL"
+      )
+      .gte(
+        "started_at",
+        since.toISOString()
       );
 
 
-  if (error) {
-
-    console.error(
-      "No se pudo guardar el tiempo:",
-      error
-    );
-  }
-}
-
-
-/* ============================================================
-   FINALIZAR SESIÓN
-   ============================================================ */
-
-async function finishStudySession() {
-
   if (
-    !studySessionId ||
-    !currentProfile ||
-    currentProfile.is_admin
+    error
   ) {
 
-    studySessionId =
-      null;
-
+    console.error(
+      "Error cargando racha:",
+      error
+    );
 
     return;
   }
 
 
-  const sessionToClose =
-    studySessionId;
+  const studiedDays =
+    new Set();
 
 
-  studySessionId =
-    null;
+  for (
+    const row
+    of data || []
+  ) {
 
+    if (
+      Number(
+        row.active_seconds
+      ) > 0
+    ) {
 
-  const { error } =
-    await supabase
-      .from(
-        "study_activity"
-      )
-      .update({
-
-        active_seconds:
-          studyActiveSeconds,
-
-        ended_at:
-          new Date()
-            .toISOString()
-
-      })
-      .eq(
-        "id",
-        sessionToClose
-      )
-      .eq(
-        "user_id",
-        currentProfile.id
+      studiedDays.add(
+        dominicanDateKey(
+          new Date(
+            row.started_at
+          )
+        )
       );
-
-
-  if (error) {
-
-    console.error(
-      "No se pudo finalizar la sesión:",
-      error
-    );
+    }
   }
 
 
-  studyActiveSeconds =
+  const todayKey =
+    dominicanDateKeyOffset(
+      0
+    );
+
+
+  let streak =
     0;
 
-  studyCourseCode =
-    null;
 
-  studySectionName =
-    null;
+  let offset =
+    studiedDays.has(
+      todayKey
+    )
+      ? 0
+      : -1;
+
+
+  while (
+    studiedDays.has(
+      dominicanDateKeyOffset(
+        offset
+      )
+    )
+  ) {
+
+    streak +=
+      1;
+
+    offset -=
+      1;
+  }
+
+
+  const weekday =
+    getDominicanWeekdayIndex();
+
+
+  const mondayDistance =
+    (
+      weekday + 6
+    ) % 7;
+
+
+  const labels =
+    [
+      "L",
+      "M",
+      "X",
+      "J",
+      "V",
+      "S",
+      "D"
+    ];
+
+
+  let completedThisWeek =
+    0;
+
+
+  const weekHtml =
+    labels
+      .map(
+        (
+          label,
+          index
+        ) => {
+
+          const offset =
+            index -
+            mondayDistance;
+
+
+          const key =
+            dominicanDateKeyOffset(
+              offset
+            );
+
+
+          const studied =
+            studiedDays.has(
+              key
+            );
+
+
+          if (
+            studied &&
+            offset <= 0
+          ) {
+
+            completedThisWeek +=
+              1;
+          }
+
+
+          const future =
+            offset > 0;
+
+
+          return `
+
+            <div
+              style="
+                text-align:center;
+                min-width:38px;
+              "
+            >
+
+              <div
+                style="
+                  font-size:12px;
+                  opacity:.72;
+                  margin-bottom:6px;
+                "
+              >
+                ${label}
+              </div>
+
+              <div
+                style="
+                  width:36px;
+                  height:36px;
+                  border-radius:50%;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  background:${
+                    studied
+                      ? "rgba(34,197,94,.18)"
+                      : future
+                        ? "rgba(148,163,184,.07)"
+                        : "rgba(148,163,184,.12)"
+                  };
+                  border:1px solid ${
+                    studied
+                      ? "rgba(34,197,94,.35)"
+                      : "rgba(148,163,184,.18)"
+                  };
+                "
+              >
+
+                ${
+                  studied
+                    ? "✅"
+                    : future
+                      ? "·"
+                      : "—"
+                }
+
+              </div>
+
+            </div>
+
+          `;
+        }
+      )
+      .join("");
+
+
+  container.innerHTML = `
+
+    <div
+      style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:14px;
+        flex-wrap:wrap;
+      "
+    >
+
+      <div>
+
+        <div
+          style="
+            font-size:20px;
+            font-weight:800;
+          "
+        >
+          🔥 Tu racha
+        </div>
+
+        <div
+          style="
+            margin-top:5px;
+            opacity:.8;
+          "
+        >
+          Un día cuenta cuando realmente estudias
+          un curso.
+        </div>
+
+      </div>
+
+
+      <div
+        style="
+          text-align:right;
+        "
+      >
+
+        <div
+          style="
+            font-size:28px;
+            font-weight:900;
+          "
+        >
+          ${streak}
+        </div>
+
+        <div
+          style="
+            font-size:12px;
+            opacity:.75;
+          "
+        >
+          ${
+            streak === 1
+              ? "día seguido"
+              : "días seguidos"
+          }
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:18px;
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+      "
+    >
+
+      ${weekHtml}
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:12px;
+        font-size:13px;
+        opacity:.85;
+      "
+    >
+
+      📅 Esta semana:
+      <strong>
+        ${completedThisWeek} días
+      </strong>
+      con estudio.
+
+    </div>
+
+  `;
 }
 
 
 /* ============================================================
-   CONTADOR DE TIEMPO
+   CARGAR RANKING SEMANAL
    ============================================================ */
 
-setInterval(
+async function loadWeeklyRanking() {
 
-  async () => {
+  if (
+    !currentProfile ||
+    currentProfile.is_admin
+  ) {
 
-    const now =
-      Date.now();
+    return;
+  }
 
 
-    const elapsedSeconds =
-      Math.max(
+  ensureMotivationCard();
 
-        0,
 
-        Math.floor(
-          (
-            now -
-            studyLastTick
-          ) /
-          1000
-        )
+  const container =
+    $("rankingContent");
 
+
+  const {
+    data,
+    error
+  } =
+    await supabase.rpc(
+      "get_weekly_study_ranking"
+    );
+
+
+  if (
+    error
+  ) {
+
+    console.error(
+      "Error cargando ranking:",
+      error
+    );
+
+
+    container.innerHTML = `
+
+      <strong>
+        🏆 Ranking semanal
+      </strong>
+
+      <div
+        style="
+          margin-top:8px;
+          opacity:.7;
+        "
+      >
+        No se pudo cargar el ranking.
+      </div>
+
+    `;
+
+
+    return;
+  }
+
+
+  const ranking =
+    (data || [])
+      .map(
+        (
+          row,
+          index
+        ) => ({
+          ...row,
+          position:
+            index + 1
+        })
       );
 
 
-    studyLastTick =
-      now;
+  const me =
+    ranking.find(
+      row =>
+        row.user_id ===
+        currentProfile.id
+    );
 
 
-    if (
-      !studySessionId
-    ) {
+  const medal =
+    position => {
 
-      return;
-    }
+      if (
+        position === 1
+      ) {
 
+        return "🥇";
+      }
 
-    const pageVisible =
-      !document.hidden;
+      if (
+        position === 2
+      ) {
 
+        return "🥈";
+      }
 
-    const recentlyActive =
-      (
-        now -
-        studyLastInteraction
-      ) <=
-      STUDY_IDLE_LIMIT_MS;
+      if (
+        position === 3
+      ) {
 
+        return "🥉";
+      }
 
-    if (
-      pageVisible &&
-      recentlyActive
-    ) {
-
-      studyActiveSeconds +=
-        Math.min(
-          elapsedSeconds,
-          20
-        );
-    }
+      return `${position}.`;
+    };
 
 
-    await saveStudyTime();
+  const top10 =
+    ranking.slice(
+      0,
+      10
+    );
 
-  },
 
-  STUDY_HEARTBEAT_MS
+  const rankingRows =
+    top10
+      .map(
+        row => {
 
-);
+          const isMe =
+            row.user_id ===
+            currentProfile.id;
+
+
+          return `
+
+            <div
+              style="
+                display:grid;
+                grid-template-columns:
+                  48px minmax(0,1fr) auto;
+                gap:10px;
+                align-items:center;
+                padding:11px 12px;
+                margin-top:7px;
+                border-radius:12px;
+                background:${
+                  isMe
+                    ? "rgba(59,130,246,.15)"
+                    : "rgba(15,23,42,.20)"
+                };
+                border:1px solid ${
+                  isMe
+                    ? "rgba(59,130,246,.30)"
+                    : "rgba(148,163,184,.12)"
+                };
+              "
+            >
+
+              <strong>
+                ${medal(
+                  row.position
+                )}
+              </strong>
+
+
+              <div
+                style="
+                  min-width:0;
+                  overflow:hidden;
+                  text-overflow:ellipsis;
+                  white-space:nowrap;
+                "
+              >
+
+                ${escapeHtml(
+                  row.display_name ||
+                  "Estudiante"
+                )}
+
+                ${
+                  isMe
+                    ? `
+                        <span
+                          style="
+                            margin-left:6px;
+                            font-size:11px;
+                            opacity:.75;
+                          "
+                        >
+                          ← Tú
+                        </span>
+                      `
+                    : ""
+                }
+
+              </div>
+
+
+              <strong
+                style="
+                  white-space:nowrap;
+                "
+              >
+
+                ${formatRankingMinutes(
+                  row.active_seconds
+                )}
+
+              </strong>
+
+            </div>
+
+          `;
+        }
+      )
+      .join("");
+
+
+  let myExtraRow =
+    "";
+
+
+  if (
+    me &&
+    me.position > 10
+  ) {
+
+    myExtraRow = `
+
+      <div
+        style="
+          margin-top:12px;
+          padding-top:12px;
+          border-top:
+            1px solid rgba(148,163,184,.18);
+        "
+      >
+
+        <div
+          style="
+            display:grid;
+            grid-template-columns:
+              48px minmax(0,1fr) auto;
+            gap:10px;
+            align-items:center;
+            padding:11px 12px;
+            border-radius:12px;
+            background:rgba(59,130,246,.15);
+            border:1px solid rgba(59,130,246,.30);
+          "
+        >
+
+          <strong>
+            ${me.position}.
+          </strong>
+
+          <div>
+            ${escapeHtml(
+              me.display_name ||
+              "Estudiante"
+            )}
+            <span
+              style="
+                margin-left:6px;
+                font-size:11px;
+                opacity:.75;
+              "
+            >
+              ← Tú
+            </span>
+          </div>
+
+          <strong>
+            ${formatRankingMinutes(
+              me.active_seconds
+            )}
+          </strong>
+
+        </div>
+
+      </div>
+
+    `;
+  }
+
+
+  container.innerHTML = `
+
+    <div
+      style="
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:12px;
+        flex-wrap:wrap;
+      "
+    >
+
+      <div>
+
+        <div
+          style="
+            font-size:20px;
+            font-weight:800;
+          "
+        >
+          🏆 Ranking semanal
+        </div>
+
+        <div
+          style="
+            margin-top:5px;
+            opacity:.8;
+          "
+        >
+          Se ordena por minutos reales de estudio
+          de lunes a domingo.
+        </div>
+
+      </div>
+
+
+      ${
+        me
+          ? `
+              <div
+                style="
+                  text-align:right;
+                "
+              >
+
+                <div
+                  style="
+                    font-size:22px;
+                    font-weight:900;
+                  "
+                >
+                  #${me.position}
+                </div>
+
+                <div
+                  style="
+                    font-size:12px;
+                    opacity:.75;
+                  "
+                >
+                  Tu posición
+                </div>
+
+              </div>
+            `
+          : ""
+      }
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:14px;
+      "
+    >
+
+      ${
+        rankingRows ||
+        `
+          <div
+            style="
+              opacity:.7;
+            "
+          >
+            Todavía no hay tiempo de estudio
+            registrado esta semana.
+          </div>
+        `
+      }
+
+      ${myExtraRow}
+
+    </div>
+
+  `;
+}
 
 
 /* ============================================================
-   ACTUALIZAR META AUTOMÁTICAMENTE
+   MOTIVACIÓN COMPLETA
+   ============================================================ */
+
+async function loadMotivationPanel() {
+
+  if (
+    !currentProfile ||
+    currentProfile.is_admin ||
+    !currentProfile.is_active
+  ) {
+
+    const card =
+      $("motivationCard");
+
+
+    if (card) {
+
+      card.remove();
+    }
+
+
+    return;
+  }
+
+
+  ensureMotivationCard();
+
+
+  await Promise.all([
+    loadStreak(),
+    loadWeeklyRanking()
+  ]);
+}
+
+
+/* ============================================================
+   ACTUALIZACIONES AUTOMÁTICAS
    ============================================================ */
 
 setInterval(
@@ -1287,55 +2437,22 @@ setInterval(
 );
 
 
-/* ============================================================
-   ACTIVIDAD EN EL PORTAL
-   ============================================================ */
+setInterval(
 
-[
-  "mousedown",
-  "mousemove",
-  "keydown",
-  "touchstart",
-  "scroll",
-  "click"
-]
-.forEach(
-  eventName => {
-
-    document.addEventListener(
-
-      eventName,
-
-      markStudyActivity,
-
-      {
-        passive: true
-      }
-
-    );
-
-  }
-);
-
-
-document.addEventListener(
-
-  "visibilitychange",
-
-  () => {
-
-    studyLastTick =
-      Date.now();
-
+  async () => {
 
     if (
-      !document.hidden
+      currentProfile &&
+      !currentProfile.is_admin &&
+      currentProfile.is_active
     ) {
 
-      markStudyActivity();
+      await loadMotivationPanel();
     }
 
-  }
+  },
+
+  120000
 
 );
 
@@ -1466,7 +2583,7 @@ async function getProfile(
 
 
 /* ============================================================
-   MOSTRAR CUENTA BLOQUEADA
+   CUENTA BLOQUEADA
    ============================================================ */
 
 function showInactiveAccount(
@@ -1492,11 +2609,9 @@ function showInactiveAccount(
 
   const blockedDate =
     profile.blocked_at
-
       ? formatDateTime(
           profile.blocked_at
         )
-
       : null;
 
 
@@ -1546,26 +2661,15 @@ function showInactiveAccount(
 
       </p>
 
-      <p
-        style="
-          margin-top:14px;
-          line-height:1.6;
-        "
-      >
-
-        Para recuperar el acceso, comunícate con tu profesor.
-
+      <p>
+        Para recuperar el acceso,
+        comunícate con tu profesor.
       </p>
 
-      <p
-        style="
-          margin-top:8px;
-          font-weight:700;
-        "
-      >
-
-        Solo el profesor puede reactivar tu cuenta.
-
+      <p>
+        <strong>
+          Solo el profesor puede reactivar tu cuenta.
+        </strong>
       </p>
 
       <div
@@ -1574,46 +2678,32 @@ function showInactiveAccount(
           padding:14px;
           border-radius:12px;
           background:rgba(239,68,68,.08);
-          border:1px solid rgba(239,68,68,.22);
           text-align:left;
         "
       >
 
-        <div>
+        <strong>
+          Motivo:
+        </strong>
 
-          <strong>
-            Motivo:
-          </strong>
-
-          ${escapeHtml(
-            reason
-          )}
-
-        </div>
+        ${escapeHtml(reason)}
 
         ${
           blockedDate
-
             ? `
-
                 <div
                   style="
                     margin-top:8px;
                   "
                 >
-
                   <strong>
                     Bloqueado:
                   </strong>
-
                   ${escapeHtml(
                     blockedDate
                   )}
-
                 </div>
-
               `
-
             : ""
         }
 
@@ -1682,9 +2772,7 @@ async function loadSession() {
     error
   ) {
 
-    console.error(
-      error
-    );
+    console.error(error);
 
 
     await supabase.auth
@@ -1708,7 +2796,6 @@ async function loadSession() {
       currentProfile
     );
 
-
     return;
   }
 
@@ -1720,9 +2807,7 @@ async function loadSession() {
 
   $("roleBadge").textContent =
     currentProfile.is_admin
-
       ? "Administrador"
-
       : "Estudiante";
 
 
@@ -1730,9 +2815,7 @@ async function loadSession() {
     "status " +
     (
       currentProfile.is_admin
-
         ? "admin"
-
         : "active"
     );
 
@@ -1756,16 +2839,11 @@ async function loadSession() {
     currentProfile.is_admin
   ) {
 
-    const goalCard =
-      $("dailyGoalCard");
+    $("dailyGoalCard")
+      ?.remove();
 
-
-    if (
-      goalCard
-    ) {
-
-      goalCard.remove();
-    }
+    $("motivationCard")
+      ?.remove();
 
 
     $("adminPanel")
@@ -1796,19 +2874,20 @@ async function loadSession() {
 
 
     await loadDailyGoal();
+
+
+    await loadMotivationPanel();
   }
 }
 
 
 /* ============================================================
-   INICIAR SESIÓN
+   LOGIN
    ============================================================ */
 
 $("loginForm")
   .addEventListener(
-
     "submit",
-
     async event => {
 
       event.preventDefault();
@@ -1823,7 +2902,6 @@ $("loginForm")
       } =
         await supabase.auth
           .signInWithPassword({
-
             email:
               $("loginEmail")
                 .value
@@ -1832,7 +2910,6 @@ $("loginForm")
             password:
               $("loginPassword")
                 .value
-
           });
 
 
@@ -1840,7 +2917,6 @@ $("loginForm")
 
         $("loginMsg").textContent =
           "Correo o contraseña incorrectos.";
-
 
         return;
       }
@@ -1851,21 +2927,17 @@ $("loginForm")
 
 
       await loadSession();
-
     }
-
   );
 
 
 /* ============================================================
-   CREAR CUENTA
+   REGISTRO
    ============================================================ */
 
 $("signupForm")
   .addEventListener(
-
     "submit",
-
     async event => {
 
       event.preventDefault();
@@ -1884,7 +2956,6 @@ $("signupForm")
       } =
         await supabase.auth
           .signUp({
-
             email:
               $("signupEmail")
                 .value
@@ -1895,18 +2966,13 @@ $("signupForm")
                 .value,
 
             options: {
-
               data: {
-
                 display_name:
                   $("signupName")
                     .value
                     .trim()
-
               }
-
             }
-
           });
 
 
@@ -1914,7 +2980,6 @@ $("signupForm")
 
         $("signupMsg").textContent =
           error.message;
-
 
         return;
       }
@@ -1926,9 +2991,7 @@ $("signupForm")
 
       $("signupMsg").textContent =
         "Cuenta creada. Joan debe activarla y darte acceso al curso.";
-
     }
-
   );
 
 
@@ -1947,12 +3010,11 @@ $("logoutBtn").onclick =
 
 
     location.reload();
-
   };
 
 
 /* ============================================================
-   OBTENER PERMISOS DEL USUARIO
+   PERMISOS DEL USUARIO
    ============================================================ */
 
 async function getMyCourseAccess() {
@@ -1976,29 +3038,24 @@ async function getMyCourseAccess() {
 
   if (error) {
 
-    console.error(
-      error
-    );
-
+    console.error(error);
 
     return new Set();
   }
 
 
   return new Set(
-
     (data || [])
       .map(
         item =>
           item.course_code
       )
-
   );
 }
 
 
 /* ============================================================
-   TARJETA DE CURSO
+   TARJETAS DE CURSO
    ============================================================ */
 
 function courseCardHtml(
@@ -2015,62 +3072,40 @@ function courseCardHtml(
 
   return `
 
-    <article
-      class="course-card"
-    >
+    <article class="course-card">
 
-      <span
-        class="status active"
-      >
-
+      <span class="status active">
         ${escapeHtml(
           course.badge
         )}
-
       </span>
 
       <h3>
-
         ${escapeHtml(
           course.title
         )}
-
       </h3>
 
       <p>
-
         ${escapeHtml(
           course.description
         )}
-
       </p>
 
       ${
         allowed
-
           ? `
-
               <button
                 class="primary open-course"
                 data-code="${course.code}"
               >
-
                 Abrir curso
-
               </button>
-
             `
-
           : `
-
-              <span
-                class="status pending"
-              >
-
+              <span class="status pending">
                 Sin acceso asignado
-
               </span>
-
             `
       }
 
@@ -2079,10 +3114,6 @@ function courseCardHtml(
   `;
 }
 
-
-/* ============================================================
-   MOSTRAR CURSOS
-   ============================================================ */
 
 async function renderCourses() {
 
@@ -2093,16 +3124,14 @@ async function renderCourses() {
   const grammarCourses =
     COURSES.filter(
       course =>
-        course.type ===
-        "grammar"
+        course.type === "grammar"
     );
 
 
   const extraCourses =
     COURSES.filter(
       course =>
-        course.type !==
-        "grammar"
+        course.type !== "grammar"
     );
 
 
@@ -2115,9 +3144,7 @@ async function renderCourses() {
             accessSet
           )
       )
-      .join(
-        ""
-      );
+      .join("");
 
 
   $("courseGrid").innerHTML =
@@ -2129,9 +3156,7 @@ async function renderCourses() {
             accessSet
           )
       )
-      .join(
-        ""
-      );
+      .join("");
 
 
   document
@@ -2153,7 +3178,7 @@ async function renderCourses() {
 
 
 /* ============================================================
-   REVISAR CUENTA ACTIVA
+   REVISAR CUENTA
    ============================================================ */
 
 async function ensureCurrentAccountIsActive() {
@@ -2188,9 +3213,7 @@ async function ensureCurrentAccountIsActive() {
       );
 
 
-    if (
-      data
-    ) {
+    if (data) {
 
       currentProfile = {
         ...currentProfile,
@@ -2240,9 +3263,7 @@ async function openCourse(
     );
 
 
-  if (
-    !course
-  ) {
+  if (!course) {
 
     return;
   }
@@ -2252,9 +3273,7 @@ async function openCourse(
     await ensureCurrentAccountIsActive();
 
 
-  if (
-    !active
-  ) {
+  if (!active) {
 
     return;
   }
@@ -2277,7 +3296,6 @@ async function openCourse(
       alert(
         "No tienes acceso autorizado a este curso."
       );
-
 
       return;
     }
@@ -2306,7 +3324,7 @@ async function openCourse(
 
 
 /* ============================================================
-   DESCARGAR CURSO PRIVADO
+   CARGAR ARCHIVO PRIVADO
    ============================================================ */
 
 async function loadPrivateCourseFile(
@@ -2334,14 +3352,11 @@ async function loadPrivateCourseFile(
 
   if (error) {
 
-    console.error(
-      error
-    );
+    console.error(error);
 
 
     $("courseStatus").textContent =
       "No se pudo abrir el contenido.";
-
 
     return;
   }
@@ -2379,9 +3394,7 @@ async function loadPrivateCourseFile(
       );
 
 
-    if (
-      title
-    ) {
+    if (title) {
 
       title.textContent =
         titleText;
@@ -2395,9 +3408,7 @@ async function loadPrivateCourseFile(
     error
   ) {
 
-    console.error(
-      error
-    );
+    console.error(error);
 
 
     $("courseStatus").textContent =
@@ -2407,7 +3418,7 @@ async function loadPrivateCourseFile(
 
 
 /* ============================================================
-   PREPARAR HTML PRIVADO
+   PREPARAR CURSO
    ============================================================ */
 
 function preparePrivateCourseHtml(
@@ -2443,20 +3454,14 @@ function preparePrivateCourseHtml(
             (
               link.getAttribute(
                 "href"
-              ) ||
-              ""
-            )
-            .trim();
+              ) || ""
+            ).trim();
 
 
           const cleanHref =
             originalHref
-              .split(
-                "?"
-              )[0]
-              .split(
-                "#"
-              )[0]
+              .split("?")[0]
+              .split("#")[0]
               .replace(
                 /^\.\//,
                 ""
@@ -2465,9 +3470,7 @@ function preparePrivateCourseHtml(
 
           const fileName =
             cleanHref
-              .split(
-                "/"
-              )
+              .split("/")
               .pop();
 
 
@@ -2491,7 +3494,6 @@ function preparePrivateCourseHtml(
             "data-private-listening-file",
             fileName
           );
-
         }
       );
   }
@@ -2517,7 +3519,6 @@ function preparePrivateCourseHtml(
           "*"
         );
       }
-
 
       [
         "mousedown",
@@ -2551,21 +3552,15 @@ function preparePrivateCourseHtml(
               "a[data-private-listening-file]"
             );
 
-
           if (!link) {
-
             return;
           }
 
-
           event.preventDefault();
-
           event.stopPropagation();
-
 
           parent.postMessage(
             {
-
               type:
                 "OPEN_PRIVATE_LISTENING_FILE",
 
@@ -2573,20 +3568,12 @@ function preparePrivateCourseHtml(
                 link.getAttribute(
                   "data-private-listening-file"
                 )
-
             },
             "*"
           );
 
         },
-
         true
-      );
-
-
-      document.addEventListener(
-        "visibilitychange",
-        notifyActivity
       );
 
     })();
@@ -2611,13 +3598,11 @@ function preparePrivateCourseHtml(
 
 
 /* ============================================================
-   MENSAJES DESDE LOS CURSOS
+   MENSAJES DEL IFRAME
    ============================================================ */
 
 window.addEventListener(
-
   "message",
-
   async event => {
 
     const frame =
@@ -2638,9 +3623,7 @@ window.addEventListener(
       event.data;
 
 
-    if (
-      !message
-    ) {
+    if (!message) {
 
       return;
     }
@@ -2652,7 +3635,6 @@ window.addEventListener(
     ) {
 
       markStudyActivity();
-
 
       return;
     }
@@ -2669,8 +3651,7 @@ window.addEventListener(
 
     const fileName =
       String(
-        message.file ||
-        ""
+        message.file || ""
       );
 
 
@@ -2688,9 +3669,7 @@ window.addEventListener(
       await ensureCurrentAccountIsActive();
 
 
-    if (
-      !active
-    ) {
+    if (!active) {
 
       return;
     }
@@ -2714,9 +3693,7 @@ window.addEventListener(
       sectionName,
       "LISTENING"
     );
-
   }
-
 );
 
 
@@ -2759,212 +3736,15 @@ $("backToPortal").onclick =
 
 
       await loadDailyGoal();
-    }
 
+
+      await loadMotivationPanel();
+    }
   };
 
 
 /* ============================================================
-   UTILIDADES DE ESTADÍSTICAS
-   ============================================================ */
-
-function startOfToday() {
-
-  const d =
-    new Date();
-
-
-  d.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  return d;
-}
-
-
-function startOfLast7Days() {
-
-  const d =
-    startOfToday();
-
-
-  d.setDate(
-    d.getDate() - 6
-  );
-
-
-  return d;
-}
-
-
-function localDayKey(
-  value
-) {
-
-  const d =
-    new Date(
-      value
-    );
-
-
-  return [
-
-    d.getFullYear(),
-
-    String(
-      d.getMonth() + 1
-    )
-    .padStart(
-      2,
-      "0"
-    ),
-
-    String(
-      d.getDate()
-    )
-    .padStart(
-      2,
-      "0"
-    )
-
-  ].join(
-    "-"
-  );
-}
-
-
-function formatStudyTime(
-  totalSeconds
-) {
-
-  const seconds =
-    Math.max(
-      0,
-      Number(
-        totalSeconds
-      ) ||
-      0
-    );
-
-
-  const hours =
-    Math.floor(
-      seconds /
-      3600
-    );
-
-
-  const minutes =
-    Math.floor(
-      (
-        seconds %
-        3600
-      ) /
-      60
-    );
-
-
-  if (
-    hours > 0
-  ) {
-
-    return `${hours} h ${minutes} min`;
-  }
-
-
-  if (
-    minutes > 0
-  ) {
-
-    return `${minutes} min`;
-  }
-
-
-  return `${seconds} s`;
-}
-
-
-function formatDateTime(
-  value
-) {
-
-  if (
-    !value
-  ) {
-
-    return "Sin actividad";
-  }
-
-
-  const date =
-    new Date(
-      value
-    );
-
-
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-
-    return "Sin actividad";
-  }
-
-
-  return new Intl.DateTimeFormat(
-    "es-DO",
-    {
-
-      dateStyle:
-        "medium",
-
-      timeStyle:
-        "short"
-
-    }
-  )
-  .format(
-    date
-  );
-}
-
-
-function courseDisplayName(
-  code
-) {
-
-  if (
-    code ===
-    "PORTAL"
-  ) {
-
-    return "Portal";
-  }
-
-
-  const course =
-    COURSES.find(
-      item =>
-        item.code ===
-        code
-    );
-
-
-  return course
-
-    ? course.shortTitle
-
-    : code;
-}
-
-
-/* ============================================================
-   RESUMEN DE ESTUDIO
+   ESTADÍSTICAS ADMIN
    ============================================================ */
 
 function buildStudySummary(
@@ -2972,23 +3752,16 @@ function buildStudySummary(
 ) {
 
   const allRows =
-    [
-      ...rows
-    ]
-    .sort(
-      (
-        a,
-        b
-      ) =>
-
-        new Date(
-          b.started_at
-        ) -
-
-        new Date(
-          a.started_at
-        )
-    );
+    [...rows]
+      .sort(
+        (a, b) =>
+          new Date(
+            b.started_at
+          ) -
+          new Date(
+            a.started_at
+          )
+      );
 
 
   const lastEntry =
@@ -3041,8 +3814,7 @@ function buildStudySummary(
         0,
         Number(
           row.active_seconds
-        ) ||
-        0
+        ) || 0
       );
 
 
@@ -3084,17 +3856,13 @@ function buildStudySummary(
 
 
     perCourse.set(
-
       row.course_code,
-
       (
         perCourse.get(
           row.course_code
-        ) ||
-        0
+        ) || 0
       ) +
       seconds
-
     );
   }
 
@@ -3128,39 +3896,23 @@ function buildStudySummary(
   }
 
 
-  const recent =
-    studyRows.slice(
-      0,
-      5
-    );
-
-
   return {
-
     lastEntry,
-
     todaySeconds,
-
     weekSeconds,
-
     totalSeconds,
-
     activeDays:
       activeDays.size,
-
     topCourseCode,
-
     topCourseSeconds,
-
-    recent
-
+    recent:
+      studyRows.slice(
+        0,
+        5
+      )
   };
 }
 
-
-/* ============================================================
-   MOSTRAR ESTADÍSTICAS
-   ============================================================ */
 
 function renderStudyStats(
   summary
@@ -3179,75 +3931,51 @@ function renderStudyStats(
                   justify-content:space-between;
                   gap:12px;
                   padding:8px 0;
-                  border-top:1px solid rgba(148,163,184,.18);
+                  border-top:
+                    1px solid rgba(148,163,184,.18);
                 "
               >
 
-                <div
-                  style="
-                    min-width:0;
-                  "
-                >
+                <div>
 
-                  <strong
-                    style="
-                      display:block;
-                    "
-                  >
-
+                  <strong>
                     ${escapeHtml(
                       row.section_name ||
                       courseDisplayName(
                         row.course_code
                       )
                     )}
-
                   </strong>
 
-                  <span
-                    class="small"
-                  >
-
+                  <div class="small">
                     ${escapeHtml(
                       formatDateTime(
                         row.started_at
                       )
                     )}
-
-                  </span>
+                  </div>
 
                 </div>
 
-                <strong
-                  style="
-                    white-space:nowrap;
-                  "
-                >
 
+                <strong>
                   ${escapeHtml(
                     formatStudyTime(
                       row.active_seconds
                     )
                   )}
-
                 </strong>
 
               </div>
 
             `
           )
-          .join(
-            ""
-          )
+          .join("")
 
       : `
-
-          <div
-            class="small"
-          >
-            Todavía no hay sesiones de estudio registradas.
+          <div class="small">
+            Todavía no hay sesiones.
           </div>
-
         `;
 
 
@@ -3258,176 +3986,74 @@ function renderStudyStats(
       style="
         margin-top:14px;
         padding:14px;
-        border:1px solid rgba(148,163,184,.22);
+        border:
+          1px solid rgba(148,163,184,.22);
         border-radius:14px;
-        background:rgba(15,23,42,.22);
       "
     >
 
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px;
-          flex-wrap:wrap;
-          margin-bottom:10px;
-        "
-      >
+      <strong>
+        📊 Estadísticas de estudio
+      </strong>
 
-        <strong>
-          📊 Estadísticas de estudio
-        </strong>
-
-        <span
-          class="small"
-        >
-
-          Última entrada:
-
-          ${escapeHtml(
-            formatDateTime(
-              summary.lastEntry
-            )
-          )}
-
-        </span>
-
-      </div>
 
       <div
         style="
           display:grid;
-          grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+          grid-template-columns:
+            repeat(
+              auto-fit,
+              minmax(120px,1fr)
+            );
           gap:8px;
-          margin-bottom:12px;
-        "
-      >
-
-        <div
-          class="stat"
-        >
-
-          <strong>
-
-            ${escapeHtml(
-              formatStudyTime(
-                summary.todaySeconds
-              )
-            )}
-
-          </strong>
-
-          <span>
-            Hoy
-          </span>
-
-        </div>
-
-        <div
-          class="stat"
-        >
-
-          <strong>
-
-            ${escapeHtml(
-              formatStudyTime(
-                summary.weekSeconds
-              )
-            )}
-
-          </strong>
-
-          <span>
-            Últimos 7 días
-          </span>
-
-        </div>
-
-        <div
-          class="stat"
-        >
-
-          <strong>
-            ${summary.activeDays}
-          </strong>
-
-          <span>
-            Días activos
-          </span>
-
-        </div>
-
-        <div
-          class="stat"
-        >
-
-          <strong>
-
-            ${escapeHtml(
-              formatStudyTime(
-                summary.totalSeconds
-              )
-            )}
-
-          </strong>
-
-          <span>
-            Total estudiado
-          </span>
-
-        </div>
-
-      </div>
-
-      <div
-        class="small"
-        style="
-          margin-bottom:8px;
-        "
-      >
-
-        <strong>
-          Curso más estudiado:
-        </strong>
-
-        ${
-          summary.topCourseCode
-
-            ? `
-
-                ${escapeHtml(
-                  courseDisplayName(
-                    summary.topCourseCode
-                  )
-                )}
-
-                ·
-
-                ${escapeHtml(
-                  formatStudyTime(
-                    summary.topCourseSeconds
-                  )
-                )}
-
-              `
-
-            : "Sin datos todavía"
-        }
-
-      </div>
-
-      <div
-        style="
           margin-top:10px;
         "
       >
 
-        <strong
-          style="
-            font-size:14px;
-          "
-        >
+        <div class="stat">
+          <strong>
+            ${formatStudyTime(
+              summary.todaySeconds
+            )}
+          </strong>
+          <span>Hoy</span>
+        </div>
+
+        <div class="stat">
+          <strong>
+            ${formatStudyTime(
+              summary.weekSeconds
+            )}
+          </strong>
+          <span>Últimos 7 días</span>
+        </div>
+
+        <div class="stat">
+          <strong>
+            ${summary.activeDays}
+          </strong>
+          <span>Días activos</span>
+        </div>
+
+        <div class="stat">
+          <strong>
+            ${formatStudyTime(
+              summary.totalSeconds
+            )}
+          </strong>
+          <span>Total</span>
+        </div>
+
+      </div>
+
+
+      <div
+        style="
+          margin-top:12px;
+        "
+      >
+
+        <strong>
           Actividad reciente
         </strong>
 
@@ -3442,7 +4068,7 @@ function renderStudyStats(
 
 
 /* ============================================================
-   BUSCADOR DE ESTUDIANTES
+   BUSCADOR ADMIN
    ============================================================ */
 
 function ensureStudentSearchControls() {
@@ -3459,9 +4085,7 @@ function ensureStudentSearchControls() {
     $("usersList");
 
 
-  if (
-    !usersList
-  ) {
+  if (!usersList) {
 
     return;
   }
@@ -3482,7 +4106,6 @@ function ensureStudentSearchControls() {
     display:flex;
     gap:10px;
     align-items:center;
-    flex-wrap:wrap;
   `;
 
 
@@ -3494,30 +4117,25 @@ function ensureStudentSearchControls() {
       placeholder="Buscar estudiante por nombre o correo..."
       autocomplete="off"
       style="
-        flex:1 1 320px;
-        min-width:220px;
+        flex:1;
         padding:12px 14px;
         border-radius:12px;
-        border:1px solid rgba(148,163,184,.3);
-        background:rgba(15,23,42,.45);
-        color:inherit;
-        outline:none;
       "
     >
 
     <span
       id="studentSearchCount"
       class="small"
-      style="white-space:nowrap;"
     ></span>
 
   `;
 
 
-  usersList.parentNode.insertBefore(
-    searchWrap,
-    usersList
-  );
+  usersList.parentNode
+    .insertBefore(
+      searchWrap,
+      usersList
+    );
 
 
   $("studentSearch")
@@ -3528,20 +4146,12 @@ function ensureStudentSearchControls() {
 }
 
 
-/* ============================================================
-   FILTRAR ESTUDIANTES
-   ============================================================ */
-
 function filterStudentCards() {
-
-  const input =
-    $("studentSearch");
-
 
   const query =
     String(
-      input?.value ||
-      ""
+      $("studentSearch")
+        ?.value || ""
     )
     .trim()
     .toLowerCase();
@@ -3562,62 +4172,44 @@ function filterStudentCards() {
   cards.forEach(
     card => {
 
-      const haystack =
+      const visible =
+        !query ||
         String(
           card.dataset.search ||
           ""
         )
-        .toLowerCase();
-
-
-      const visible =
-        !query ||
-        haystack.includes(
+        .toLowerCase()
+        .includes(
           query
         );
 
 
       card.style.display =
         visible
-
           ? "block"
-
           : "none";
 
 
-      if (
-        visible
-      ) {
+      if (visible) {
 
         visibleCount +=
           1;
       }
-
     }
   );
 
 
-  const count =
-    $("studentSearchCount");
-
-
   if (
-    count
+    $("studentSearchCount")
   ) {
 
-    count.textContent =
+    $("studentSearchCount").textContent =
       query
-
-        ? `${visibleCount} resultado${visibleCount === 1 ? "" : "s"}`
-
-        : `${cards.length} estudiante${cards.length === 1 ? "" : "s"}`;
+        ? `${visibleCount} resultados`
+        : `${cards.length} estudiantes`;
   }
 }
 
-
-/* ============================================================
-   ESTUDIANTES DESPLEGABLES
-   ============================================================ */
 
 function setupStudentDropdowns() {
 
@@ -3638,21 +4230,16 @@ function setupStudentDropdowns() {
         );
 
 
-      const updateIcon =
-        () => {
+      function updateIcon() {
 
-          if (
-            icon
-          ) {
+        if (icon) {
 
-            icon.textContent =
-              details.open
-
-                ? "▼"
-
-                : "▶";
-          }
-        };
+          icon.textContent =
+            details.open
+              ? "▼"
+              : "▶";
+        }
+      }
 
 
       updateIcon();
@@ -3665,9 +4252,7 @@ function setupStudentDropdowns() {
           updateIcon();
 
 
-          if (
-            !details.open
-          ) {
+          if (!details.open) {
 
             return;
           }
@@ -3683,20 +4268,17 @@ function setupStudentDropdowns() {
                 other.open =
                   false;
               }
-
             }
           );
-
         }
       );
-
     }
   );
 }
 
 
 /* ============================================================
-   PANEL ADMINISTRADOR
+   PANEL ADMIN
    ============================================================ */
 
 async function loadUsers() {
@@ -3718,30 +4300,21 @@ async function loadUsers() {
       .order(
         "created_at",
         {
-          ascending:
-            false
+          ascending: false
         }
       );
 
 
   if (error) {
 
-    console.error(
-      error
-    );
-
-
-    $("usersList").innerHTML =
-      "<p>No se pudieron cargar los estudiantes.</p>";
-
+    console.error(error);
 
     return;
   }
 
 
   const {
-    data: accessRows,
-    error: accessError
+    data: accessRows
   } =
     await supabase
       .from(
@@ -3752,19 +4325,8 @@ async function loadUsers() {
       );
 
 
-  if (
-    accessError
-  ) {
-
-    console.error(
-      accessError
-    );
-  }
-
-
   const {
-    data: activityRows,
-    error: activityError
+    data: activityRows
   } =
     await supabase
       .from(
@@ -3776,54 +4338,9 @@ async function loadUsers() {
       .order(
         "started_at",
         {
-          ascending:
-            false
+          ascending: false
         }
       );
-
-
-  if (
-    activityError
-  ) {
-
-    console.error(
-      "No se pudieron cargar las estadísticas:",
-      activityError
-    );
-  }
-
-
-  const activityMap =
-    new Map();
-
-
-  for (
-    const row
-    of activityRows ||
-    []
-  ) {
-
-    if (
-      !activityMap.has(
-        row.user_id
-      )
-    ) {
-
-      activityMap.set(
-        row.user_id,
-        []
-      );
-    }
-
-
-    activityMap
-      .get(
-        row.user_id
-      )
-      .push(
-        row
-      );
-  }
 
 
   const accessMap =
@@ -3832,8 +4349,7 @@ async function loadUsers() {
 
   for (
     const row
-    of accessRows ||
-    []
+    of accessRows || []
   ) {
 
     if (
@@ -3859,6 +4375,38 @@ async function loadUsers() {
   }
 
 
+  const activityMap =
+    new Map();
+
+
+  for (
+    const row
+    of activityRows || []
+  ) {
+
+    if (
+      !activityMap.has(
+        row.user_id
+      )
+    ) {
+
+      activityMap.set(
+        row.user_id,
+        []
+      );
+    }
+
+
+    activityMap
+      .get(
+        row.user_id
+      )
+      .push(
+        row
+      );
+  }
+
+
   const students =
     profiles.filter(
       profile =>
@@ -3869,61 +4417,46 @@ async function loadUsers() {
   $("adminStats").innerHTML = `
 
     <div class="stat">
-
       <strong>
         ${students.length}
       </strong>
-
       <span>
         Estudiantes
       </span>
-
     </div>
 
-
     <div class="stat">
-
       <strong>
-
         ${
           students.filter(
-            student =>
-              student.is_active
+            s =>
+              s.is_active
           ).length
         }
-
       </strong>
-
       <span>
         Activos
       </span>
-
     </div>
 
-
     <div class="stat">
-
       <strong>
-
         ${
           students.filter(
-            student =>
-              !student.is_active
+            s =>
+              !s.is_active
           ).length
         }
-
       </strong>
-
       <span>
         Bloqueados
       </span>
-
     </div>
 
   `;
 
 
-  const adminProfiles =
+  const admins =
     profiles.filter(
       profile =>
         profile.is_admin
@@ -3931,7 +4464,7 @@ async function loadUsers() {
 
 
   const adminHtml =
-    adminProfiles
+    admins
       .map(
         profile => `
 
@@ -3962,17 +4495,11 @@ async function loadUsers() {
 
             </div>
 
-            <div class="admin-account-note">
-              Cuenta de administrador
-            </div>
-
           </div>
 
         `
       )
-      .join(
-        ""
-      );
+      .join("");
 
 
   const studentHtml =
@@ -3987,115 +4514,79 @@ async function loadUsers() {
             new Set();
 
 
-          const userActivity =
-            activityMap.get(
-              profile.id
-            ) ||
-            [];
-
-
-          const studySummary =
+          const summary =
             buildStudySummary(
-              userActivity
+              activityMap.get(
+                profile.id
+              ) || []
             );
 
 
-          const courseSwitches =
-            COURSES
-              .map(
-                course => {
+          const switches =
+            COURSES.map(
+              course => {
 
-                  const hasAccess =
-                    userCourses.has(
-                      course.code
-                    );
-
-
-                  return `
-
-                    <div class="course-switch-row">
-
-                      <div class="course-switch-copy">
-
-                        <strong>
-                          ${escapeHtml(
-                            course.shortTitle
-                          )}
-                        </strong>
-
-                        <span>
-
-                          ${
-                            hasAccess
-                              ? "Acceso permitido"
-                              : "Sin acceso"
-                          }
-
-                        </span>
-
-                      </div>
+                const hasAccess =
+                  userCourses.has(
+                    course.code
+                  );
 
 
-                      <label class="switch">
+                return `
 
-                        <input
-                          type="checkbox"
-                          class="course-access-switch"
-                          data-id="${profile.id}"
-                          data-code="${course.code}"
-                          ${
-                            hasAccess
-                              ? "checked"
-                              : ""
-                          }
-                        >
+                  <div class="course-switch-row">
 
-                        <span class="slider"></span>
+                    <div class="course-switch-copy">
 
-                      </label>
+                      <strong>
+                        ${escapeHtml(
+                          course.shortTitle
+                        )}
+                      </strong>
+
+                      <span>
+                        ${
+                          hasAccess
+                            ? "Acceso permitido"
+                            : "Sin acceso"
+                        }
+                      </span>
 
                     </div>
 
-                  `;
-                }
-              )
-              .join(
-                ""
-              );
+
+                    <label class="switch">
+
+                      <input
+                        type="checkbox"
+                        class="course-access-switch"
+                        data-id="${profile.id}"
+                        data-code="${course.code}"
+                        ${
+                          hasAccess
+                            ? "checked"
+                            : ""
+                        }
+                      >
+
+                      <span class="slider"></span>
+
+                    </label>
+
+                  </div>
+
+                `;
+              }
+            )
+            .join("");
 
 
           const statusText =
             profile.is_active
-
               ? "Activo"
-
               : profile.auto_blocked
-
                 ? "Bloqueado por inactividad"
-
                 : "Bloqueado";
-
-
-          const accountText =
-            profile.is_active
-
-              ? "Puede entrar a la plataforma"
-
-              : profile.auto_blocked
-
-                ? "Bloqueada automáticamente por inactividad"
-
-                : "Cuenta bloqueada";
-
-
-          const searchText =
-            `${
-              profile.display_name ||
-              ""
-            } ${
-              profile.email ||
-              ""
-            } ${statusText}`;
 
 
           return `
@@ -4103,11 +4594,12 @@ async function loadUsers() {
             <details
               class="student-admin-card student-details-card"
               data-search="${escapeHtml(
-                searchText
+                `${
+                  profile.display_name || ""
+                } ${
+                  profile.email || ""
+                } ${statusText}`
               )}"
-              style="
-                overflow:hidden;
-              "
             >
 
               <summary
@@ -4115,8 +4607,6 @@ async function loadUsers() {
                 style="
                   cursor:pointer;
                   list-style:none;
-                  user-select:none;
-                  padding:2px 0;
                 "
               >
 
@@ -4125,24 +4615,12 @@ async function loadUsers() {
                     display:flex;
                     align-items:center;
                     gap:10px;
-                    min-width:0;
-                    flex:1;
                   "
                 >
 
-                  <span
-                    class="student-toggle-icon"
-                    aria-hidden="true"
-                    style="
-                      width:18px;
-                      flex:0 0 18px;
-                      font-size:13px;
-                      opacity:.8;
-                    "
-                  >
+                  <span class="student-toggle-icon">
                     ▶
                   </span>
-
 
                   <div class="user-meta">
 
@@ -4170,15 +4648,10 @@ async function loadUsers() {
                       ? "active"
                       : "blocked"
                   }"
-                  style="
-                    margin-left:auto;
-                  "
                 >
-
                   ${escapeHtml(
                     statusText
                   )}
-
                 </span>
 
               </summary>
@@ -4188,7 +4661,8 @@ async function loadUsers() {
                 style="
                   margin-top:16px;
                   padding-top:14px;
-                  border-top:1px solid rgba(148,163,184,.18);
+                  border-top:
+                    1px solid rgba(148,163,184,.18);
                 "
               >
 
@@ -4201,38 +4675,12 @@ async function loadUsers() {
                     </strong>
 
                     <div class="small">
-                      ${escapeHtml(
-                        accountText
-                      )}
+                      ${
+                        profile.is_active
+                          ? "Puede entrar a la plataforma"
+                          : "Cuenta bloqueada"
+                      }
                     </div>
-
-                    ${
-                      profile.auto_blocked &&
-                      profile.blocked_at
-
-                        ? `
-
-                            <div
-                              class="small"
-                              style="
-                                margin-top:4px;
-                              "
-                            >
-
-                              Bloqueado:
-
-                              ${escapeHtml(
-                                formatDateTime(
-                                  profile.blocked_at
-                                )
-                              )}
-
-                            </div>
-
-                          `
-
-                        : ""
-                    }
 
                   </div>
 
@@ -4258,12 +4706,12 @@ async function loadUsers() {
 
 
                 <div class="course-access-list">
-                  ${courseSwitches}
+                  ${switches}
                 </div>
 
 
                 ${renderStudyStats(
-                  studySummary
+                  summary
                 )}
 
               </div>
@@ -4273,9 +4721,7 @@ async function loadUsers() {
           `;
         }
       )
-      .join(
-        ""
-      );
+      .join("");
 
 
   $("usersList").innerHTML =
@@ -4296,14 +4742,8 @@ async function loadUsers() {
       input => {
 
         input.addEventListener(
-
           "change",
-
           async () => {
-
-            const userId =
-              input.dataset.id;
-
 
             const newStatus =
               input.checked;
@@ -4317,45 +4757,29 @@ async function loadUsers() {
               error
             } =
               await supabase.rpc(
-
                 "set_student_active",
-
                 {
-
                   p_target_user:
-                    userId,
+                    input.dataset.id,
 
                   p_active:
                     newStatus
-
                 }
-
               );
 
 
-            if (
-              error
-            ) {
+            if (error) {
 
-              console.error(
-                error
-              );
+              console.error(error);
 
 
               input.checked =
                 !newStatus;
 
 
-              input.disabled =
-                false;
-
-
               alert(
-                "No se pudo bloquear o desbloquear la cuenta."
+                "No se pudo cambiar la cuenta."
               );
-
-
-              return;
             }
 
 
@@ -4364,11 +4788,8 @@ async function loadUsers() {
 
 
             await loadUsers();
-
           }
-
         );
-
       }
     );
 
@@ -4381,9 +4802,7 @@ async function loadUsers() {
       input => {
 
         input.addEventListener(
-
           "change",
-
           async () => {
 
             const userId =
@@ -4416,13 +4835,11 @@ async function loadUsers() {
                     "course_access"
                   )
                   .insert({
-
                     user_id:
                       userId,
 
                     course_code:
                       courseCode
-
                   });
 
 
@@ -4452,13 +4869,9 @@ async function loadUsers() {
             }
 
 
-            if (
-              error
-            ) {
+            if (error) {
 
-              console.error(
-                error
-              );
+              console.error(error);
 
 
               input.checked =
@@ -4466,9 +4879,8 @@ async function loadUsers() {
 
 
               alert(
-                "No se pudo cambiar el acceso al curso."
+                "No se pudo cambiar el acceso."
               );
-
             }
 
 
@@ -4477,82 +4889,29 @@ async function loadUsers() {
 
 
             await loadUsers();
-
           }
-
         );
-
       }
     );
-
 }
 
-
-/* ============================================================
-   ACTUALIZAR ESTUDIANTES
-   ============================================================ */
 
 $("refreshUsers").onclick =
   loadUsers;
 
 
 /* ============================================================
-   ESCAPAR HTML
-   ============================================================ */
-
-function escapeHtml(
-  value
-) {
-
-  return String(
-    value ??
-    ""
-  )
-  .replace(
-
-    /[&<>"']/g,
-
-    character =>
-      ({
-
-        "&":
-          "&amp;",
-
-        "<":
-          "&lt;",
-
-        ">":
-          "&gt;",
-
-        '"':
-          "&quot;",
-
-        "'":
-          "&#039;"
-
-      }[
-        character
-      ])
-
-  );
-}
-
-
-/* ============================================================
-   CAMBIO DE SESIÓN
+   CAMBIOS DE AUTH
    ============================================================ */
 
 supabase.auth
   .onAuthStateChange(
-
     (
       _event,
       session
     ) => {
 
-      if (
-        !session
-      ) {
+      if (!session) {
 
         currentProfile =
           null;
@@ -4569,14 +4928,12 @@ supabase.auth
           "authView"
         );
       }
-
     }
-
   );
 
 
 /* ============================================================
-   REVISAR SI EL ESTUDIANTE FUE BLOQUEADO
+   COMPROBAR BLOQUEO
    ============================================================ */
 
 setInterval(
@@ -4593,16 +4950,8 @@ setInterval(
 
 
     if (
-      !session
-    ) {
-
-      return;
-    }
-
-
-    if (
-      currentProfile
-        ?.is_admin
+      !session ||
+      currentProfile?.is_admin
     ) {
 
       return;
@@ -4614,7 +4963,6 @@ setInterval(
         profile,
 
       error
-
     } =
       await supabase
         .from(
@@ -4630,9 +4978,7 @@ setInterval(
         .single();
 
 
-    if (
-      error
-    ) {
+    if (error) {
 
       return;
     }
@@ -4681,19 +5027,15 @@ setInterval(
 
 
 /* ============================================================
-   CERRAR / CAMBIAR PÁGINA
+   CERRAR PÁGINA
    ============================================================ */
 
 window.addEventListener(
-
   "pagehide",
-
   () => {
 
     saveStudyTime();
-
   }
-
 );
 
 
