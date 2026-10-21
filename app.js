@@ -88,15 +88,16 @@ const COURSES = [
   },
 
   {
-  code: "A2",
-  title: "A2 — Elementary",
-  shortTitle: "A2 — Elementary",
-  description:
-    "Gramática A2 completa · explicaciones · ejemplos · audio · práctica · Final Review de 110 ejercicios.",
-  file: "a2_grammar.html",
-  badge: "A2",
-  type: "grammar"
-},
+    code: "A2",
+    title: "A2 — Elementary",
+    shortTitle: "A2 — Elementary",
+    description:
+      "Gramática A2 completa · explicaciones · ejemplos · audio · práctica · Final Review de 110 ejercicios.",
+    file: "a2_grammar.html",
+    badge: "A2",
+    type: "grammar"
+  },
+
 ];
 
 
@@ -106,6 +107,7 @@ const COURSES = [
 
 const LISTENING_FILES =
   new Set([
+
     "listening_index.html",
     "listening_a1_v1.html",
     "listening_a1_v2.html",
@@ -114,6 +116,7 @@ const LISTENING_FILES =
     "listening_b1_v1.html",
     "listening_b1_v2.html",
     "listening_b2_v1.html"
+
   ]);
 
 
@@ -142,10 +145,12 @@ const LISTENING_TITLES = {
 
   "listening_b2_v1.html":
     "Listening B2 — Volumen 1"
+
 };
 
 
-let currentProfile = null;
+let currentProfile =
+  null;
 
 
 /* ============================================================
@@ -194,16 +199,22 @@ async function closeOldStudySessions() {
     !currentProfile ||
     currentProfile.is_admin
   ) {
+
     return;
   }
 
 
   const { error } =
     await supabase
-      .from("study_activity")
+      .from(
+        "study_activity"
+      )
       .update({
+
         ended_at:
-          new Date().toISOString()
+          new Date()
+            .toISOString()
+
       })
       .eq(
         "user_id",
@@ -238,6 +249,7 @@ async function startStudySession(
     !currentProfile ||
     currentProfile.is_admin
   ) {
+
     return;
   }
 
@@ -266,7 +278,9 @@ async function startStudySession(
     error
   } =
     await supabase
-      .from("study_activity")
+      .from(
+        "study_activity"
+      )
       .insert({
 
         user_id:
@@ -282,7 +296,9 @@ async function startStudySession(
           0
 
       })
-      .select("id")
+      .select(
+        "id"
+      )
       .single();
 
 
@@ -293,8 +309,10 @@ async function startStudySession(
       error
     );
 
+
     studySessionId =
       null;
+
 
     return;
   }
@@ -316,13 +334,16 @@ async function saveStudyTime() {
     !currentProfile ||
     currentProfile.is_admin
   ) {
+
     return;
   }
 
 
   const { error } =
     await supabase
-      .from("study_activity")
+      .from(
+        "study_activity"
+      )
       .update({
 
         active_seconds:
@@ -364,6 +385,7 @@ async function finishStudySession() {
     studySessionId =
       null;
 
+
     return;
   }
 
@@ -371,20 +393,24 @@ async function finishStudySession() {
   const sessionToClose =
     studySessionId;
 
+
   studySessionId =
     null;
 
 
   const { error } =
     await supabase
-      .from("study_activity")
+      .from(
+        "study_activity"
+      )
       .update({
 
         active_seconds:
           studyActiveSeconds,
 
         ended_at:
-          new Date().toISOString()
+          new Date()
+            .toISOString()
 
       })
       .eq(
@@ -431,13 +457,17 @@ setInterval(
 
     const elapsedSeconds =
       Math.max(
+
         0,
+
         Math.floor(
           (
             now -
             studyLastTick
-          ) / 1000
+          ) /
+          1000
         )
+
       );
 
 
@@ -448,6 +478,7 @@ setInterval(
     if (
       !studySessionId
     ) {
+
       return;
     }
 
@@ -482,6 +513,7 @@ setInterval(
   },
 
   STUDY_HEARTBEAT_MS
+
 );
 
 
@@ -497,24 +529,34 @@ setInterval(
   "scroll",
   "click"
 ]
-.forEach(eventName => {
+.forEach(
+  eventName => {
 
-  document.addEventListener(
-    eventName,
-    markStudyActivity,
-    {
-      passive: true
-    }
-  );
-});
+    document.addEventListener(
+
+      eventName,
+
+      markStudyActivity,
+
+      {
+        passive: true
+      }
+
+    );
+
+  }
+);
 
 
 document.addEventListener(
+
   "visibilitychange",
+
   () => {
 
     studyLastTick =
       Date.now();
+
 
     if (
       !document.hidden
@@ -522,7 +564,9 @@ document.addEventListener(
 
       markStudyActivity();
     }
+
   }
+
 );
 
 
@@ -530,7 +574,9 @@ document.addEventListener(
    LOGIN / REGISTRO
    ============================================================ */
 
-function setAuthTab(mode) {
+function setAuthTab(
+  mode
+) {
 
   const login =
     mode === "login";
@@ -583,24 +629,33 @@ $("signupTab").onclick =
     );
 
 
-function showOnly(view) {
+function showOnly(
+  view
+) {
 
   [
     "authView",
     "pendingView",
     "portalView"
   ]
-  .forEach(id => {
+  .forEach(
+    id => {
 
-    $(id)
-      .classList
-      .add("hidden");
-  });
+      $(id)
+        .classList
+        .add(
+          "hidden"
+        );
+
+    }
+  );
 
 
   $(view)
     .classList
-    .remove("hidden");
+    .remove(
+      "hidden"
+    );
 }
 
 
@@ -617,10 +672,12 @@ async function getProfile(
     error
   } =
     await supabase
-      .from("profiles")
+      .from(
+        "profiles"
+      )
       .select(
-  "id,email,display_name,is_admin,is_active,activated_at,auto_blocked,blocked_at,blocked_reason"
-)
+        "id,email,display_name,is_admin,is_active,activated_at,auto_blocked,blocked_at,blocked_reason"
+      )
       .eq(
         "id",
         userId
@@ -639,6 +696,178 @@ async function getProfile(
 
 
 /* ============================================================
+   MOSTRAR CUENTA INACTIVA / BLOQUEADA
+   ============================================================ */
+
+function showInactiveAccount(
+  profile
+) {
+
+  showOnly(
+    "pendingView"
+  );
+
+
+  if (
+    !profile?.auto_blocked
+  ) {
+
+    return;
+  }
+
+
+  const pendingView =
+    $("pendingView");
+
+
+  const blockedDate =
+    profile.blocked_at
+
+      ? formatDateTime(
+          profile.blocked_at
+        )
+
+      : null;
+
+
+  const reason =
+    profile.blocked_reason ||
+    "Bloqueado automáticamente por inactividad.";
+
+
+  pendingView.innerHTML = `
+
+    <div
+      class="panel"
+      style="
+        max-width:720px;
+        margin:40px auto;
+        text-align:center;
+        padding:32px;
+      "
+    >
+
+      <div
+        style="
+          font-size:52px;
+          margin-bottom:12px;
+        "
+      >
+        🔴
+      </div>
+
+      <h2>
+        Cuenta bloqueada por inactividad
+      </h2>
+
+      <p
+        style="
+          margin-top:14px;
+          font-size:16px;
+          line-height:1.6;
+        "
+      >
+
+        Tu cuenta fue bloqueada automáticamente porque pasaron
+        <strong>48 horas</strong> sin completar al menos
+        <strong>20 minutos de estudio activo</strong>.
+
+      </p>
+
+      <p
+        style="
+          margin-top:14px;
+          line-height:1.6;
+        "
+      >
+
+        Para recuperar el acceso, comunícate con tu profesor.
+
+      </p>
+
+      <p
+        style="
+          margin-top:8px;
+          font-weight:700;
+        "
+      >
+
+        Solo el profesor puede reactivar tu cuenta.
+
+      </p>
+
+      <div
+        style="
+          margin-top:22px;
+          padding:14px;
+          border-radius:12px;
+          background:rgba(239,68,68,.08);
+          border:1px solid rgba(239,68,68,.22);
+          text-align:left;
+        "
+      >
+
+        <div>
+
+          <strong>
+            Motivo:
+          </strong>
+
+          ${escapeHtml(
+            reason
+          )}
+
+        </div>
+
+        ${
+          blockedDate
+
+            ? `
+
+                <div
+                  style="
+                    margin-top:8px;
+                  "
+                >
+
+                  <strong>
+                    Bloqueado:
+                  </strong>
+
+                  ${escapeHtml(
+                    blockedDate
+                  )}
+
+                </div>
+
+              `
+
+            : ""
+        }
+
+        <div
+          style="
+            margin-top:8px;
+          "
+        >
+
+          <strong>
+            Requisito:
+          </strong>
+
+          mínimo 20 minutos de estudio activo dentro del período permitido.
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+}
+
+
+/* ============================================================
    CARGAR SESIÓN
    ============================================================ */
 
@@ -653,7 +882,9 @@ async function loadSession() {
       .getSession();
 
 
-  if (!session) {
+  if (
+    !session
+  ) {
 
     currentProfile =
       null;
@@ -661,7 +892,9 @@ async function loadSession() {
 
     $("logoutBtn")
       .classList
-      .add("hidden");
+      .add(
+        "hidden"
+      );
 
 
     showOnly(
@@ -675,7 +908,9 @@ async function loadSession() {
 
   $("logoutBtn")
     .classList
-    .remove("hidden");
+    .remove(
+      "hidden"
+    );
 
 
   try {
@@ -685,7 +920,9 @@ async function loadSession() {
         session.user.id
       );
 
-  } catch (error) {
+  } catch (
+    error
+  ) {
 
     console.error(
       error
@@ -709,8 +946,8 @@ async function loadSession() {
     !currentProfile.is_active
   ) {
 
-    showOnly(
-      "pendingView"
+    showInactiveAccount(
+      currentProfile
     );
 
 
@@ -725,7 +962,9 @@ async function loadSession() {
 
   $("roleBadge").textContent =
     currentProfile.is_admin
+
       ? "Administrador"
+
       : "Estudiante";
 
 
@@ -733,7 +972,9 @@ async function loadSession() {
     "status " +
     (
       currentProfile.is_admin
+
         ? "admin"
+
         : "active"
     );
 
@@ -759,7 +1000,9 @@ async function loadSession() {
 
     $("adminPanel")
       .classList
-      .remove("hidden");
+      .remove(
+        "hidden"
+      );
 
 
     await loadUsers();
@@ -768,7 +1011,9 @@ async function loadSession() {
 
     $("adminPanel")
       .classList
-      .add("hidden");
+      .add(
+        "hidden"
+      );
 
 
     await closeOldStudySessions();
@@ -788,7 +1033,9 @@ async function loadSession() {
 
 $("loginForm")
   .addEventListener(
+
     "submit",
+
     async event => {
 
       event.preventDefault();
@@ -831,7 +1078,9 @@ $("loginForm")
 
 
       await loadSession();
+
     }
+
   );
 
 
@@ -841,7 +1090,9 @@ $("loginForm")
 
 $("signupForm")
   .addEventListener(
+
     "submit",
+
     async event => {
 
       event.preventDefault();
@@ -902,7 +1153,9 @@ $("signupForm")
 
       $("signupMsg").textContent =
         "Cuenta creada. Joan debe activarla y darte acceso al curso.";
+
     }
+
   );
 
 
@@ -921,6 +1174,7 @@ $("logoutBtn").onclick =
 
 
     location.reload();
+
   };
 
 
@@ -959,11 +1213,13 @@ async function getMyCourseAccess() {
 
 
   return new Set(
+
     (data || [])
       .map(
         item =>
           item.course_code
       )
+
   );
 }
 
@@ -986,24 +1242,34 @@ function courseCardHtml(
 
   return `
 
-    <article class="course-card">
+    <article
+      class="course-card"
+    >
 
-      <span class="status active">
+      <span
+        class="status active"
+      >
+
         ${escapeHtml(
           course.badge
         )}
+
       </span>
 
       <h3>
+
         ${escapeHtml(
           course.title
         )}
+
       </h3>
 
       <p>
+
         ${escapeHtml(
           course.description
         )}
+
       </p>
 
       ${
@@ -1015,15 +1281,21 @@ function courseCardHtml(
                 class="primary open-course"
                 data-code="${course.code}"
               >
+
                 Abrir curso
+
               </button>
 
             `
 
           : `
 
-              <span class="status pending">
+              <span
+                class="status pending"
+              >
+
                 Sin acceso asignado
+
               </span>
 
             `
@@ -1070,7 +1342,9 @@ async function renderCourses() {
             accessSet
           )
       )
-      .join("");
+      .join(
+        ""
+      );
 
 
   $("courseGrid").innerHTML =
@@ -1082,7 +1356,9 @@ async function renderCourses() {
             accessSet
           )
       )
-      .join("");
+      .join(
+        ""
+      );
 
 
   document
@@ -1114,8 +1390,12 @@ async function ensureCurrentAccountIsActive() {
     error
   } =
     await supabase
-      .from("profiles")
-      .select("is_active")
+      .from(
+        "profiles"
+      )
+      .select(
+        "is_active,auto_blocked,blocked_at,blocked_reason"
+      )
       .eq(
         "id",
         currentProfile.id
@@ -1130,12 +1410,31 @@ async function ensureCurrentAccountIsActive() {
 
     $("courseView")
       .classList
-      .add("hidden");
+      .add(
+        "hidden"
+      );
 
 
-    showOnly(
-      "pendingView"
-    );
+    if (
+      data
+    ) {
+
+      currentProfile = {
+        ...currentProfile,
+        ...data
+      };
+
+
+      showInactiveAccount(
+        currentProfile
+      );
+
+    } else {
+
+      showOnly(
+        "pendingView"
+      );
+    }
 
 
     return false;
@@ -1162,7 +1461,9 @@ async function openCourse(
     );
 
 
-  if (!course) {
+  if (
+    !course
+  ) {
 
     return;
   }
@@ -1172,19 +1473,13 @@ async function openCourse(
     await ensureCurrentAccountIsActive();
 
 
-  if (!active) {
+  if (
+    !active
+  ) {
 
     return;
   }
 
-
-  /* ----------------------------------------------------------
-     ADMINISTRADOR:
-     acceso automático a todos los cursos.
-
-     ESTUDIANTE:
-     debe tener autorización en course_access.
-     ---------------------------------------------------------- */
 
   if (
     !currentProfile?.is_admin
@@ -1204,6 +1499,7 @@ async function openCourse(
         "No tienes acceso autorizado a este curso."
       );
 
+
       return;
     }
   }
@@ -1211,7 +1507,9 @@ async function openCourse(
 
   $("courseView")
     .classList
-    .remove("hidden");
+    .remove(
+      "hidden"
+    );
 
 
   await startStudySession(
@@ -1247,7 +1545,9 @@ async function loadPrivateCourseFile(
     error
   } =
     await supabase.storage
-      .from("courses")
+      .from(
+        "courses"
+      )
       .download(
         fileName
       );
@@ -1300,7 +1600,9 @@ async function loadPrivateCourseFile(
       );
 
 
-    if (title) {
+    if (
+      title
+    ) {
 
       title.textContent =
         titleText;
@@ -1310,8 +1612,9 @@ async function loadPrivateCourseFile(
     $("courseStatus").textContent =
       "Curso cargado";
 
-
-  } catch (error) {
+  } catch (
+    error
+  ) {
 
     console.error(
       error
@@ -1344,10 +1647,6 @@ function preparePrivateCourseHtml(
     );
 
 
-  /* ----------------------------------------------------------
-     ENLACES INTERNOS DEL LISTENING
-     ---------------------------------------------------------- */
-
   if (
     LISTENING_FILES.has(
       currentFile
@@ -1373,8 +1672,12 @@ function preparePrivateCourseHtml(
 
           const cleanHref =
             originalHref
-              .split("?")[0]
-              .split("#")[0]
+              .split(
+                "?"
+              )[0]
+              .split(
+                "#"
+              )[0]
               .replace(
                 /^\.\//,
                 ""
@@ -1383,7 +1686,9 @@ function preparePrivateCourseHtml(
 
           const fileName =
             cleanHref
-              .split("/")
+              .split(
+                "/"
+              )
               .pop();
 
 
@@ -1412,10 +1717,6 @@ function preparePrivateCourseHtml(
       );
   }
 
-
-  /* ----------------------------------------------------------
-     DETECTAR ACTIVIDAD DENTRO DEL IFRAME
-     ---------------------------------------------------------- */
 
   const activityScript =
     doc.createElement(
@@ -1535,7 +1836,9 @@ function preparePrivateCourseHtml(
    ============================================================ */
 
 window.addEventListener(
+
   "message",
+
   async event => {
 
     const frame =
@@ -1545,7 +1848,7 @@ window.addEventListener(
     if (
       !frame ||
       event.source !==
-        frame.contentWindow
+      frame.contentWindow
     ) {
 
       return;
@@ -1556,7 +1859,9 @@ window.addEventListener(
       event.data;
 
 
-    if (!message) {
+    if (
+      !message
+    ) {
 
       return;
     }
@@ -1568,6 +1873,7 @@ window.addEventListener(
     ) {
 
       markStudyActivity();
+
 
       return;
     }
@@ -1603,7 +1909,9 @@ window.addEventListener(
       await ensureCurrentAccountIsActive();
 
 
-    if (!active) {
+    if (
+      !active
+    ) {
 
       return;
     }
@@ -1629,6 +1937,7 @@ window.addEventListener(
     );
 
   }
+
 );
 
 
@@ -1644,7 +1953,9 @@ $("backToPortal").onclick =
 
     $("courseView")
       .classList
-      .add("hidden");
+      .add(
+        "hidden"
+      );
 
 
     $("courseFrame")
@@ -1680,12 +1991,14 @@ function startOfToday() {
   const d =
     new Date();
 
+
   d.setHours(
     0,
     0,
     0,
     0
   );
+
 
   return d;
 }
@@ -1696,18 +2009,24 @@ function startOfLast7Days() {
   const d =
     startOfToday();
 
+
   d.setDate(
     d.getDate() - 6
   );
+
 
   return d;
 }
 
 
-function localDayKey(value) {
+function localDayKey(
+  value
+) {
 
   const d =
-    new Date(value);
+    new Date(
+      value
+    );
 
 
   return [
@@ -1730,7 +2049,9 @@ function localDayKey(value) {
       "0"
     )
 
-  ].join("-");
+  ].join(
+    "-"
+  );
 }
 
 
@@ -1741,14 +2062,17 @@ function formatStudyTime(
   const seconds =
     Math.max(
       0,
-      Number(totalSeconds) ||
+      Number(
+        totalSeconds
+      ) ||
       0
     );
 
 
   const hours =
     Math.floor(
-      seconds / 3600
+      seconds /
+      3600
     );
 
 
@@ -1782,16 +2106,22 @@ function formatStudyTime(
 }
 
 
-function formatDateTime(value) {
+function formatDateTime(
+  value
+) {
 
-  if (!value) {
+  if (
+    !value
+  ) {
 
     return "Sin actividad";
   }
 
 
   const date =
-    new Date(value);
+    new Date(
+      value
+    );
 
 
   if (
@@ -1822,7 +2152,9 @@ function formatDateTime(value) {
 }
 
 
-function courseDisplayName(code) {
+function courseDisplayName(
+  code
+) {
 
   if (
     code ===
@@ -1842,7 +2174,9 @@ function courseDisplayName(code) {
 
 
   return course
+
     ? course.shortTitle
+
     : code;
 }
 
@@ -1851,19 +2185,28 @@ function courseDisplayName(code) {
    RESUMEN DE ESTUDIO
    ============================================================ */
 
-function buildStudySummary(rows) {
+function buildStudySummary(
+  rows
+) {
 
   const allRows =
-    [...rows]
-      .sort(
-        (a, b) =>
-          new Date(
-            b.started_at
-          ) -
-          new Date(
-            a.started_at
-          )
-      );
+    [
+      ...rows
+    ]
+    .sort(
+      (
+        a,
+        b
+      ) =>
+
+        new Date(
+          b.started_at
+        ) -
+
+        new Date(
+          a.started_at
+        )
+    );
 
 
   const lastEntry =
@@ -1959,7 +2302,9 @@ function buildStudySummary(rows) {
 
 
     perCourse.set(
+
       row.course_code,
+
       (
         perCourse.get(
           row.course_code
@@ -1967,6 +2312,7 @@ function buildStudySummary(rows) {
         0
       ) +
       seconds
+
     );
   }
 
@@ -2034,7 +2380,9 @@ function buildStudySummary(rows) {
    MOSTRAR ESTADÍSTICAS
    ============================================================ */
 
-function renderStudyStats(summary) {
+function renderStudyStats(
+  summary
+) {
 
   const recentHtml =
     summary.recent.length
@@ -2043,53 +2391,78 @@ function renderStudyStats(summary) {
           .map(
             row => `
 
-              <div style="
-                display:flex;
-                justify-content:space-between;
-                gap:12px;
-                padding:8px 0;
-                border-top:1px solid rgba(148,163,184,.18);
-              ">
+              <div
+                style="
+                  display:flex;
+                  justify-content:space-between;
+                  gap:12px;
+                  padding:8px 0;
+                  border-top:1px solid rgba(148,163,184,.18);
+                "
+              >
 
-                <div style="min-width:0;">
+                <div
+                  style="
+                    min-width:0;
+                  "
+                >
 
-                  <strong style="display:block;">
+                  <strong
+                    style="
+                      display:block;
+                    "
+                  >
+
                     ${escapeHtml(
                       row.section_name ||
                       courseDisplayName(
                         row.course_code
                       )
                     )}
+
                   </strong>
 
-                  <span class="small">
+                  <span
+                    class="small"
+                  >
+
                     ${escapeHtml(
                       formatDateTime(
                         row.started_at
                       )
                     )}
+
                   </span>
 
                 </div>
 
+                <strong
+                  style="
+                    white-space:nowrap;
+                  "
+                >
 
-                <strong style="white-space:nowrap;">
                   ${escapeHtml(
                     formatStudyTime(
                       row.active_seconds
                     )
                   )}
+
                 </strong>
 
               </div>
 
             `
           )
-          .join("")
+          .join(
+            ""
+          )
 
       : `
 
-          <div class="small">
+          <div
+            class="small"
+          >
             Todavía no hay sesiones de estudio registradas.
           </div>
 
@@ -2109,20 +2482,24 @@ function renderStudyStats(summary) {
       "
     >
 
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:10px;
-        flex-wrap:wrap;
-        margin-bottom:10px;
-      ">
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          flex-wrap:wrap;
+          margin-bottom:10px;
+        "
+      >
 
         <strong>
           📊 Estadísticas de estudio
         </strong>
 
-        <span class="small">
+        <span
+          class="small"
+        >
 
           Última entrada:
 
@@ -2136,22 +2513,27 @@ function renderStudyStats(summary) {
 
       </div>
 
+      <div
+        style="
+          display:grid;
+          grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+          gap:8px;
+          margin-bottom:12px;
+        "
+      >
 
-      <div style="
-        display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-        gap:8px;
-        margin-bottom:12px;
-      ">
-
-        <div class="stat">
+        <div
+          class="stat"
+        >
 
           <strong>
+
             ${escapeHtml(
               formatStudyTime(
                 summary.todaySeconds
               )
             )}
+
           </strong>
 
           <span>
@@ -2160,15 +2542,18 @@ function renderStudyStats(summary) {
 
         </div>
 
-
-        <div class="stat">
+        <div
+          class="stat"
+        >
 
           <strong>
+
             ${escapeHtml(
               formatStudyTime(
                 summary.weekSeconds
               )
             )}
+
           </strong>
 
           <span>
@@ -2177,8 +2562,9 @@ function renderStudyStats(summary) {
 
         </div>
 
-
-        <div class="stat">
+        <div
+          class="stat"
+        >
 
           <strong>
             ${summary.activeDays}
@@ -2190,15 +2576,18 @@ function renderStudyStats(summary) {
 
         </div>
 
-
-        <div class="stat">
+        <div
+          class="stat"
+        >
 
           <strong>
+
             ${escapeHtml(
               formatStudyTime(
                 summary.totalSeconds
               )
             )}
+
           </strong>
 
           <span>
@@ -2209,10 +2598,11 @@ function renderStudyStats(summary) {
 
       </div>
 
-
       <div
         class="small"
-        style="margin-bottom:8px;"
+        style="
+          margin-bottom:8px;
+        "
       >
 
         <strong>
@@ -2245,10 +2635,17 @@ function renderStudyStats(summary) {
 
       </div>
 
+      <div
+        style="
+          margin-top:10px;
+        "
+      >
 
-      <div style="margin-top:10px;">
-
-        <strong style="font-size:14px;">
+        <strong
+          style="
+            font-size:14px;
+          "
+        >
           Actividad reciente
         </strong>
 
@@ -2277,7 +2674,7 @@ async function loadUsers() {
         "profiles"
       )
       .select(
-        "id,email,display_name,is_admin,is_active,created_at"
+        "id,email,display_name,is_admin,is_active,created_at,activated_at,auto_blocked,blocked_at,blocked_reason"
       )
       .order(
         "created_at",
@@ -2316,7 +2713,9 @@ async function loadUsers() {
       );
 
 
-  if (accessError) {
+  if (
+    accessError
+  ) {
 
     console.error(
       accessError
@@ -2344,7 +2743,9 @@ async function loadUsers() {
       );
 
 
-  if (activityError) {
+  if (
+    activityError
+  ) {
 
     console.error(
       "No se pudieron cargar las estadísticas:",
@@ -2428,7 +2829,9 @@ async function loadUsers() {
 
   $("adminStats").innerHTML = `
 
-    <div class="stat">
+    <div
+      class="stat"
+    >
 
       <strong>
         ${students.length}
@@ -2440,8 +2843,9 @@ async function loadUsers() {
 
     </div>
 
-
-    <div class="stat">
+    <div
+      class="stat"
+    >
 
       <strong>
 
@@ -2460,8 +2864,9 @@ async function loadUsers() {
 
     </div>
 
-
-    <div class="stat">
+    <div
+      class="stat"
+    >
 
       <strong>
 
@@ -2484,194 +2889,92 @@ async function loadUsers() {
 
 
   $("usersList").innerHTML =
-    profiles.map(
-      profile => {
+    profiles
+      .map(
+        profile => {
 
-        const userCourses =
-          accessMap.get(
-            profile.id
-          ) ||
-          new Set();
-
-
-        const userActivity =
-          activityMap.get(
-            profile.id
-          ) ||
-          [];
+          const userCourses =
+            accessMap.get(
+              profile.id
+            ) ||
+            new Set();
 
 
-        const studySummary =
-          buildStudySummary(
-            userActivity
-          );
+          const userActivity =
+            activityMap.get(
+              profile.id
+            ) ||
+            [];
 
 
-        const courseSwitches =
-          COURSES.map(
-            course => {
-
-              const hasAccess =
-                userCourses.has(
-                  course.code
-                );
+          const studySummary =
+            buildStudySummary(
+              userActivity
+            );
 
 
-              return `
+          const courseSwitches =
+            COURSES
+              .map(
+                course => {
 
-                <div class="course-switch-row">
-
-                  <div class="course-switch-copy">
-
-                    <strong>
-                      ${escapeHtml(
-                        course.shortTitle
-                      )}
-                    </strong>
-
-                    <span>
-
-                      ${
-                        hasAccess
-                          ? "Acceso permitido"
-                          : "Sin acceso"
-                      }
-
-                    </span>
-
-                  </div>
+                  const hasAccess =
+                    userCourses.has(
+                      course.code
+                    );
 
 
-                  <label class="switch">
+                  return `
 
-                    <input
-                      type="checkbox"
-                      class="course-access-switch"
-                      data-id="${profile.id}"
-                      data-code="${course.code}"
-
-                      ${
-                        hasAccess
-                          ? "checked"
-                          : ""
-                      }
-
-                      ${
-                        profile.is_admin
-                          ? "disabled"
-                          : ""
-                      }
+                    <div
+                      class="course-switch-row"
                     >
 
-                    <span
-                      class="slider"
-                    ></span>
-
-                  </label>
-
-                </div>
-
-              `;
-            }
-          )
-          .join("");
-
-
-        return `
-
-          <div class="student-admin-card">
-
-            <div class="student-admin-head">
-
-              <div class="user-meta">
-
-                <strong>
-
-                  ${escapeHtml(
-                    profile.display_name ||
-                    "Sin nombre"
-                  )}
-
-                </strong>
-
-                <span>
-
-                  ${escapeHtml(
-                    profile.email
-                  )}
-
-                </span>
-
-              </div>
-
-
-              <span
-
-                class="status ${
-                  profile.is_active
-                    ? "active"
-                    : "blocked"
-                }"
-
-              >
-
-                ${
-                  profile.is_active
-                    ? "Activo"
-                    : "Bloqueado"
-                }
-
-              </span>
-
-            </div>
-
-
-            ${
-              profile.is_admin
-
-                ? `
-
-                    <div class="admin-account-note">
-
-                      Cuenta de administrador
-
-                    </div>
-
-                  `
-
-                : `
-
-                    <div class="student-account-control">
-
-                      <div>
+                      <div
+                        class="course-switch-copy"
+                      >
 
                         <strong>
-                          Cuenta del estudiante
+
+                          ${escapeHtml(
+                            course.shortTitle
+                          )}
+
                         </strong>
 
-                        <div class="small">
+                        <span>
 
                           ${
-                            profile.is_active
-                              ? "Puede entrar a la plataforma"
-                              : "Cuenta bloqueada"
+                            hasAccess
+
+                              ? "Acceso permitido"
+
+                              : "Sin acceso"
                           }
 
-                        </div>
+                        </span>
 
                       </div>
 
-
-                      <label class="switch">
+                      <label
+                        class="switch"
+                      >
 
                         <input
                           type="checkbox"
-                          class="student-active-switch"
+                          class="course-access-switch"
                           data-id="${profile.id}"
+                          data-code="${course.code}"
 
                           ${
-                            profile.is_active
+                            hasAccess
                               ? "checked"
+                              : ""
+                          }
+
+                          ${
+                            profile.is_admin
+                              ? "disabled"
                               : ""
                           }
                         >
@@ -2684,32 +2987,170 @@ async function loadUsers() {
 
                     </div>
 
+                  `;
+                }
+              )
+              .join(
+                ""
+              );
 
-                    <div class="course-access-list">
 
-                      ${courseSwitches}
+          return `
 
-                    </div>
+            <div
+              class="student-admin-card"
+            >
 
+              <div
+                class="student-admin-head"
+              >
 
-                    ${renderStudyStats(
-                      studySummary
+                <div
+                  class="user-meta"
+                >
+
+                  <strong>
+
+                    ${escapeHtml(
+                      profile.display_name ||
+                      "Sin nombre"
                     )}
 
-                  `
-            }
+                  </strong>
 
-          </div>
+                  <span>
 
-        `;
-      }
-    )
-    .join("");
+                    ${escapeHtml(
+                      profile.email
+                    )}
+
+                  </span>
+
+                </div>
+
+                <span
+                  class="status ${
+                    profile.is_active
+                      ? "active"
+                      : "blocked"
+                  }"
+                >
+
+                  ${
+                    profile.is_active
+
+                      ? "Activo"
+
+                      : profile.auto_blocked
+
+                        ? "Bloqueado por inactividad"
+
+                        : "Bloqueado"
+                  }
+
+                </span>
+
+              </div>
+
+              ${
+                profile.is_admin
+
+                  ? `
+
+                      <div
+                        class="admin-account-note"
+                      >
+
+                        Cuenta de administrador
+
+                      </div>
+
+                    `
+
+                  : `
+
+                      <div
+                        class="student-account-control"
+                      >
+
+                        <div>
+
+                          <strong>
+                            Cuenta del estudiante
+                          </strong>
+
+                          <div
+                            class="small"
+                          >
+
+                            ${
+                              profile.is_active
+
+                                ? "Puede entrar a la plataforma"
+
+                                : profile.auto_blocked
+
+                                  ? "Bloqueada automáticamente por inactividad"
+
+                                  : "Cuenta bloqueada"
+                            }
+
+                          </div>
+
+                        </div>
+
+                        <label
+                          class="switch"
+                        >
+
+                          <input
+                            type="checkbox"
+                            class="student-active-switch"
+                            data-id="${profile.id}"
+
+                            ${
+                              profile.is_active
+                                ? "checked"
+                                : ""
+                            }
+                          >
+
+                          <span
+                            class="slider"
+                          ></span>
+
+                        </label>
+
+                      </div>
+
+                      <div
+                        class="course-access-list"
+                      >
+
+                        ${courseSwitches}
+
+                      </div>
+
+                      ${renderStudyStats(
+                        studySummary
+                      )}
+
+                    `
+              }
+
+            </div>
+
+          `;
+        }
+      )
+      .join(
+        ""
+      );
 
 
-  /* ----------------------------------------------------------
+  /* ==========================================================
      ACTIVAR / BLOQUEAR ESTUDIANTE
-     ---------------------------------------------------------- */
+     ========================================================== */
 
   document
     .querySelectorAll(
@@ -2719,7 +3160,9 @@ async function loadUsers() {
       input => {
 
         input.addEventListener(
+
           "change",
+
           async () => {
 
             const userId =
@@ -2738,7 +3181,9 @@ async function loadUsers() {
               error
             } =
               await supabase.rpc(
+
                 "set_student_active",
+
                 {
 
                   p_target_user:
@@ -2748,10 +3193,13 @@ async function loadUsers() {
                     newStatus
 
                 }
+
               );
 
 
-            if (error) {
+            if (
+              error
+            ) {
 
               console.error(
                 error
@@ -2782,15 +3230,16 @@ async function loadUsers() {
             await loadUsers();
 
           }
+
         );
 
       }
     );
 
 
-  /* ----------------------------------------------------------
+  /* ==========================================================
      PERMISOS DE CURSOS
-     ---------------------------------------------------------- */
+     ========================================================== */
 
   document
     .querySelectorAll(
@@ -2800,7 +3249,9 @@ async function loadUsers() {
       input => {
 
         input.addEventListener(
+
           "change",
+
           async () => {
 
             const userId =
@@ -2869,7 +3320,9 @@ async function loadUsers() {
             }
 
 
-            if (error) {
+            if (
+              error
+            ) {
 
               console.error(
                 error
@@ -2883,7 +3336,6 @@ async function loadUsers() {
               alert(
                 "No se pudo cambiar el acceso al curso."
               );
-
             }
 
 
@@ -2894,10 +3346,12 @@ async function loadUsers() {
             await loadUsers();
 
           }
+
         );
 
       }
     );
+
 }
 
 
@@ -2913,14 +3367,18 @@ $("refreshUsers").onclick =
    ESCAPAR HTML
    ============================================================ */
 
-function escapeHtml(value) {
+function escapeHtml(
+  value
+) {
 
   return String(
     value ??
     ""
   )
   .replace(
+
     /[&<>"']/g,
+
     character =>
       ({
 
@@ -2942,6 +3400,7 @@ function escapeHtml(value) {
       }[
         character
       ])
+
   );
 }
 
@@ -2953,7 +3412,10 @@ function escapeHtml(value) {
 supabase.auth
   .onAuthStateChange(
 
-    (_event, session) => {
+    (
+      _event,
+      session
+    ) => {
 
       if (
         !session
@@ -2976,6 +3438,7 @@ supabase.auth
       }
 
     }
+
   );
 
 
@@ -3025,7 +3488,7 @@ setInterval(
           "profiles"
         )
         .select(
-          "is_active"
+          "is_active,auto_blocked,blocked_at,blocked_reason"
         )
         .eq(
           "id",
@@ -3034,7 +3497,9 @@ setInterval(
         .single();
 
 
-    if (error) {
+    if (
+      error
+    ) {
 
       return;
     }
@@ -3064,14 +3529,21 @@ setInterval(
         "about:blank";
 
 
-      showOnly(
-        "pendingView"
+      currentProfile = {
+        ...currentProfile,
+        ...profile
+      };
+
+
+      showInactiveAccount(
+        currentProfile
       );
     }
 
   },
 
   5000
+
 );
 
 
@@ -3080,11 +3552,15 @@ setInterval(
    ============================================================ */
 
 window.addEventListener(
+
   "pagehide",
+
   () => {
 
     saveStudyTime();
+
   }
+
 );
 
 
