@@ -87,6 +87,16 @@ const COURSES = [
     type: "grammar"
   }
 
+  {
+  code: "A2",
+  title: "A2 — Elementary",
+  shortTitle: "A2 — Elementary",
+  description:
+    "Gramática A2 completa · explicaciones · ejemplos · audio · práctica · Final Review de 110 ejercicios.",
+  file: "a2_grammar.html",
+  badge: "A2",
+  type: "grammar"
+},
 ];
 
 
