@@ -77,6 +77,17 @@ const COURSES = [
   },
 
   {
+    code: "VERBS5000",
+    title: "5000 Most Common English Verbs",
+    shortTitle: "5000 English Verbs",
+    description:
+      "5,000 verbos · base · past · past participle · pronunciación americana · Auto Flashcards.",
+    file: "5000_most_common_english_verbs.html",
+    badge: "American English",
+    type: "extra"
+  },
+
+  {
     code: "A1",
     title: "A1 — Beginner",
     shortTitle: "A1 — Beginner",
@@ -96,7 +107,7 @@ const COURSES = [
     file: "a2_grammar.html",
     badge: "A2",
     type: "grammar"
-  },
+  }
 
 ];
 
@@ -841,20 +852,6 @@ function showInactiveAccount(
 
             : ""
         }
-
-        <div
-          style="
-            margin-top:8px;
-          "
-        >
-
-          <strong>
-            Requisito:
-          </strong>
-
-          mínimo 20 minutos de estudio activo dentro del período permitido.
-
-        </div>
 
       </div>
 
