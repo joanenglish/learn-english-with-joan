@@ -619,8 +619,8 @@ async function getProfile(
     await supabase
       .from("profiles")
       .select(
-        "id,email,display_name,is_admin,is_active"
-      )
+  "id,email,display_name,is_admin,is_active,activated_at,auto_blocked,blocked_at,blocked_reason"
+)
       .eq(
         "id",
         userId
