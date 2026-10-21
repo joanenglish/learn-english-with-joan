@@ -16,6 +16,23 @@ const $ = id =>
 
 
 /* ============================================================
+   META DIARIA
+   ============================================================ */
+
+const DAILY_GOAL_SECONDS =
+  20 * 60;
+
+const SAFETY_WINDOW_HOURS =
+  24;
+
+const SAFETY_WINDOW_MS =
+  SAFETY_WINDOW_HOURS *
+  60 *
+  60 *
+  1000;
+
+
+/* ============================================================
    CURSOS
    ============================================================ */
 
@@ -194,6 +211,727 @@ function markStudyActivity() {
 
   studyLastInteraction =
     Date.now();
+}
+
+
+/* ============================================================
+   TARJETA META DIARIA
+   ============================================================ */
+
+function ensureDailyGoalCard() {
+
+  if (
+    $("dailyGoalCard")
+  ) {
+
+    return;
+  }
+
+
+  const portalView =
+    $("portalView");
+
+
+  if (
+    !portalView
+  ) {
+
+    return;
+  }
+
+
+  const card =
+    document.createElement(
+      "section"
+    );
+
+
+  card.id =
+    "dailyGoalCard";
+
+
+  card.style.cssText = `
+    margin: 18px 0 22px;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(96,165,250,.25);
+    background:
+      linear-gradient(
+        135deg,
+        rgba(37,99,235,.13),
+        rgba(16,185,129,.08)
+      );
+  `;
+
+
+  card.innerHTML = `
+    <div
+      id="dailyGoalContent"
+      class="small"
+    >
+      Cargando progreso...
+    </div>
+  `;
+
+
+  const welcomeArea =
+    $("welcomeTitle")
+      ?.parentElement;
+
+
+  if (
+    welcomeArea &&
+    welcomeArea.parentElement
+  ) {
+
+    welcomeArea.parentElement
+      .insertBefore(
+        card,
+        welcomeArea.nextSibling
+      );
+
+  } else {
+
+    portalView.prepend(
+      card
+    );
+  }
+}
+
+
+/* ============================================================
+   FORMATEAR MINUTOS
+   ============================================================ */
+
+function formatGoalMinutes(
+  seconds
+) {
+
+  const value =
+    Math.max(
+      0,
+      Number(
+        seconds
+      ) ||
+      0
+    );
+
+
+  const minutes =
+    Math.floor(
+      value / 60
+    );
+
+
+  const remainingSeconds =
+    Math.floor(
+      value % 60
+    );
+
+
+  if (
+    minutes <= 0
+  ) {
+
+    return `${remainingSeconds} s`;
+  }
+
+
+  if (
+    remainingSeconds === 0
+  ) {
+
+    return `${minutes} min`;
+  }
+
+
+  return `${minutes} min ${remainingSeconds} s`;
+}
+
+
+/* ============================================================
+   TIEMPO RESTANTE DEL PERÍODO INICIAL
+   ============================================================ */
+
+function formatRemainingInitialTime(
+  milliseconds
+) {
+
+  const ms =
+    Math.max(
+      0,
+      milliseconds
+    );
+
+
+  const totalMinutes =
+    Math.ceil(
+      ms / 60000
+    );
+
+
+  const hours =
+    Math.floor(
+      totalMinutes / 60
+    );
+
+
+  const minutes =
+    totalMinutes % 60;
+
+
+  if (
+    hours > 0
+  ) {
+
+    return `${hours} h ${minutes} min`;
+  }
+
+
+  return `${minutes} min`;
+}
+
+
+/* ============================================================
+   CARGAR META DIARIA Y ÚLTIMAS 24 HORAS
+   ============================================================ */
+
+async function loadDailyGoal() {
+
+  if (
+    !currentProfile ||
+    currentProfile.is_admin ||
+    !currentProfile.is_active
+  ) {
+
+    const card =
+      $("dailyGoalCard");
+
+
+    if (
+      card
+    ) {
+
+      card.remove();
+    }
+
+
+    return;
+  }
+
+
+  ensureDailyGoalCard();
+
+
+  const content =
+    $("dailyGoalContent");
+
+
+  if (
+    !content
+  ) {
+
+    return;
+  }
+
+
+  const now =
+    new Date();
+
+
+  const todayStart =
+    new Date();
+
+
+  todayStart.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  const last24h =
+    new Date(
+      Date.now() -
+      SAFETY_WINDOW_MS
+    );
+
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from(
+        "study_activity"
+      )
+      .select(
+        "active_seconds,started_at,course_code"
+      )
+      .eq(
+        "user_id",
+        currentProfile.id
+      )
+      .neq(
+        "course_code",
+        "PORTAL"
+      )
+      .gte(
+        "started_at",
+        last24h.toISOString()
+      );
+
+
+  if (
+    error
+  ) {
+
+    console.error(
+      "No se pudo cargar la meta diaria:",
+      error
+    );
+
+
+    content.innerHTML = `
+      <strong>
+        🎯 Meta diaria
+      </strong>
+
+      <div
+        style="
+          margin-top:8px;
+          opacity:.75;
+        "
+      >
+        No se pudo cargar el progreso.
+      </div>
+    `;
+
+
+    return;
+  }
+
+
+  let secondsToday =
+    0;
+
+  let seconds24h =
+    0;
+
+
+  for (
+    const row
+    of data ||
+    []
+  ) {
+
+    const seconds =
+      Math.max(
+        0,
+        Number(
+          row.active_seconds
+        ) ||
+        0
+      );
+
+
+    const started =
+      new Date(
+        row.started_at
+      );
+
+
+    seconds24h +=
+      seconds;
+
+
+    if (
+      started >=
+      todayStart
+    ) {
+
+      secondsToday +=
+        seconds;
+    }
+  }
+
+
+  const todayPercent =
+    Math.min(
+      100,
+      Math.round(
+        (
+          secondsToday /
+          DAILY_GOAL_SECONDS
+        ) *
+        100
+      )
+    );
+
+
+  const safetyPercent =
+    Math.min(
+      100,
+      Math.round(
+        (
+          seconds24h /
+          DAILY_GOAL_SECONDS
+        ) *
+        100
+      )
+    );
+
+
+  const missingToday =
+    Math.max(
+      0,
+      DAILY_GOAL_SECONDS -
+      secondsToday
+    );
+
+
+  const missing24h =
+    Math.max(
+      0,
+      DAILY_GOAL_SECONDS -
+      seconds24h
+    );
+
+
+  const dailyDone =
+    secondsToday >=
+    DAILY_GOAL_SECONDS;
+
+
+  const safe24h =
+    seconds24h >=
+    DAILY_GOAL_SECONDS;
+
+
+  let initialPeriod =
+    false;
+
+  let initialRemainingMs =
+    0;
+
+
+  if (
+    currentProfile.activated_at
+  ) {
+
+    const activated =
+      new Date(
+        currentProfile.activated_at
+      );
+
+
+    const elapsed =
+      now.getTime() -
+      activated.getTime();
+
+
+    if (
+      elapsed <
+      SAFETY_WINDOW_MS
+    ) {
+
+      initialPeriod =
+        true;
+
+
+      initialRemainingMs =
+        SAFETY_WINDOW_MS -
+        elapsed;
+    }
+  }
+
+
+  let safetyMessage =
+    "";
+
+
+  let safetyIcon =
+    "";
+
+
+  let safetyTitle =
+    "";
+
+
+  if (
+    safe24h
+  ) {
+
+    safetyIcon =
+      "✅";
+
+
+    safetyTitle =
+      "Cuenta al día";
+
+
+    safetyMessage =
+      "Ya completaste el mínimo de 20 minutos dentro de las últimas 24 horas.";
+
+  } else if (
+    initialPeriod
+  ) {
+
+    safetyIcon =
+      "🟡";
+
+
+    safetyTitle =
+      "Período inicial";
+
+
+    safetyMessage =
+      `Te faltan ${formatGoalMinutes(
+        missing24h
+      )} de estudio. Tu período inicial termina aproximadamente en ${formatRemainingInitialTime(
+        initialRemainingMs
+      )}.`;
+
+  } else {
+
+    safetyIcon =
+      "⚠️";
+
+
+    safetyTitle =
+      "Riesgo de bloqueo";
+
+
+    safetyMessage =
+      `Tienes menos de 20 minutos en las últimas 24 horas. Estudia ${formatGoalMinutes(
+        missing24h
+      )} para volver a estar al día.`;
+  }
+
+
+  content.innerHTML = `
+
+    <div
+      style="
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:12px;
+        flex-wrap:wrap;
+      "
+    >
+
+      <div>
+
+        <div
+          style="
+            font-size:20px;
+            font-weight:800;
+          "
+        >
+          🎯 Meta de hoy
+        </div>
+
+        <div
+          style="
+            margin-top:4px;
+            opacity:.8;
+          "
+        >
+          Estudia al menos 20 minutos cada día.
+        </div>
+
+      </div>
+
+
+      <div
+        style="
+          font-size:18px;
+          font-weight:800;
+        "
+      >
+
+        ${formatGoalMinutes(
+          secondsToday
+        )}
+        / 20 min
+
+      </div>
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:14px;
+        height:12px;
+        overflow:hidden;
+        border-radius:999px;
+        background:rgba(148,163,184,.18);
+      "
+    >
+
+      <div
+        style="
+          width:${todayPercent}%;
+          height:100%;
+          border-radius:999px;
+          background:linear-gradient(
+            90deg,
+            #3b82f6,
+            #22c55e
+          );
+          transition:width .3s ease;
+        "
+      ></div>
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:8px;
+      "
+    >
+
+      ${
+        dailyDone
+
+          ? `
+              <strong>
+                ✅ Meta de hoy completada.
+              </strong>
+            `
+
+          : `
+              Te faltan
+              <strong>
+                ${formatGoalMinutes(
+                  missingToday
+                )}
+              </strong>
+              para completar tu meta de hoy.
+            `
+      }
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:20px;
+        padding-top:18px;
+        border-top:1px solid rgba(148,163,184,.18);
+      "
+    >
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:12px;
+          flex-wrap:wrap;
+        "
+      >
+
+        <strong
+          style="
+            font-size:17px;
+          "
+        >
+          🛡️ Últimas 24 horas
+        </strong>
+
+        <strong>
+
+          ${formatGoalMinutes(
+            seconds24h
+          )}
+          / 20 min
+
+        </strong>
+
+      </div>
+
+
+      <div
+        style="
+          margin-top:10px;
+          height:9px;
+          overflow:hidden;
+          border-radius:999px;
+          background:rgba(148,163,184,.18);
+        "
+      >
+
+        <div
+          style="
+            width:${safetyPercent}%;
+            height:100%;
+            border-radius:999px;
+            background:${
+              safe24h
+                ? "#22c55e"
+                : "#f59e0b"
+            };
+            transition:width .3s ease;
+          "
+        ></div>
+
+      </div>
+
+
+      <div
+        style="
+          margin-top:12px;
+          padding:12px 14px;
+          border-radius:12px;
+          background:${
+            safe24h
+
+              ? "rgba(34,197,94,.08)"
+
+              : initialPeriod
+
+                ? "rgba(245,158,11,.08)"
+
+                : "rgba(239,68,68,.08)"
+          };
+          border:1px solid ${
+            safe24h
+
+              ? "rgba(34,197,94,.22)"
+
+              : initialPeriod
+
+                ? "rgba(245,158,11,.22)"
+
+                : "rgba(239,68,68,.22)"
+          };
+        "
+      >
+
+        <strong>
+          ${safetyIcon}
+          ${safetyTitle}
+        </strong>
+
+        <div
+          style="
+            margin-top:5px;
+            line-height:1.5;
+          "
+        >
+          ${safetyMessage}
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
 }
 
 
@@ -526,6 +1264,30 @@ setInterval(
 
 
 /* ============================================================
+   ACTUALIZAR META AUTOMÁTICAMENTE
+   ============================================================ */
+
+setInterval(
+
+  async () => {
+
+    if (
+      currentProfile &&
+      !currentProfile.is_admin &&
+      currentProfile.is_active
+    ) {
+
+      await loadDailyGoal();
+    }
+
+  },
+
+  60000
+
+);
+
+
+/* ============================================================
    ACTIVIDAD EN EL PORTAL
    ============================================================ */
 
@@ -704,7 +1466,7 @@ async function getProfile(
 
 
 /* ============================================================
-   MOSTRAR CUENTA INACTIVA / BLOQUEADA
+   MOSTRAR CUENTA BLOQUEADA
    ============================================================ */
 
 function showInactiveAccount(
@@ -776,9 +1538,11 @@ function showInactiveAccount(
         "
       >
 
-        Tu cuenta fue bloqueada automáticamente porque pasaron
-        <strong>48 horas</strong> sin completar al menos
-        <strong>20 minutos de estudio activo</strong>.
+        Tu cuenta fue bloqueada automáticamente porque
+        no completaste al menos
+        <strong>20 minutos de estudio activo</strong>
+        dentro de las últimas
+        <strong>24 horas</strong>.
 
       </p>
 
@@ -992,6 +1756,18 @@ async function loadSession() {
     currentProfile.is_admin
   ) {
 
+    const goalCard =
+      $("dailyGoalCard");
+
+
+    if (
+      goalCard
+    ) {
+
+      goalCard.remove();
+    }
+
+
     $("adminPanel")
       .classList
       .remove(
@@ -1017,6 +1793,9 @@ async function loadSession() {
       "PORTAL",
       "Portal principal"
     );
+
+
+    await loadDailyGoal();
   }
 }
 
@@ -1219,7 +1998,7 @@ async function getMyCourseAccess() {
 
 
 /* ============================================================
-   CREAR TARJETA DE CURSO
+   TARJETA DE CURSO
    ============================================================ */
 
 function courseCardHtml(
@@ -1388,7 +2167,7 @@ async function ensureCurrentAccountIsActive() {
         "profiles"
       )
       .select(
-        "is_active,auto_blocked,blocked_at,blocked_reason"
+        "is_active,auto_blocked,blocked_at,blocked_reason,activated_at"
       )
       .eq(
         "id",
@@ -1433,6 +2212,12 @@ async function ensureCurrentAccountIsActive() {
 
     return false;
   }
+
+
+  currentProfile = {
+    ...currentProfile,
+    ...data
+  };
 
 
   return true;
@@ -1971,6 +2756,9 @@ $("backToPortal").onclick =
         "PORTAL",
         "Portal principal"
       );
+
+
+      await loadDailyGoal();
     }
 
   };
@@ -3080,9 +3868,7 @@ async function loadUsers() {
 
   $("adminStats").innerHTML = `
 
-    <div
-      class="stat"
-    >
+    <div class="stat">
 
       <strong>
         ${students.length}
@@ -3094,9 +3880,8 @@ async function loadUsers() {
 
     </div>
 
-    <div
-      class="stat"
-    >
+
+    <div class="stat">
 
       <strong>
 
@@ -3115,9 +3900,8 @@ async function loadUsers() {
 
     </div>
 
-    <div
-      class="stat"
-    >
+
+    <div class="stat">
 
       <strong>
 
@@ -3151,53 +3935,35 @@ async function loadUsers() {
       .map(
         profile => `
 
-          <div
-            class="student-admin-card"
-          >
+          <div class="student-admin-card">
 
-            <div
-              class="student-admin-head"
-            >
+            <div class="student-admin-head">
 
-              <div
-                class="user-meta"
-              >
+              <div class="user-meta">
 
                 <strong>
-
                   ${escapeHtml(
                     profile.display_name ||
                     "Sin nombre"
                   )}
-
                 </strong>
 
                 <span>
-
                   ${escapeHtml(
                     profile.email
                   )}
-
                 </span>
 
               </div>
 
-              <span
-                class="status active"
-              >
-
+              <span class="status active">
                 Administrador
-
               </span>
 
             </div>
 
-            <div
-              class="admin-account-note"
-            >
-
+            <div class="admin-account-note">
               Cuenta de administrador
-
             </div>
 
           </div>
@@ -3247,29 +4013,21 @@ async function loadUsers() {
 
                   return `
 
-                    <div
-                      class="course-switch-row"
-                    >
+                    <div class="course-switch-row">
 
-                      <div
-                        class="course-switch-copy"
-                      >
+                      <div class="course-switch-copy">
 
                         <strong>
-
                           ${escapeHtml(
                             course.shortTitle
                           )}
-
                         </strong>
 
                         <span>
 
                           ${
                             hasAccess
-
                               ? "Acceso permitido"
-
                               : "Sin acceso"
                           }
 
@@ -3277,16 +4035,14 @@ async function loadUsers() {
 
                       </div>
 
-                      <label
-                        class="switch"
-                      >
+
+                      <label class="switch">
 
                         <input
                           type="checkbox"
                           class="course-access-switch"
                           data-id="${profile.id}"
                           data-code="${course.code}"
-
                           ${
                             hasAccess
                               ? "checked"
@@ -3294,9 +4050,7 @@ async function loadUsers() {
                           }
                         >
 
-                        <span
-                          class="slider"
-                        ></span>
+                        <span class="slider"></span>
 
                       </label>
 
@@ -3389,30 +4143,26 @@ async function loadUsers() {
                     ▶
                   </span>
 
-                  <div
-                    class="user-meta"
-                  >
+
+                  <div class="user-meta">
 
                     <strong>
-
                       ${escapeHtml(
                         profile.display_name ||
                         "Sin nombre"
                       )}
-
                     </strong>
 
                     <span>
-
                       ${escapeHtml(
                         profile.email
                       )}
-
                     </span>
 
                   </div>
 
                 </div>
+
 
                 <span
                   class="status ${
@@ -3433,6 +4183,7 @@ async function loadUsers() {
 
               </summary>
 
+
               <div
                 style="
                   margin-top:16px;
@@ -3441,9 +4192,7 @@ async function loadUsers() {
                 "
               >
 
-                <div
-                  class="student-account-control"
-                >
+                <div class="student-account-control">
 
                   <div>
 
@@ -3451,14 +4200,10 @@ async function loadUsers() {
                       Cuenta del estudiante
                     </strong>
 
-                    <div
-                      class="small"
-                    >
-
+                    <div class="small">
                       ${escapeHtml(
                         accountText
                       )}
-
                     </div>
 
                     ${
@@ -3491,15 +4236,13 @@ async function loadUsers() {
 
                   </div>
 
-                  <label
-                    class="switch"
-                  >
+
+                  <label class="switch">
 
                     <input
                       type="checkbox"
                       class="student-active-switch"
                       data-id="${profile.id}"
-
                       ${
                         profile.is_active
                           ? "checked"
@@ -3507,21 +4250,17 @@ async function loadUsers() {
                       }
                     >
 
-                    <span
-                      class="slider"
-                    ></span>
+                    <span class="slider"></span>
 
                   </label>
 
                 </div>
 
-                <div
-                  class="course-access-list"
-                >
 
+                <div class="course-access-list">
                   ${courseSwitches}
-
                 </div>
+
 
                 ${renderStudyStats(
                   studySummary
@@ -3548,10 +4287,6 @@ async function loadUsers() {
 
   filterStudentCards();
 
-
-  /* ----------------------------------------------------------
-     ACTIVAR / BLOQUEAR ESTUDIANTE
-     ---------------------------------------------------------- */
 
   document
     .querySelectorAll(
@@ -3637,10 +4372,6 @@ async function loadUsers() {
       }
     );
 
-
-  /* ----------------------------------------------------------
-     PERMISOS DE CURSOS
-     ---------------------------------------------------------- */
 
   document
     .querySelectorAll(
@@ -3890,7 +4621,7 @@ setInterval(
           "profiles"
         )
         .select(
-          "is_active,auto_blocked,blocked_at,blocked_reason"
+          "is_active,auto_blocked,blocked_at,blocked_reason,activated_at"
         )
         .eq(
           "id",
@@ -3905,6 +4636,12 @@ setInterval(
 
       return;
     }
+
+
+    currentProfile = {
+      ...currentProfile,
+      ...profile
+    };
 
 
     if (
@@ -3929,12 +4666,6 @@ setInterval(
 
       $("courseFrame").src =
         "about:blank";
-
-
-      currentProfile = {
-        ...currentProfile,
-        ...profile
-      };
 
 
       showInactiveAccount(
