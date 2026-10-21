@@ -107,7 +107,6 @@ const COURSES = [
 
 const LISTENING_FILES =
   new Set([
-
     "listening_index.html",
     "listening_a1_v1.html",
     "listening_a1_v2.html",
@@ -116,7 +115,6 @@ const LISTENING_FILES =
     "listening_b1_v1.html",
     "listening_b1_v2.html",
     "listening_b2_v1.html"
-
   ]);
 
 
@@ -145,7 +143,6 @@ const LISTENING_TITLES = {
 
   "listening_b2_v1.html":
     "Listening B2 — Volumen 1"
-
 };
 
 
@@ -2660,10 +2657,267 @@ function renderStudyStats(
 
 
 /* ============================================================
+   BUSCADOR DE ESTUDIANTES
+   ============================================================ */
+
+function ensureStudentSearchControls() {
+
+  if (
+    $("studentSearch")
+  ) {
+
+    return;
+  }
+
+
+  const usersList =
+    $("usersList");
+
+
+  if (
+    !usersList
+  ) {
+
+    return;
+  }
+
+
+  const searchWrap =
+    document.createElement(
+      "div"
+    );
+
+
+  searchWrap.id =
+    "studentSearchWrap";
+
+
+  searchWrap.style.cssText = `
+    margin:18px 0 14px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  `;
+
+
+  searchWrap.innerHTML = `
+
+    <input
+      id="studentSearch"
+      type="search"
+      placeholder="Buscar estudiante por nombre o correo..."
+      autocomplete="off"
+      style="
+        flex:1 1 320px;
+        min-width:220px;
+        padding:12px 14px;
+        border-radius:12px;
+        border:1px solid rgba(148,163,184,.3);
+        background:rgba(15,23,42,.45);
+        color:inherit;
+        outline:none;
+      "
+    >
+
+    <span
+      id="studentSearchCount"
+      class="small"
+      style="white-space:nowrap;"
+    ></span>
+
+  `;
+
+
+  usersList.parentNode.insertBefore(
+    searchWrap,
+    usersList
+  );
+
+
+  $("studentSearch")
+    .addEventListener(
+      "input",
+      filterStudentCards
+    );
+}
+
+
+/* ============================================================
+   FILTRAR ESTUDIANTES
+   ============================================================ */
+
+function filterStudentCards() {
+
+  const input =
+    $("studentSearch");
+
+
+  const query =
+    String(
+      input?.value ||
+      ""
+    )
+    .trim()
+    .toLowerCase();
+
+
+  const cards =
+    [
+      ...document.querySelectorAll(
+        ".student-details-card"
+      )
+    ];
+
+
+  let visibleCount =
+    0;
+
+
+  cards.forEach(
+    card => {
+
+      const haystack =
+        String(
+          card.dataset.search ||
+          ""
+        )
+        .toLowerCase();
+
+
+      const visible =
+        !query ||
+        haystack.includes(
+          query
+        );
+
+
+      card.style.display =
+        visible
+
+          ? "block"
+
+          : "none";
+
+
+      if (
+        visible
+      ) {
+
+        visibleCount +=
+          1;
+      }
+
+    }
+  );
+
+
+  const count =
+    $("studentSearchCount");
+
+
+  if (
+    count
+  ) {
+
+    count.textContent =
+      query
+
+        ? `${visibleCount} resultado${visibleCount === 1 ? "" : "s"}`
+
+        : `${cards.length} estudiante${cards.length === 1 ? "" : "s"}`;
+  }
+}
+
+
+/* ============================================================
+   ESTUDIANTES DESPLEGABLES
+   ============================================================ */
+
+function setupStudentDropdowns() {
+
+  const detailsList =
+    [
+      ...document.querySelectorAll(
+        ".student-details-card"
+      )
+    ];
+
+
+  detailsList.forEach(
+    details => {
+
+      const icon =
+        details.querySelector(
+          ".student-toggle-icon"
+        );
+
+
+      const updateIcon =
+        () => {
+
+          if (
+            icon
+          ) {
+
+            icon.textContent =
+              details.open
+
+                ? "▼"
+
+                : "▶";
+          }
+        };
+
+
+      updateIcon();
+
+
+      details.addEventListener(
+        "toggle",
+        () => {
+
+          updateIcon();
+
+
+          if (
+            !details.open
+          ) {
+
+            return;
+          }
+
+
+          detailsList.forEach(
+            other => {
+
+              if (
+                other !== details
+              ) {
+
+                other.open =
+                  false;
+              }
+
+            }
+          );
+
+        }
+      );
+
+    }
+  );
+}
+
+
+/* ============================================================
    PANEL ADMINISTRADOR
    ============================================================ */
 
 async function loadUsers() {
+
+  ensureStudentSearchControls();
+
 
   const {
     data: profiles,
@@ -2888,8 +3142,78 @@ async function loadUsers() {
   `;
 
 
-  $("usersList").innerHTML =
-    profiles
+  const adminProfiles =
+    profiles.filter(
+      profile =>
+        profile.is_admin
+    );
+
+
+  const adminHtml =
+    adminProfiles
+      .map(
+        profile => `
+
+          <div
+            class="student-admin-card"
+          >
+
+            <div
+              class="student-admin-head"
+            >
+
+              <div
+                class="user-meta"
+              >
+
+                <strong>
+
+                  ${escapeHtml(
+                    profile.display_name ||
+                    "Sin nombre"
+                  )}
+
+                </strong>
+
+                <span>
+
+                  ${escapeHtml(
+                    profile.email
+                  )}
+
+                </span>
+
+              </div>
+
+              <span
+                class="status active"
+              >
+
+                Administrador
+
+              </span>
+
+            </div>
+
+            <div
+              class="admin-account-note"
+            >
+
+              Cuenta de administrador
+
+            </div>
+
+          </div>
+
+        `
+      )
+      .join(
+        ""
+      );
+
+
+  const studentHtml =
+    students
       .map(
         profile => {
 
@@ -2971,12 +3295,6 @@ async function loadUsers() {
                               ? "checked"
                               : ""
                           }
-
-                          ${
-                            profile.is_admin
-                              ? "disabled"
-                              : ""
-                          }
                         >
 
                         <span
@@ -2995,36 +3313,107 @@ async function loadUsers() {
               );
 
 
+          const statusText =
+            profile.is_active
+
+              ? "Activo"
+
+              : profile.auto_blocked
+
+                ? "Bloqueado por inactividad"
+
+                : "Bloqueado";
+
+
+          const accountText =
+            profile.is_active
+
+              ? "Puede entrar a la plataforma"
+
+              : profile.auto_blocked
+
+                ? "Bloqueada automáticamente por inactividad"
+
+                : "Cuenta bloqueada";
+
+
+          const searchText =
+            `${
+              profile.display_name ||
+              ""
+            } ${
+              profile.email ||
+              ""
+            } ${statusText}`;
+
+
           return `
 
-            <div
-              class="student-admin-card"
+            <details
+              class="student-admin-card student-details-card"
+              data-search="${escapeHtml(
+                searchText
+              )}"
+              style="
+                overflow:hidden;
+              "
             >
 
-              <div
-                class="student-admin-head"
+              <summary
+                class="student-admin-head student-summary"
+                style="
+                  cursor:pointer;
+                  list-style:none;
+                  user-select:none;
+                  padding:2px 0;
+                "
               >
 
                 <div
-                  class="user-meta"
+                  style="
+                    display:flex;
+                    align-items:center;
+                    gap:10px;
+                    min-width:0;
+                    flex:1;
+                  "
                 >
 
-                  <strong>
-
-                    ${escapeHtml(
-                      profile.display_name ||
-                      "Sin nombre"
-                    )}
-
-                  </strong>
-
-                  <span>
-
-                    ${escapeHtml(
-                      profile.email
-                    )}
-
+                  <span
+                    class="student-toggle-icon"
+                    aria-hidden="true"
+                    style="
+                      width:18px;
+                      flex:0 0 18px;
+                      font-size:13px;
+                      opacity:.8;
+                    "
+                  >
+                    ▶
                   </span>
+
+                  <div
+                    class="user-meta"
+                  >
+
+                    <strong>
+
+                      ${escapeHtml(
+                        profile.display_name ||
+                        "Sin nombre"
+                      )}
+
+                    </strong>
+
+                    <span>
+
+                      ${escapeHtml(
+                        profile.email
+                      )}
+
+                    </span>
+
+                  </div>
 
                 </div>
 
@@ -3034,111 +3423,116 @@ async function loadUsers() {
                       ? "active"
                       : "blocked"
                   }"
+                  style="
+                    margin-left:auto;
+                  "
                 >
 
-                  ${
-                    profile.is_active
-
-                      ? "Activo"
-
-                      : profile.auto_blocked
-
-                        ? "Bloqueado por inactividad"
-
-                        : "Bloqueado"
-                  }
+                  ${escapeHtml(
+                    statusText
+                  )}
 
                 </span>
 
-              </div>
+              </summary>
 
-              ${
-                profile.is_admin
+              <div
+                style="
+                  margin-top:16px;
+                  padding-top:14px;
+                  border-top:1px solid rgba(148,163,184,.18);
+                "
+              >
 
-                  ? `
+                <div
+                  class="student-account-control"
+                >
 
-                      <div
-                        class="admin-account-note"
-                      >
+                  <div>
 
-                        Cuenta de administrador
+                    <strong>
+                      Cuenta del estudiante
+                    </strong>
 
-                      </div>
+                    <div
+                      class="small"
+                    >
 
-                    `
-
-                  : `
-
-                      <div
-                        class="student-account-control"
-                      >
-
-                        <div>
-
-                          <strong>
-                            Cuenta del estudiante
-                          </strong>
-
-                          <div
-                            class="small"
-                          >
-
-                            ${
-                              profile.is_active
-
-                                ? "Puede entrar a la plataforma"
-
-                                : profile.auto_blocked
-
-                                  ? "Bloqueada automáticamente por inactividad"
-
-                                  : "Cuenta bloqueada"
-                            }
-
-                          </div>
-
-                        </div>
-
-                        <label
-                          class="switch"
-                        >
-
-                          <input
-                            type="checkbox"
-                            class="student-active-switch"
-                            data-id="${profile.id}"
-
-                            ${
-                              profile.is_active
-                                ? "checked"
-                                : ""
-                            }
-                          >
-
-                          <span
-                            class="slider"
-                          ></span>
-
-                        </label>
-
-                      </div>
-
-                      <div
-                        class="course-access-list"
-                      >
-
-                        ${courseSwitches}
-
-                      </div>
-
-                      ${renderStudyStats(
-                        studySummary
+                      ${escapeHtml(
+                        accountText
                       )}
 
-                    `
-              }
+                    </div>
 
-            </div>
+                    ${
+                      profile.auto_blocked &&
+                      profile.blocked_at
+
+                        ? `
+
+                            <div
+                              class="small"
+                              style="
+                                margin-top:4px;
+                              "
+                            >
+
+                              Bloqueado:
+
+                              ${escapeHtml(
+                                formatDateTime(
+                                  profile.blocked_at
+                                )
+                              )}
+
+                            </div>
+
+                          `
+
+                        : ""
+                    }
+
+                  </div>
+
+                  <label
+                    class="switch"
+                  >
+
+                    <input
+                      type="checkbox"
+                      class="student-active-switch"
+                      data-id="${profile.id}"
+
+                      ${
+                        profile.is_active
+                          ? "checked"
+                          : ""
+                      }
+                    >
+
+                    <span
+                      class="slider"
+                    ></span>
+
+                  </label>
+
+                </div>
+
+                <div
+                  class="course-access-list"
+                >
+
+                  ${courseSwitches}
+
+                </div>
+
+                ${renderStudyStats(
+                  studySummary
+                )}
+
+              </div>
+
+            </details>
 
           `;
         }
@@ -3148,9 +3542,19 @@ async function loadUsers() {
       );
 
 
-  /* ==========================================================
+  $("usersList").innerHTML =
+    adminHtml +
+    studentHtml;
+
+
+  setupStudentDropdowns();
+
+  filterStudentCards();
+
+
+  /* ----------------------------------------------------------
      ACTIVAR / BLOQUEAR ESTUDIANTE
-     ========================================================== */
+     ---------------------------------------------------------- */
 
   document
     .querySelectorAll(
@@ -3237,9 +3641,9 @@ async function loadUsers() {
     );
 
 
-  /* ==========================================================
+  /* ----------------------------------------------------------
      PERMISOS DE CURSOS
-     ========================================================== */
+     ---------------------------------------------------------- */
 
   document
     .querySelectorAll(
@@ -3336,6 +3740,7 @@ async function loadUsers() {
               alert(
                 "No se pudo cambiar el acceso al curso."
               );
+
             }
 
 
