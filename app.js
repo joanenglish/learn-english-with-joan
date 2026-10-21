@@ -16,7 +16,7 @@ const $ = id =>
 
 
 /* ============================================================
-   ESTILOS RESPONSIVE PARA CELULAR
+   ESTILOS RESPONSIVE
    ============================================================ */
 
 const responsiveStyle =
@@ -29,8 +29,36 @@ responsiveStyle.textContent = `
   }
 
   #dailyGoalCard,
-  #motivationCard {
+  #motivationCard,
+  #courseProgressCard {
     box-sizing: border-box;
+  }
+
+  .progress-course-row {
+    padding: 12px;
+    border-radius: 13px;
+    border: 1px solid rgba(148,163,184,.15);
+    background: rgba(15,23,42,.18);
+    margin-top: 8px;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(148,163,184,.15);
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      #3b82f6,
+      #22c55e
+    );
   }
 
   @media (max-width: 700px) {
@@ -42,7 +70,8 @@ responsiveStyle.textContent = `
     }
 
     #dailyGoalCard,
-    #motivationCard {
+    #motivationCard,
+    #courseProgressCard {
       display: block !important;
       width: 100% !important;
       max-width: 100% !important;
@@ -55,46 +84,24 @@ responsiveStyle.textContent = `
 
     #dailyGoalContent,
     #streakContent,
-    #rankingContent {
+    #rankingContent,
+    #courseProgressContent {
       width: 100% !important;
       min-width: 0 !important;
       box-sizing: border-box !important;
     }
 
-    #dailyGoalCard * ,
-    #motivationCard * {
+    #dailyGoalCard *,
+    #motivationCard *,
+    #courseProgressCard * {
       max-width: 100%;
       box-sizing: border-box;
     }
 
-    #dailyGoalCard {
+    #dailyGoalCard,
+    #motivationCard,
+    #courseProgressCard {
       font-size: 15px !important;
-    }
-
-    #motivationCard {
-      font-size: 15px !important;
-    }
-
-    #dailyGoalCard strong,
-    #motivationCard strong {
-      word-break: normal !important;
-      overflow-wrap: normal !important;
-    }
-
-    #dailyGoalCard > div,
-    #motivationCard > div {
-      min-width: 0 !important;
-    }
-
-    #dailyGoalContent > div:first-child {
-      display: block !important;
-    }
-
-    #dailyGoalContent > div:first-child > strong {
-      display: block !important;
-      margin-top: 12px !important;
-      text-align: left !important;
-      font-size: 18px !important;
     }
 
   }
@@ -299,6 +306,32 @@ let studySectionName =
 
 
 /* ============================================================
+   PROGRESO
+   ============================================================ */
+
+let currentCourseCode =
+  null;
+
+let currentCourseFile =
+  null;
+
+let currentCourseTitle =
+  null;
+
+let currentCourseProgress =
+  null;
+
+let progressCache =
+  new Map();
+
+let pendingProgressUpdate =
+  null;
+
+let progressSaveBusy =
+  false;
+
+
+/* ============================================================
    UTILIDADES
    ============================================================ */
 
@@ -318,6 +351,37 @@ function escapeHtml(value) {
         "'": "&#039;"
       }[character])
   );
+}
+
+
+function clampPercent(value) {
+
+  return Math.max(
+    0,
+    Math.min(
+      100,
+      Number(value) || 0
+    )
+  );
+}
+
+
+function formatPercent(value) {
+
+  const number =
+    clampPercent(value);
+
+  if (
+    Math.abs(
+      number -
+      Math.round(number)
+    ) < 0.05
+  ) {
+
+    return `${Math.round(number)}%`;
+  }
+
+  return `${number.toFixed(1)}%`;
 }
 
 
@@ -380,7 +444,9 @@ function formatGoalMinutes(
     return `${remainingSeconds} s`;
   }
 
-  if (remainingSeconds === 0) {
+  if (
+    remainingSeconds === 0
+  ) {
 
     return `${minutes} min`;
   }
@@ -551,7 +617,7 @@ function courseDisplayName(
 
 
 /* ============================================================
-   FECHAS REPÚBLICA DOMINICANA
+   FECHAS RD
    ============================================================ */
 
 function getDominicanDateParts(
@@ -564,24 +630,18 @@ function getDominicanDateParts(
       {
         timeZone:
           "America/Santo_Domingo",
-        year:
-          "numeric",
-        month:
-          "2-digit",
-        day:
-          "2-digit"
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
       }
     );
-
 
   const parts =
     formatter.formatToParts(
       date
     );
 
-
   const result = {};
-
 
   for (
     const part
@@ -603,7 +663,6 @@ function getDominicanDateParts(
     }
   }
 
-
   return result;
 }
 
@@ -616,7 +675,6 @@ function dominicanDateKey(
     getDominicanDateParts(
       date
     );
-
 
   return [
     parts.year,
@@ -637,19 +695,15 @@ function dominicanDateKeyOffset(
   const parts =
     getDominicanDateParts();
 
-
   const date =
     new Date(
       Date.UTC(
         parts.year,
         parts.month - 1,
         parts.day + offsetDays,
-        12,
-        0,
-        0
+        12
       )
     );
-
 
   return [
     date.getUTCFullYear(),
@@ -670,7 +724,6 @@ function getDominicanWeekdayIndex() {
       0
     );
 
-
   const [
     year,
     month,
@@ -679,7 +732,6 @@ function getDominicanWeekdayIndex() {
     key
       .split("-")
       .map(Number);
-
 
   const date =
     new Date(
@@ -690,7 +742,6 @@ function getDominicanWeekdayIndex() {
         12
       )
     );
-
 
   return date.getUTCDay();
 }
@@ -749,7 +800,7 @@ document.addEventListener(
 
 
 /* ============================================================
-   CERRAR SESIONES ANTIGUAS
+   SESIONES DE ESTUDIO
    ============================================================ */
 
 async function closeOldStudySessions() {
@@ -761,7 +812,6 @@ async function closeOldStudySessions() {
 
     return;
   }
-
 
   const {
     error
@@ -784,7 +834,6 @@ async function closeOldStudySessions() {
         null
       );
 
-
   if (error) {
 
     console.error(
@@ -794,10 +843,6 @@ async function closeOldStudySessions() {
   }
 }
 
-
-/* ============================================================
-   INICIAR SESIÓN DE ESTUDIO
-   ============================================================ */
 
 async function startStudySession(
   courseCode,
@@ -812,9 +857,7 @@ async function startStudySession(
     return;
   }
 
-
   await finishStudySession();
-
 
   studyCourseCode =
     courseCode;
@@ -830,7 +873,6 @@ async function startStudySession(
 
   studyLastInteraction =
     Date.now();
-
 
   const {
     data,
@@ -858,11 +900,10 @@ async function startStudySession(
       )
       .single();
 
-
   if (error) {
 
     console.error(
-      "No se pudo iniciar la sesión de estudio:",
+      "No se pudo iniciar la sesión:",
       error
     );
 
@@ -872,15 +913,10 @@ async function startStudySession(
     return;
   }
 
-
   studySessionId =
     data.id;
 }
 
-
-/* ============================================================
-   GUARDAR TIEMPO
-   ============================================================ */
 
 async function saveStudyTime() {
 
@@ -893,41 +929,24 @@ async function saveStudyTime() {
     return;
   }
 
-
-  const {
-    error
-  } =
-    await supabase
-      .from(
-        "study_activity"
-      )
-      .update({
-        active_seconds:
-          studyActiveSeconds
-      })
-      .eq(
-        "id",
-        studySessionId
-      )
-      .eq(
-        "user_id",
-        currentProfile.id
-      );
-
-
-  if (error) {
-
-    console.error(
-      "No se pudo guardar el tiempo:",
-      error
+  await supabase
+    .from(
+      "study_activity"
+    )
+    .update({
+      active_seconds:
+        studyActiveSeconds
+    })
+    .eq(
+      "id",
+      studySessionId
+    )
+    .eq(
+      "user_id",
+      currentProfile.id
     );
-  }
 }
 
-
-/* ============================================================
-   FINALIZAR SESIÓN
-   ============================================================ */
 
 async function finishStudySession() {
 
@@ -943,48 +962,32 @@ async function finishStudySession() {
     return;
   }
 
-
   const sessionToClose =
     studySessionId;
-
 
   studySessionId =
     null;
 
+  await supabase
+    .from(
+      "study_activity"
+    )
+    .update({
+      active_seconds:
+        studyActiveSeconds,
 
-  const {
-    error
-  } =
-    await supabase
-      .from(
-        "study_activity"
-      )
-      .update({
-        active_seconds:
-          studyActiveSeconds,
-
-        ended_at:
-          new Date()
-            .toISOString()
-      })
-      .eq(
-        "id",
-        sessionToClose
-      )
-      .eq(
-        "user_id",
-        currentProfile.id
-      );
-
-
-  if (error) {
-
-    console.error(
-      "No se pudo finalizar la sesión:",
-      error
+      ended_at:
+        new Date()
+          .toISOString()
+    })
+    .eq(
+      "id",
+      sessionToClose
+    )
+    .eq(
+      "user_id",
+      currentProfile.id
     );
-  }
-
 
   studyActiveSeconds =
     0;
@@ -997,17 +1000,11 @@ async function finishStudySession() {
 }
 
 
-/* ============================================================
-   HEARTBEAT
-   ============================================================ */
-
 setInterval(
-
   async () => {
 
     const now =
       Date.now();
-
 
     const elapsedSeconds =
       Math.max(
@@ -1021,10 +1018,8 @@ setInterval(
         )
       );
 
-
     studyLastTick =
       now;
-
 
     if (
       !studySessionId
@@ -1033,10 +1028,8 @@ setInterval(
       return;
     }
 
-
     const pageVisible =
       !document.hidden;
-
 
     const recentlyActive =
       (
@@ -1044,7 +1037,6 @@ setInterval(
         studyLastInteraction
       ) <=
       STUDY_IDLE_LIMIT_MS;
-
 
     if (
       pageVisible &&
@@ -1058,14 +1050,757 @@ setInterval(
         );
     }
 
-
     await saveStudyTime();
 
   },
 
   STUDY_HEARTBEAT_MS
-
 );
+
+
+/* ============================================================
+   PROGRESO — LEER
+   ============================================================ */
+
+async function loadProgressCache() {
+
+  if (
+    !currentProfile ||
+    currentProfile.is_admin
+  ) {
+
+    progressCache =
+      new Map();
+
+    return;
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from(
+        "course_progress"
+      )
+      .select(
+        "user_id,course_code,completed_items,total_items,progress_percent,last_section,last_file,last_position,updated_at"
+      )
+      .eq(
+        "user_id",
+        currentProfile.id
+      );
+
+  if (error) {
+
+    console.error(
+      "No se pudo cargar el progreso:",
+      error
+    );
+
+    return;
+  }
+
+  progressCache =
+    new Map();
+
+  for (
+    const row
+    of data || []
+  ) {
+
+    progressCache.set(
+      row.course_code,
+      row
+    );
+  }
+}
+
+
+async function getCourseProgress(
+  courseCode
+) {
+
+  if (
+    progressCache.has(
+      courseCode
+    )
+  ) {
+
+    return progressCache.get(
+      courseCode
+    );
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from(
+        "course_progress"
+      )
+      .select(
+        "user_id,course_code,completed_items,total_items,progress_percent,last_section,last_file,last_position,updated_at"
+      )
+      .eq(
+        "user_id",
+        currentProfile.id
+      )
+      .eq(
+        "course_code",
+        courseCode
+      )
+      .maybeSingle();
+
+  if (error) {
+
+    console.error(error);
+
+    return null;
+  }
+
+  if (data) {
+
+    progressCache.set(
+      courseCode,
+      data
+    );
+  }
+
+  return data;
+}
+
+
+/* ============================================================
+   PROGRESO — GUARDAR
+   ============================================================ */
+
+function queueCourseProgress(
+  update
+) {
+
+  if (
+    !currentProfile ||
+    currentProfile.is_admin ||
+    !update?.courseCode
+  ) {
+
+    return;
+  }
+
+  pendingProgressUpdate = {
+    ...update
+  };
+}
+
+
+async function flushCourseProgress() {
+
+  if (
+    progressSaveBusy ||
+    !pendingProgressUpdate ||
+    !currentProfile ||
+    currentProfile.is_admin
+  ) {
+
+    return;
+  }
+
+  progressSaveBusy =
+    true;
+
+  const update =
+    pendingProgressUpdate;
+
+  pendingProgressUpdate =
+    null;
+
+  try {
+
+    const existing =
+      progressCache.get(
+        update.courseCode
+      ) ||
+      await getCourseProgress(
+        update.courseCode
+      );
+
+    const lastPosition =
+      clampPercent(
+        update.position
+      );
+
+    const reportedItems =
+      Math.max(
+        0,
+        Number(
+          update.completedItems
+        ) || 0
+      );
+
+    const reportedTotal =
+      Math.max(
+        0,
+        Number(
+          update.totalItems
+        ) || 0
+      );
+
+    let calculatedProgress =
+      lastPosition;
+
+    if (
+      reportedTotal > 0
+    ) {
+
+      calculatedProgress =
+        clampPercent(
+          (
+            reportedItems /
+            reportedTotal
+          ) *
+          100
+        );
+    }
+
+    const previousProgress =
+      Number(
+        existing
+          ?.progress_percent
+      ) || 0;
+
+    const previousItems =
+      Number(
+        existing
+          ?.completed_items
+      ) || 0;
+
+    const previousTotal =
+      Number(
+        existing
+          ?.total_items
+      ) || 0;
+
+    const payload = {
+
+      user_id:
+        currentProfile.id,
+
+      course_code:
+        update.courseCode,
+
+      completed_items:
+        Math.max(
+          previousItems,
+          reportedItems
+        ),
+
+      total_items:
+        Math.max(
+          previousTotal,
+          reportedTotal
+        ),
+
+      progress_percent:
+        Math.max(
+          previousProgress,
+          calculatedProgress
+        ),
+
+      last_position:
+        lastPosition,
+
+      last_section:
+        update.section ||
+        existing?.last_section ||
+        null,
+
+      last_file:
+        update.file ||
+        existing?.last_file ||
+        null,
+
+      updated_at:
+        new Date()
+          .toISOString()
+
+    };
+
+    const {
+      data,
+      error
+    } =
+      await supabase
+        .from(
+          "course_progress"
+        )
+        .upsert(
+          payload,
+          {
+            onConflict:
+              "user_id,course_code"
+          }
+        )
+        .select()
+        .single();
+
+    if (error) {
+
+      console.error(
+        "No se pudo guardar progreso:",
+        error
+      );
+
+      return;
+    }
+
+    progressCache.set(
+      update.courseCode,
+      data
+    );
+
+    currentCourseProgress =
+      data;
+
+  } finally {
+
+    progressSaveBusy =
+      false;
+  }
+}
+
+
+setInterval(
+  flushCourseProgress,
+  5000
+);
+
+
+/* ============================================================
+   PANEL CONTINUAR + MI PROGRESO
+   ============================================================ */
+
+function ensureCourseProgressCard() {
+
+  if (
+    $("courseProgressCard")
+  ) {
+
+    return;
+  }
+
+  const card =
+    document.createElement(
+      "section"
+    );
+
+  card.id =
+    "courseProgressCard";
+
+  card.style.cssText = `
+    margin:18px 0 22px;
+    padding:20px;
+    border-radius:20px;
+    border:1px solid rgba(139,92,246,.25);
+    background:
+      linear-gradient(
+        135deg,
+        rgba(124,58,237,.10),
+        rgba(59,130,246,.07)
+      );
+  `;
+
+  card.innerHTML = `
+    <div id="courseProgressContent">
+      Cargando progreso...
+    </div>
+  `;
+
+  const motivationCard =
+    $("motivationCard");
+
+  if (
+    motivationCard &&
+    motivationCard.parentElement
+  ) {
+
+    motivationCard.insertAdjacentElement(
+      "afterend",
+      card
+    );
+
+    return;
+  }
+
+  const dailyCard =
+    $("dailyGoalCard");
+
+  if (
+    dailyCard &&
+    dailyCard.parentElement
+  ) {
+
+    dailyCard.insertAdjacentElement(
+      "afterend",
+      card
+    );
+
+    return;
+  }
+
+  $("portalView")
+    ?.prepend(
+      card
+    );
+}
+
+
+async function loadCourseProgressPanel() {
+
+  if (
+    !currentProfile ||
+    currentProfile.is_admin
+  ) {
+
+    $("courseProgressCard")
+      ?.remove();
+
+    return;
+  }
+
+  ensureCourseProgressCard();
+
+  await loadProgressCache();
+
+  const accessSet =
+    await getMyCourseAccess();
+
+  const allowedCourses =
+    COURSES.filter(
+      course =>
+        accessSet.has(
+          course.code
+        )
+    );
+
+  const rows =
+    allowedCourses
+      .map(
+        course => ({
+          course,
+          progress:
+            progressCache.get(
+              course.code
+            ) ||
+            null
+        })
+      );
+
+  const latest =
+    rows
+      .filter(
+        item =>
+          item.progress
+            ?.updated_at
+      )
+      .sort(
+        (a, b) =>
+          new Date(
+            b.progress.updated_at
+          ) -
+          new Date(
+            a.progress.updated_at
+          )
+      )[0] ||
+    null;
+
+  const container =
+    $("courseProgressContent");
+
+  let continueHtml = `
+
+    <div
+      style="
+        font-size:21px;
+        font-weight:900;
+      "
+    >
+      ▶ Continuar donde me quedé
+    </div>
+
+  `;
+
+  if (latest) {
+
+    const {
+      course,
+      progress
+    } =
+      latest;
+
+    const detail =
+      progress.last_section ||
+      course.shortTitle;
+
+    let extra =
+      formatPercent(
+        progress.progress_percent
+      );
+
+    if (
+      course.code ===
+        "VERBS5000" &&
+      Number(
+        progress.total_items
+      ) > 0
+    ) {
+
+      extra =
+        `${progress.completed_items} / ${progress.total_items}`;
+    }
+
+    continueHtml += `
+
+      <div
+        style="
+          margin-top:12px;
+          padding:15px;
+          border-radius:14px;
+          background:rgba(59,130,246,.10);
+          border:1px solid rgba(59,130,246,.20);
+        "
+      >
+
+        <strong
+          style="
+            display:block;
+            font-size:17px;
+          "
+        >
+          ${escapeHtml(
+            course.title
+          )}
+        </strong>
+
+        <div
+          style="
+            margin-top:5px;
+            opacity:.8;
+          "
+        >
+          ${escapeHtml(
+            detail
+          )}
+        </div>
+
+        <div
+          style="
+            margin-top:5px;
+            font-weight:800;
+          "
+        >
+          Progreso: ${escapeHtml(
+            extra
+          )}
+        </div>
+
+        <button
+          id="continueLastCourseBtn"
+          class="primary"
+          style="
+            margin-top:12px;
+          "
+        >
+          ▶ Continuar estudiando
+        </button>
+
+      </div>
+
+    `;
+
+  } else {
+
+    continueHtml += `
+
+      <div
+        style="
+          margin-top:10px;
+          opacity:.72;
+        "
+      >
+        Cuando empieces un curso, aquí aparecerá
+        el botón para continuar exactamente donde
+        estabas estudiando.
+      </div>
+
+    `;
+  }
+
+
+  const progressRows =
+    rows
+      .map(
+        ({
+          course,
+          progress
+        }) => {
+
+          const percent =
+            clampPercent(
+              progress
+                ?.progress_percent ||
+              0
+            );
+
+          let progressText =
+            formatPercent(
+              percent
+            );
+
+          if (
+            course.code ===
+              "VERBS5000" &&
+            Number(
+              progress
+                ?.total_items
+            ) > 0
+          ) {
+
+            progressText =
+              `${progress.completed_items} / ${progress.total_items}`;
+          }
+
+          const sectionText =
+            progress
+              ?.last_section
+              ? escapeHtml(
+                  progress.last_section
+                )
+              : "Todavía no iniciado";
+
+          return `
+
+            <div class="progress-course-row">
+
+              <div
+                style="
+                  display:flex;
+                  justify-content:space-between;
+                  align-items:center;
+                  gap:10px;
+                  flex-wrap:wrap;
+                "
+              >
+
+                <strong>
+                  ${escapeHtml(
+                    course.shortTitle
+                  )}
+                </strong>
+
+                <strong>
+                  ${escapeHtml(
+                    progressText
+                  )}
+                </strong>
+
+              </div>
+
+              <div class="progress-track">
+
+                <div
+                  class="progress-fill"
+                  style="
+                    width:${percent}%;
+                  "
+                ></div>
+
+              </div>
+
+              <div
+                style="
+                  margin-top:7px;
+                  font-size:12px;
+                  opacity:.72;
+                "
+              >
+                ${sectionText}
+              </div>
+
+            </div>
+
+          `;
+        }
+      )
+      .join("");
+
+
+  container.innerHTML = `
+
+    ${continueHtml}
+
+    <div
+      style="
+        margin:22px 0 18px;
+        border-top:
+          1px solid rgba(148,163,184,.18);
+      "
+    ></div>
+
+    <div
+      style="
+        font-size:20px;
+        font-weight:900;
+      "
+    >
+      📊 Mi progreso
+    </div>
+
+    <div
+      style="
+        margin-top:5px;
+        opacity:.78;
+      "
+    >
+      Tu avance se guarda automáticamente.
+    </div>
+
+    <div
+      style="
+        margin-top:12px;
+      "
+    >
+      ${
+        progressRows ||
+        `
+          <div style="opacity:.7;">
+            No tienes cursos asignados.
+          </div>
+        `
+      }
+    </div>
+
+  `;
+
+
+  if (
+    latest &&
+    $("continueLastCourseBtn")
+  ) {
+
+    $("continueLastCourseBtn")
+      .onclick =
+        () => {
+
+          resumeCourse(
+            latest.course.code,
+            latest.progress
+          );
+
+        };
+  }
+}
 
 
 /* ============================================================
@@ -1081,28 +1816,21 @@ function ensureDailyGoalCard() {
     return;
   }
 
-
   const portalView =
     $("portalView");
 
-
-  if (
-    !portalView
-  ) {
+  if (!portalView) {
 
     return;
   }
-
 
   const card =
     document.createElement(
       "section"
     );
 
-
   card.id =
     "dailyGoalCard";
-
 
   card.style.cssText = `
     margin:18px 0 22px;
@@ -1117,7 +1845,6 @@ function ensureDailyGoalCard() {
       );
   `;
 
-
   card.innerHTML = `
     <div
       id="dailyGoalContent"
@@ -1127,30 +1854,26 @@ function ensureDailyGoalCard() {
     </div>
   `;
 
-
   const welcomeArea =
     $("welcomeTitle")
       ?.parentElement;
-
 
   if (
     welcomeArea &&
     welcomeArea.parentElement
   ) {
 
-    const parent =
-      welcomeArea.parentElement;
+    welcomeArea.parentElement
+      .classList
+      .add(
+        "student-overview-layout"
+      );
 
-
-    parent.classList.add(
-      "student-overview-layout"
-    );
-
-
-    parent.insertBefore(
-      card,
-      welcomeArea.nextSibling
-    );
+    welcomeArea.parentElement
+      .insertBefore(
+        card,
+        welcomeArea.nextSibling
+      );
 
   } else {
 
@@ -1169,38 +1892,19 @@ async function loadDailyGoal() {
     !currentProfile.is_active
   ) {
 
-    const card =
-      $("dailyGoalCard");
-
-
-    if (card) {
-
-      card.remove();
-    }
-
+    $("dailyGoalCard")
+      ?.remove();
 
     return;
   }
 
-
   ensureDailyGoalCard();
-
 
   const content =
     $("dailyGoalContent");
 
-
-  if (
-    !content
-  ) {
-
-    return;
-  }
-
-
   const todayStart =
     new Date();
-
 
   todayStart.setHours(
     0,
@@ -1209,13 +1913,11 @@ async function loadDailyGoal() {
     0
   );
 
-
   const last24h =
     new Date(
       Date.now() -
       SAFETY_WINDOW_MS
     );
-
 
   const {
     data,
@@ -1241,24 +1943,18 @@ async function loadDailyGoal() {
         last24h.toISOString()
       );
 
-
   if (error) {
 
-    console.error(
-      "Error cargando meta diaria:",
-      error
-    );
+    console.error(error);
 
     return;
   }
-
 
   let secondsToday =
     0;
 
   let seconds24h =
     0;
-
 
   for (
     const row
@@ -1273,16 +1969,13 @@ async function loadDailyGoal() {
         ) || 0
       );
 
-
     const started =
       new Date(
         row.started_at
       );
 
-
     seconds24h +=
       seconds;
-
 
     if (
       started >=
@@ -1293,7 +1986,6 @@ async function loadDailyGoal() {
         seconds;
     }
   }
-
 
   const todayPercent =
     Math.min(
@@ -1307,7 +1999,6 @@ async function loadDailyGoal() {
       )
     );
 
-
   const safetyPercent =
     Math.min(
       100,
@@ -1320,14 +2011,12 @@ async function loadDailyGoal() {
       )
     );
 
-
   const missingToday =
     Math.max(
       0,
       DAILY_GOAL_SECONDS -
       secondsToday
     );
-
 
   const missing24h =
     Math.max(
@@ -1336,23 +2025,19 @@ async function loadDailyGoal() {
       seconds24h
     );
 
-
   const dailyDone =
     secondsToday >=
     DAILY_GOAL_SECONDS;
 
-
   const safe24h =
     seconds24h >=
     DAILY_GOAL_SECONDS;
-
 
   let initialPeriod =
     false;
 
   let initialRemainingMs =
     0;
-
 
   if (
     currentProfile.activated_at
@@ -1363,11 +2048,9 @@ async function loadDailyGoal() {
         currentProfile.activated_at
       );
 
-
     const elapsed =
       Date.now() -
       activated.getTime();
-
 
     if (
       elapsed <
@@ -1383,15 +2066,11 @@ async function loadDailyGoal() {
     }
   }
 
-
   let safetyIcon;
   let safetyTitle;
   let safetyMessage;
 
-
-  if (
-    safe24h
-  ) {
+  if (safe24h) {
 
     safetyIcon =
       "✅";
@@ -1415,7 +2094,7 @@ async function loadDailyGoal() {
     safetyMessage =
       `Te faltan ${formatGoalMinutes(
         missing24h
-      )} de estudio. ⏱ ${formatRemainingInitialTime(
+      )}. ⏱ ${formatRemainingInitialTime(
         initialRemainingMs
       )} restantes.`;
 
@@ -1433,14 +2112,12 @@ async function loadDailyGoal() {
       )} para volver a estar al día.`;
   }
 
-
   content.innerHTML = `
 
     <div
       style="
         display:flex;
         justify-content:space-between;
-        align-items:flex-start;
         gap:12px;
         flex-wrap:wrap;
       "
@@ -1468,31 +2145,27 @@ async function loadDailyGoal() {
 
       </div>
 
-
       <strong
         style="
           font-size:18px;
           white-space:nowrap;
         "
       >
-
         ${formatGoalMinutes(
           secondsToday
         )}
         / 20 min
-
       </strong>
 
     </div>
-
 
     <div
       style="
         margin-top:14px;
         height:12px;
-        overflow:hidden;
         border-radius:999px;
         background:rgba(148,163,184,.18);
+        overflow:hidden;
       "
     >
 
@@ -1500,34 +2173,30 @@ async function loadDailyGoal() {
         style="
           width:${todayPercent}%;
           height:100%;
-          background:linear-gradient(
-            90deg,
-            #3b82f6,
-            #22c55e
-          );
-          border-radius:999px;
+          background:
+            linear-gradient(
+              90deg,
+              #3b82f6,
+              #22c55e
+            );
         "
       ></div>
 
     </div>
 
-
     <div
       style="
         margin-top:10px;
-        line-height:1.5;
       "
     >
 
       ${
         dailyDone
-
           ? `
               <strong>
                 ✅ Meta de hoy completada.
               </strong>
             `
-
           : `
               Te faltan
               <strong>
@@ -1541,12 +2210,12 @@ async function loadDailyGoal() {
 
     </div>
 
-
     <div
       style="
         margin-top:20px;
         padding-top:18px;
-        border-top:1px solid rgba(148,163,184,.18);
+        border-top:
+          1px solid rgba(148,163,184,.18);
       "
     >
 
@@ -1556,40 +2225,28 @@ async function loadDailyGoal() {
           justify-content:space-between;
           gap:12px;
           flex-wrap:wrap;
-          align-items:center;
         "
       >
 
-        <strong
-          style="
-            font-size:17px;
-          "
-        >
+        <strong>
           🛡️ Últimas 24 horas
         </strong>
 
-        <strong
-          style="
-            white-space:nowrap;
-          "
-        >
-
+        <strong>
           ${formatGoalMinutes(
             seconds24h
           )}
           / 20 min
-
         </strong>
 
       </div>
-
 
       <div
         style="
           margin-top:10px;
           height:9px;
-          background:rgba(148,163,184,.18);
           border-radius:999px;
+          background:rgba(148,163,184,.18);
           overflow:hidden;
         "
       >
@@ -1603,12 +2260,10 @@ async function loadDailyGoal() {
                 ? "#22c55e"
                 : "#f59e0b"
             };
-            border-radius:999px;
           "
         ></div>
 
       </div>
-
 
       <div
         style="
@@ -1622,7 +2277,6 @@ async function loadDailyGoal() {
                 ? "rgba(245,158,11,.08)"
                 : "rgba(239,68,68,.08)"
           };
-          line-height:1.5;
         "
       >
 
@@ -1660,16 +2314,13 @@ function ensureMotivationCard() {
     return;
   }
 
-
   const card =
     document.createElement(
       "section"
     );
 
-
   card.id =
     "motivationCard";
-
 
   card.style.cssText = `
     margin:18px 0 22px;
@@ -1683,7 +2334,6 @@ function ensureMotivationCard() {
         rgba(59,130,246,.08)
       );
   `;
-
 
   card.innerHTML = `
 
@@ -1705,22 +2355,13 @@ function ensureMotivationCard() {
 
   `;
 
-
   const dailyCard =
     $("dailyGoalCard");
-
 
   if (
     dailyCard &&
     dailyCard.parentElement
   ) {
-
-    dailyCard.parentElement
-      .classList
-      .add(
-        "student-overview-layout"
-      );
-
 
     dailyCard.insertAdjacentElement(
       "afterend",
@@ -1737,10 +2378,6 @@ function ensureMotivationCard() {
 }
 
 
-/* ============================================================
-   RACHA
-   ============================================================ */
-
 async function loadStreak() {
 
   if (
@@ -1751,13 +2388,10 @@ async function loadStreak() {
     return;
   }
 
-
   ensureMotivationCard();
-
 
   const container =
     $("streakContent");
-
 
   const since =
     new Date(
@@ -1770,7 +2404,6 @@ async function loadStreak() {
         1000
       )
     );
-
 
   const {
     data,
@@ -1796,21 +2429,13 @@ async function loadStreak() {
         since.toISOString()
       );
 
-
   if (error) {
-
-    console.error(
-      "Error cargando racha:",
-      error
-    );
 
     return;
   }
 
-
   const studiedDays =
     new Set();
-
 
   for (
     const row
@@ -1833,16 +2458,13 @@ async function loadStreak() {
     }
   }
 
-
   const todayKey =
     dominicanDateKeyOffset(
       0
     );
 
-
   let streak =
     0;
-
 
   let offset =
     studiedDays.has(
@@ -1850,7 +2472,6 @@ async function loadStreak() {
     )
       ? 0
       : -1;
-
 
   while (
     studiedDays.has(
@@ -1860,23 +2481,17 @@ async function loadStreak() {
     )
   ) {
 
-    streak +=
-      1;
-
-    offset -=
-      1;
+    streak += 1;
+    offset -= 1;
   }
-
 
   const weekday =
     getDominicanWeekdayIndex();
-
 
   const mondayDistance =
     (
       weekday + 6
     ) % 7;
-
 
   const labels =
     [
@@ -1889,10 +2504,8 @@ async function loadStreak() {
       "D"
     ];
 
-
   let completedThisWeek =
     0;
-
 
   const weekHtml =
     labels
@@ -1906,32 +2519,26 @@ async function loadStreak() {
             index -
             mondayDistance;
 
-
           const key =
             dominicanDateKeyOffset(
               dayOffset
             );
-
 
           const studied =
             studiedDays.has(
               key
             );
 
-
           if (
             studied &&
             dayOffset <= 0
           ) {
 
-            completedThisWeek +=
-              1;
+            completedThisWeek += 1;
           }
-
 
           const future =
             dayOffset > 0;
-
 
           return `
 
@@ -1965,18 +2572,10 @@ async function loadStreak() {
                   background:${
                     studied
                       ? "rgba(34,197,94,.18)"
-                      : future
-                        ? "rgba(148,163,184,.07)"
-                        : "rgba(148,163,184,.12)"
-                  };
-                  border:1px solid ${
-                    studied
-                      ? "rgba(34,197,94,.35)"
-                      : "rgba(148,163,184,.18)"
+                      : "rgba(148,163,184,.08)"
                   };
                 "
               >
-
                 ${
                   studied
                     ? "✅"
@@ -1984,7 +2583,6 @@ async function loadStreak() {
                       ? "·"
                       : "—"
                 }
-
               </div>
 
             </div>
@@ -1994,14 +2592,12 @@ async function loadStreak() {
       )
       .join("");
 
-
   container.innerHTML = `
 
     <div
       style="
         display:flex;
         justify-content:space-between;
-        align-items:center;
         gap:14px;
         flex-wrap:wrap;
       "
@@ -2028,7 +2624,6 @@ async function loadStreak() {
         </div>
 
       </div>
-
 
       <div
         style="
@@ -2062,45 +2657,32 @@ async function loadStreak() {
 
     </div>
 
-
     <div
       style="
         margin-top:18px;
         display:flex;
-        justify-content:space-between;
         gap:4px;
-        width:100%;
       "
     >
-
       ${weekHtml}
-
     </div>
-
 
     <div
       style="
         margin-top:12px;
         font-size:13px;
-        opacity:.85;
       "
     >
-
       📅 Esta semana:
       <strong>
         ${completedThisWeek} días
       </strong>
       con estudio.
-
     </div>
 
   `;
 }
 
-
-/* ============================================================
-   RANKING SEMANAL
-   ============================================================ */
 
 async function loadWeeklyRanking() {
 
@@ -2112,13 +2694,10 @@ async function loadWeeklyRanking() {
     return;
   }
 
-
   ensureMotivationCard();
-
 
   const container =
     $("rankingContent");
-
 
   const {
     data,
@@ -2128,38 +2707,13 @@ async function loadWeeklyRanking() {
       "get_weekly_study_ranking"
     );
 
+  if (error) {
 
-  if (
-    error
-  ) {
-
-    console.error(
-      "Error cargando ranking:",
-      error
-    );
-
-
-    container.innerHTML = `
-
-      <strong>
-        🏆 Ranking semanal
-      </strong>
-
-      <div
-        style="
-          margin-top:8px;
-          opacity:.7;
-        "
-      >
-        No se pudo cargar el ranking.
-      </div>
-
-    `;
-
+    container.innerHTML =
+      "No se pudo cargar el ranking.";
 
     return;
   }
-
 
   const ranking =
     (data || [])
@@ -2174,14 +2728,12 @@ async function loadWeeklyRanking() {
         })
       );
 
-
   const me =
     ranking.find(
       row =>
         row.user_id ===
         currentProfile.id
     );
-
 
   const medal =
     position => {
@@ -2210,23 +2762,18 @@ async function loadWeeklyRanking() {
       return `${position}.`;
     };
 
-
-  const top10 =
-    ranking.slice(
-      0,
-      10
-    );
-
-
   const rankingRows =
-    top10
+    ranking
+      .slice(
+        0,
+        10
+      )
       .map(
         row => {
 
           const isMe =
             row.user_id ===
             currentProfile.id;
-
 
           return `
 
@@ -2245,11 +2792,6 @@ async function loadWeeklyRanking() {
                     ? "rgba(59,130,246,.15)"
                     : "rgba(15,23,42,.20)"
                 };
-                border:1px solid ${
-                  isMe
-                    ? "rgba(59,130,246,.30)"
-                    : "rgba(148,163,184,.12)"
-                };
               "
             >
 
@@ -2259,10 +2801,8 @@ async function loadWeeklyRanking() {
                 )}
               </strong>
 
-
               <div
                 style="
-                  min-width:0;
                   overflow:hidden;
                   text-overflow:ellipsis;
                   white-space:nowrap;
@@ -2277,33 +2817,19 @@ async function loadWeeklyRanking() {
                 ${
                   isMe
                     ? `
-                        <span
-                          style="
-                            margin-left:5px;
-                            font-size:11px;
-                            opacity:.75;
-                          "
-                        >
+                        <small>
                           ← Tú
-                        </span>
+                        </small>
                       `
                     : ""
                 }
 
               </div>
 
-
-              <strong
-                style="
-                  white-space:nowrap;
-                  font-size:14px;
-                "
-              >
-
+              <strong>
                 ${formatRankingMinutes(
                   row.active_seconds
                 )}
-
               </strong>
 
             </div>
@@ -2313,99 +2839,13 @@ async function loadWeeklyRanking() {
       )
       .join("");
 
-
-  let myExtraRow =
-    "";
-
-
-  if (
-    me &&
-    me.position > 10
-  ) {
-
-    myExtraRow = `
-
-      <div
-        style="
-          margin-top:12px;
-          padding-top:12px;
-          border-top:
-            1px solid rgba(148,163,184,.18);
-        "
-      >
-
-        <div
-          style="
-            display:grid;
-            grid-template-columns:
-              42px minmax(0,1fr) auto;
-            gap:8px;
-            align-items:center;
-            padding:11px 10px;
-            border-radius:12px;
-            background:rgba(59,130,246,.15);
-            border:1px solid rgba(59,130,246,.30);
-          "
-        >
-
-          <strong>
-            ${me.position}.
-          </strong>
-
-          <div
-            style="
-              min-width:0;
-              overflow:hidden;
-              text-overflow:ellipsis;
-              white-space:nowrap;
-            "
-          >
-
-            ${escapeHtml(
-              me.display_name ||
-              "Estudiante"
-            )}
-
-            <span
-              style="
-                margin-left:5px;
-                font-size:11px;
-                opacity:.75;
-              "
-            >
-              ← Tú
-            </span>
-
-          </div>
-
-          <strong
-            style="
-              white-space:nowrap;
-              font-size:14px;
-            "
-          >
-            ${formatRankingMinutes(
-              me.active_seconds
-            )}
-          </strong>
-
-        </div>
-
-      </div>
-
-    `;
-  }
-
-
   container.innerHTML = `
 
     <div
       style="
         display:flex;
         justify-content:space-between;
-        align-items:flex-start;
         gap:12px;
-        flex-wrap:wrap;
       "
     >
 
@@ -2431,63 +2871,28 @@ async function loadWeeklyRanking() {
 
       </div>
 
-
       ${
         me
           ? `
-              <div
+              <strong
                 style="
-                  text-align:right;
+                  font-size:22px;
                 "
               >
-
-                <div
-                  style="
-                    font-size:22px;
-                    font-weight:900;
-                  "
-                >
-                  #${me.position}
-                </div>
-
-                <div
-                  style="
-                    font-size:12px;
-                    opacity:.75;
-                  "
-                >
-                  Tu posición
-                </div>
-
-              </div>
+                #${me.position}
+              </strong>
             `
           : ""
       }
 
     </div>
 
-
     <div
       style="
         margin-top:14px;
       "
     >
-
-      ${
-        rankingRows ||
-        `
-          <div
-            style="
-              opacity:.7;
-            "
-          >
-            Todavía no hay tiempo de estudio registrado.
-          </div>
-        `
-      }
-
-      ${myExtraRow}
-
+      ${rankingRows}
     </div>
 
   `;
@@ -2498,19 +2903,13 @@ async function loadMotivationPanel() {
 
   if (
     !currentProfile ||
-    currentProfile.is_admin ||
-    !currentProfile.is_active
+    currentProfile.is_admin
   ) {
-
-    $("motivationCard")
-      ?.remove();
 
     return;
   }
 
-
   ensureMotivationCard();
-
 
   await Promise.all([
     loadStreak(),
@@ -2520,51 +2919,7 @@ async function loadMotivationPanel() {
 
 
 /* ============================================================
-   ACTUALIZACIONES AUTOMÁTICAS
-   ============================================================ */
-
-setInterval(
-
-  async () => {
-
-    if (
-      currentProfile &&
-      !currentProfile.is_admin &&
-      currentProfile.is_active
-    ) {
-
-      await loadDailyGoal();
-    }
-
-  },
-
-  60000
-
-);
-
-
-setInterval(
-
-  async () => {
-
-    if (
-      currentProfile &&
-      !currentProfile.is_admin &&
-      currentProfile.is_active
-    ) {
-
-      await loadMotivationPanel();
-    }
-
-  },
-
-  120000
-
-);
-
-
-/* ============================================================
-   LOGIN / REGISTRO
+   AUTH
    ============================================================ */
 
 function setAuthTab(
@@ -2574,14 +2929,12 @@ function setAuthTab(
   const login =
     mode === "login";
 
-
   $("loginForm")
     .classList
     .toggle(
       "hidden",
       !login
     );
-
 
   $("signupForm")
     .classList
@@ -2590,14 +2943,12 @@ function setAuthTab(
       login
     );
 
-
   $("loginTab")
     .classList
     .toggle(
       "active",
       login
     );
-
 
   $("signupTab")
     .classList
@@ -2613,7 +2964,6 @@ $("loginTab").onclick =
     setAuthTab(
       "login"
     );
-
 
 $("signupTab").onclick =
   () =>
@@ -2642,7 +2992,6 @@ function showOnly(
 
     }
   );
-
 
   $(view)
     .classList
@@ -2677,20 +3026,14 @@ async function getProfile(
       )
       .single();
 
-
   if (error) {
 
     throw error;
   }
 
-
   return data;
 }
 
-
-/* ============================================================
-   CUENTA BLOQUEADA
-   ============================================================ */
 
 function showInactiveAccount(
   profile
@@ -2700,7 +3043,6 @@ function showInactiveAccount(
     "pendingView"
   );
 
-
   if (
     !profile?.auto_blocked
   ) {
@@ -2708,25 +3050,7 @@ function showInactiveAccount(
     return;
   }
 
-
-  const pendingView =
-    $("pendingView");
-
-
-  const blockedDate =
-    profile.blocked_at
-      ? formatDateTime(
-          profile.blocked_at
-        )
-      : null;
-
-
-  const reason =
-    profile.blocked_reason ||
-    "Bloqueado automáticamente por inactividad.";
-
-
-  pendingView.innerHTML = `
+  $("pendingView").innerHTML = `
 
     <div
       class="panel"
@@ -2741,7 +3065,6 @@ function showInactiveAccount(
       <div
         style="
           font-size:52px;
-          margin-bottom:12px;
         "
       >
         🔴
@@ -2751,69 +3074,17 @@ function showInactiveAccount(
         Cuenta bloqueada por inactividad
       </h2>
 
-      <p
-        style="
-          margin-top:14px;
-          font-size:16px;
-          line-height:1.6;
-        "
-      >
-
-        Tu cuenta fue bloqueada automáticamente porque
-        no completaste al menos
+      <p>
+        No completaste al menos
         <strong>20 minutos de estudio activo</strong>
         dentro de las últimas
         <strong>24 horas</strong>.
-
       </p>
 
       <p>
-        Para recuperar el acceso,
-        comunícate con tu profesor.
+        Comunícate con tu profesor para
+        recuperar el acceso.
       </p>
-
-      <p>
-        <strong>
-          Solo el profesor puede reactivar tu cuenta.
-        </strong>
-      </p>
-
-      <div
-        style="
-          margin-top:22px;
-          padding:14px;
-          border-radius:12px;
-          background:rgba(239,68,68,.08);
-          text-align:left;
-        "
-      >
-
-        <strong>
-          Motivo:
-        </strong>
-
-        ${escapeHtml(reason)}
-
-        ${
-          blockedDate
-            ? `
-                <div
-                  style="
-                    margin-top:8px;
-                  "
-                >
-                  <strong>
-                    Bloqueado:
-                  </strong>
-                  ${escapeHtml(
-                    blockedDate
-                  )}
-                </div>
-              `
-            : ""
-        }
-
-      </div>
 
     </div>
 
@@ -2822,7 +3093,7 @@ function showInactiveAccount(
 
 
 /* ============================================================
-   CARGAR SESIÓN
+   SESIÓN
    ============================================================ */
 
 async function loadSession() {
@@ -2835,14 +3106,10 @@ async function loadSession() {
     await supabase.auth
       .getSession();
 
-
-  if (
-    !session
-  ) {
+  if (!session) {
 
     currentProfile =
       null;
-
 
     $("logoutBtn")
       .classList
@@ -2850,22 +3117,18 @@ async function loadSession() {
         "hidden"
       );
 
-
     showOnly(
       "authView"
     );
 
-
     return;
   }
-
 
   $("logoutBtn")
     .classList
     .remove(
       "hidden"
     );
-
 
   try {
 
@@ -2878,21 +3141,15 @@ async function loadSession() {
     error
   ) {
 
-    console.error(error);
-
-
     await supabase.auth
       .signOut();
-
 
     showOnly(
       "authView"
     );
 
-
     return;
   }
-
 
   if (
     !currentProfile.is_active
@@ -2905,17 +3162,14 @@ async function loadSession() {
     return;
   }
 
-
   showOnly(
     "portalView"
   );
-
 
   $("roleBadge").textContent =
     currentProfile.is_admin
       ? "Administrador"
       : "Estudiante";
-
 
   $("roleBadge").className =
     "status " +
@@ -2925,7 +3179,6 @@ async function loadSession() {
         : "active"
     );
 
-
   $("welcomeTitle").textContent =
     "Hola, " +
     (
@@ -2933,13 +3186,10 @@ async function loadSession() {
       currentProfile.email
     );
 
-
   $("welcomeEmail").textContent =
     currentProfile.email;
 
-
   await renderCourses();
-
 
   if (
     currentProfile.is_admin
@@ -2951,13 +3201,14 @@ async function loadSession() {
     $("motivationCard")
       ?.remove();
 
+    $("courseProgressCard")
+      ?.remove();
 
     $("adminPanel")
       .classList
       .remove(
         "hidden"
       );
-
 
     await loadUsers();
 
@@ -2969,26 +3220,26 @@ async function loadSession() {
         "hidden"
       );
 
-
     await closeOldStudySessions();
 
+    await loadProgressCache();
 
     await startStudySession(
       "PORTAL",
       "Portal principal"
     );
 
-
     await loadDailyGoal();
 
-
     await loadMotivationPanel();
+
+    await loadCourseProgressPanel();
   }
 }
 
 
 /* ============================================================
-   LOGIN
+   LOGIN / REGISTRO
    ============================================================ */
 
 $("loginForm")
@@ -2998,10 +3249,8 @@ $("loginForm")
 
       event.preventDefault();
 
-
       $("loginMsg").textContent =
         "Entrando...";
-
 
       const {
         error
@@ -3018,7 +3267,6 @@ $("loginForm")
                 .value
           });
 
-
       if (error) {
 
         $("loginMsg").textContent =
@@ -3027,19 +3275,13 @@ $("loginForm")
         return;
       }
 
-
       $("loginMsg").textContent =
         "";
-
 
       await loadSession();
     }
   );
 
-
-/* ============================================================
-   REGISTRO
-   ============================================================ */
 
 $("signupForm")
   .addEventListener(
@@ -3048,14 +3290,8 @@ $("signupForm")
 
       event.preventDefault();
 
-
-      $("signupMsg").className =
-        "msg";
-
-
       $("signupMsg").textContent =
         "Creando cuenta...";
-
 
       const {
         error
@@ -3081,7 +3317,6 @@ $("signupForm")
             }
           });
 
-
       if (error) {
 
         $("signupMsg").textContent =
@@ -3090,30 +3325,21 @@ $("signupForm")
         return;
       }
 
-
-      $("signupMsg").className =
-        "msg ok";
-
-
       $("signupMsg").textContent =
-        "Cuenta creada. Joan debe activarla y darte acceso al curso.";
+        "Cuenta creada. Joan debe activarla.";
     }
   );
 
 
-/* ============================================================
-   CERRAR SESIÓN
-   ============================================================ */
-
 $("logoutBtn").onclick =
   async () => {
 
-    await finishStudySession();
+    await flushCourseProgress();
 
+    await finishStudySession();
 
     await supabase.auth
       .signOut();
-
 
     location.reload();
   };
@@ -3141,14 +3367,10 @@ async function getMyCourseAccess() {
         currentProfile.id
       );
 
-
   if (error) {
-
-    console.error(error);
 
     return new Set();
   }
-
 
   return new Set(
     (data || [])
@@ -3161,7 +3383,7 @@ async function getMyCourseAccess() {
 
 
 /* ============================================================
-   TARJETAS DE CURSO
+   CURSOS
    ============================================================ */
 
 function courseCardHtml(
@@ -3174,7 +3396,6 @@ function courseCardHtml(
     accessSet.has(
       course.code
     );
-
 
   return `
 
@@ -3226,20 +3447,19 @@ async function renderCourses() {
   const accessSet =
     await getMyCourseAccess();
 
-
   const grammarCourses =
     COURSES.filter(
       course =>
-        course.type === "grammar"
+        course.type ===
+        "grammar"
     );
-
 
   const extraCourses =
     COURSES.filter(
       course =>
-        course.type !== "grammar"
+        course.type !==
+        "grammar"
     );
-
 
   $("grammarGrid").innerHTML =
     grammarCourses
@@ -3252,7 +3472,6 @@ async function renderCourses() {
       )
       .join("");
 
-
   $("courseGrid").innerHTML =
     extraCourses
       .map(
@@ -3263,7 +3482,6 @@ async function renderCourses() {
           )
       )
       .join("");
-
 
   document
     .querySelectorAll(
@@ -3284,81 +3502,29 @@ async function renderCourses() {
 
 
 /* ============================================================
-   REVISAR CUENTA
+   ABRIR / CONTINUAR
    ============================================================ */
 
-async function ensureCurrentAccountIsActive() {
+async function resumeCourse(
+  courseCode,
+  progress
+) {
 
-  const {
-    data,
-    error
-  } =
-    await supabase
-      .from(
-        "profiles"
-      )
-      .select(
-        "is_active,auto_blocked,blocked_at,blocked_reason,activated_at"
-      )
-      .eq(
-        "id",
-        currentProfile.id
-      )
-      .single();
-
-
-  if (
-    error ||
-    !data?.is_active
-  ) {
-
-    $("courseView")
-      .classList
-      .add(
-        "hidden"
-      );
-
-
-    if (data) {
-
-      currentProfile = {
-        ...currentProfile,
-        ...data
-      };
-
-
-      showInactiveAccount(
-        currentProfile
-      );
-
-    } else {
-
-      showOnly(
-        "pendingView"
-      );
+  await openCourse(
+    courseCode,
+    {
+      resume:
+        true,
+      savedProgress:
+        progress
     }
-
-
-    return false;
-  }
-
-
-  currentProfile = {
-    ...currentProfile,
-    ...data
-  };
-
-
-  return true;
+  );
 }
 
 
-/* ============================================================
-   ABRIR CURSO
-   ============================================================ */
-
 async function openCourse(
-  courseCode
+  courseCode,
+  options = {}
 ) {
 
   const course =
@@ -3368,22 +3534,10 @@ async function openCourse(
         courseCode
     );
 
-
   if (!course) {
 
     return;
   }
-
-
-  const active =
-    await ensureCurrentAccountIsActive();
-
-
-  if (!active) {
-
-    return;
-  }
-
 
   if (
     !currentProfile?.is_admin
@@ -3391,7 +3545,6 @@ async function openCourse(
 
     const accessSet =
       await getMyCourseAccess();
-
 
     if (
       !accessSet.has(
@@ -3407,6 +3560,42 @@ async function openCourse(
     }
   }
 
+  let savedProgress =
+    options.savedProgress ||
+    await getCourseProgress(
+      courseCode
+    );
+
+  let fileName =
+    course.file;
+
+  if (
+    options.resume &&
+    courseCode ===
+      "LISTENING" &&
+    savedProgress
+      ?.last_file &&
+    LISTENING_FILES.has(
+      savedProgress.last_file
+    )
+  ) {
+
+    fileName =
+      savedProgress.last_file;
+  }
+
+  currentCourseCode =
+    course.code;
+
+  currentCourseFile =
+    fileName;
+
+  currentCourseTitle =
+    course.title;
+
+  currentCourseProgress =
+    savedProgress ||
+    null;
 
   $("courseView")
     .classList
@@ -3414,34 +3603,42 @@ async function openCourse(
       "hidden"
     );
 
+  const section =
+    options.resume &&
+    savedProgress
+      ?.last_section
+      ? savedProgress.last_section
+      : course.title;
 
   await startStudySession(
     course.code,
-    course.title
+    section
   );
 
-
   await loadPrivateCourseFile(
-    course.file,
+    fileName,
     course.title,
-    course.code
+    course.code,
+    options.resume
+      ? savedProgress
+      : null
   );
 }
 
 
 /* ============================================================
-   CARGAR ARCHIVO PRIVADO
+   CARGAR CURSO PRIVADO
    ============================================================ */
 
 async function loadPrivateCourseFile(
   fileName,
   titleText,
-  courseCode = null
+  courseCode,
+  restoreProgress = null
 ) {
 
   $("courseStatus").textContent =
     "Cargando contenido privado...";
-
 
   const {
     data,
@@ -3455,11 +3652,7 @@ async function loadPrivateCourseFile(
         fileName
       );
 
-
   if (error) {
-
-    console.error(error);
-
 
     $("courseStatus").textContent =
       "No se pudo abrir el contenido.";
@@ -3467,55 +3660,84 @@ async function loadPrivateCourseFile(
     return;
   }
 
-
   try {
 
     let htmlText =
       await data.text();
 
-
     htmlText =
       preparePrivateCourseHtml(
         htmlText,
-        fileName
+        fileName,
+        courseCode
       );
-
 
     const frame =
       $("courseFrame");
-
 
     frame.removeAttribute(
       "src"
     );
 
+    frame.onload =
+      () => {
+
+        if (
+          restoreProgress
+        ) {
+
+          setTimeout(
+            () => {
+
+              frame.contentWindow
+                ?.postMessage(
+                  {
+                    type:
+                      "RESTORE_COURSE_PROGRESS",
+
+                    position:
+                      Number(
+                        restoreProgress
+                          .last_position
+                      ) || 0,
+
+                    completedItems:
+                      Number(
+                        restoreProgress
+                          .completed_items
+                      ) || 0,
+
+                    totalItems:
+                      Number(
+                        restoreProgress
+                          .total_items
+                      ) || 0,
+
+                    file:
+                      fileName
+                  },
+                  "*"
+                );
+
+            },
+            400
+          );
+        }
+      };
 
     frame.srcdoc =
       htmlText;
 
-
-    const title =
-      document.querySelector(
-        ".course-toolbar strong"
-      );
-
-
-    if (title) {
-
-      title.textContent =
-        titleText;
-    }
-
-
     $("courseStatus").textContent =
-      "Curso cargado";
+      restoreProgress
+        ? "Continuando donde te quedaste"
+        : "Curso cargado";
 
   } catch (
     error
   ) {
 
     console.error(error);
-
 
     $("courseStatus").textContent =
       "Error al preparar el curso.";
@@ -3524,17 +3746,17 @@ async function loadPrivateCourseFile(
 
 
 /* ============================================================
-   PREPARAR CURSO
+   INYECTAR SEGUIMIENTO DENTRO DEL CURSO
    ============================================================ */
 
 function preparePrivateCourseHtml(
   htmlText,
-  currentFile
+  currentFile,
+  courseCode
 ) {
 
   const parser =
     new DOMParser();
-
 
   const doc =
     parser.parseFromString(
@@ -3561,8 +3783,8 @@ function preparePrivateCourseHtml(
               link.getAttribute(
                 "href"
               ) || ""
-            ).trim();
-
+            )
+            .trim();
 
           const cleanHref =
             originalHref
@@ -3573,12 +3795,10 @@ function preparePrivateCourseHtml(
                 ""
               );
 
-
           const fileName =
             cleanHref
               .split("/")
               .pop();
-
 
           if (
             !LISTENING_FILES.has(
@@ -3589,31 +3809,49 @@ function preparePrivateCourseHtml(
             return;
           }
 
-
           link.setAttribute(
             "href",
             "#"
           );
 
-
           link.setAttribute(
             "data-private-listening-file",
             fileName
           );
+
         }
       );
   }
 
 
-  const activityScript =
+  const trackerScript =
     doc.createElement(
       "script"
     );
 
+  const safeFile =
+    JSON.stringify(
+      currentFile
+    );
 
-  activityScript.textContent = `
+  const safeCode =
+    JSON.stringify(
+      courseCode
+    );
+
+  trackerScript.textContent = `
 
     (function () {
+
+      const CURRENT_FILE =
+        ${safeFile};
+
+      const COURSE_CODE =
+        ${safeCode};
+
+      let progressTimer =
+        null;
+
 
       function notifyActivity() {
 
@@ -3626,6 +3864,209 @@ function preparePrivateCourseHtml(
         );
       }
 
+
+      function findCurrentSection() {
+
+        const elements =
+          Array.from(
+            document.querySelectorAll(
+              "h1,h2,h3,h4,h5,h6,summary"
+            )
+          );
+
+        let section =
+          "";
+
+        for (
+          const element
+          of elements
+        ) {
+
+          if (
+            !element.offsetParent
+          ) {
+
+            continue;
+          }
+
+          const rect =
+            element.getBoundingClientRect();
+
+          if (
+            rect.top <= 160
+          ) {
+
+            const text =
+              String(
+                element.textContent ||
+                ""
+              )
+              .replace(
+                /\\s+/g,
+                " "
+              )
+              .trim();
+
+            if (text) {
+
+              section =
+                text.slice(
+                  0,
+                  140
+                );
+            }
+
+          } else {
+
+            break;
+          }
+        }
+
+        return section;
+      }
+
+
+      function sendProgress() {
+
+        const root =
+          document.scrollingElement ||
+          document.documentElement;
+
+        const maxScroll =
+          Math.max(
+            0,
+            root.scrollHeight -
+            window.innerHeight
+          );
+
+        let position =
+          maxScroll > 0
+            ? (
+                root.scrollTop /
+                maxScroll
+              ) * 100
+            : 0;
+
+        let completedItems =
+          0;
+
+        let totalItems =
+          0;
+
+        let section =
+          findCurrentSection();
+
+
+        if (
+          COURSE_CODE ===
+          "VERBS5000"
+        ) {
+
+          try {
+
+            if (
+              typeof index !==
+              "undefined"
+            ) {
+
+              completedItems =
+                Number(index) + 1;
+
+            } else {
+
+              completedItems =
+                Number(
+                  localStorage.getItem(
+                    "lewjoan_verbs5000_index"
+                  ) || 0
+                ) + 1;
+            }
+
+          } catch (error) {
+
+            completedItems =
+              Number(
+                localStorage.getItem(
+                  "lewjoan_verbs5000_index"
+                ) || 0
+              ) + 1;
+          }
+
+          totalItems =
+            5000;
+
+          completedItems =
+            Math.max(
+              1,
+              Math.min(
+                5000,
+                completedItems
+              )
+            );
+
+          position =
+            (
+              completedItems /
+              totalItems
+            ) * 100;
+
+          section =
+            "Verbo " +
+            completedItems +
+            " / 5000";
+        }
+
+
+        parent.postMessage(
+          {
+            type:
+              "COURSE_PROGRESS_UPDATE",
+
+            courseCode:
+              COURSE_CODE,
+
+            file:
+              CURRENT_FILE,
+
+            position:
+              Math.max(
+                0,
+                Math.min(
+                  100,
+                  position
+                )
+              ),
+
+            section:
+              section,
+
+            completedItems:
+              completedItems,
+
+            totalItems:
+              totalItems
+          },
+          "*"
+        );
+      }
+
+
+      function scheduleProgress() {
+
+        notifyActivity();
+
+        clearTimeout(
+          progressTimer
+        );
+
+        progressTimer =
+          setTimeout(
+            sendProgress,
+            500
+          );
+      }
+
+
       [
         "mousedown",
         "mousemove",
@@ -3635,14 +4076,145 @@ function preparePrivateCourseHtml(
         "click"
       ]
       .forEach(
-        function (eventName) {
+        function (
+          eventName
+        ) {
 
           document.addEventListener(
             eventName,
-            notifyActivity,
+            scheduleProgress,
             {
               passive: true
             }
+          );
+
+        }
+      );
+
+
+      setInterval(
+        sendProgress,
+        5000
+      );
+
+
+      window.addEventListener(
+        "load",
+        function () {
+
+          setTimeout(
+            sendProgress,
+            700
+          );
+
+        }
+      );
+
+
+      window.addEventListener(
+        "message",
+        function (event) {
+
+          const message =
+            event.data;
+
+          if (
+            !message ||
+            message.type !==
+              "RESTORE_COURSE_PROGRESS"
+          ) {
+
+            return;
+          }
+
+
+          if (
+            COURSE_CODE ===
+            "VERBS5000" &&
+            Number(
+              message.completedItems
+            ) > 0
+          ) {
+
+            const targetIndex =
+              Math.max(
+                0,
+                Math.min(
+                  4999,
+                  Number(
+                    message.completedItems
+                  ) - 1
+                )
+              );
+
+            try {
+
+              localStorage.setItem(
+                "lewjoan_verbs5000_index",
+                targetIndex
+              );
+
+              if (
+                typeof index !==
+                "undefined"
+              ) {
+
+                index =
+                  targetIndex;
+
+                if (
+                  typeof render ===
+                  "function"
+                ) {
+
+                  render();
+                }
+              }
+
+            } catch (
+              error
+            ) {}
+
+            return;
+          }
+
+
+          const position =
+            Math.max(
+              0,
+              Math.min(
+                100,
+                Number(
+                  message.position
+                ) || 0
+              )
+            );
+
+          setTimeout(
+            function () {
+
+              const root =
+                document.scrollingElement ||
+                document.documentElement;
+
+              const maxScroll =
+                Math.max(
+                  0,
+                  root.scrollHeight -
+                  window.innerHeight
+                );
+
+              window.scrollTo(
+                0,
+                maxScroll *
+                (
+                  position /
+                  100
+                )
+              );
+
+            },
+            300
           );
 
         }
@@ -3653,17 +4225,20 @@ function preparePrivateCourseHtml(
         "click",
         function (event) {
 
-          var link =
+          const link =
             event.target.closest(
               "a[data-private-listening-file]"
             );
 
           if (!link) {
+
             return;
           }
 
           event.preventDefault();
           event.stopPropagation();
+
+          sendProgress();
 
           parent.postMessage(
             {
@@ -3686,15 +4261,13 @@ function preparePrivateCourseHtml(
 
   `;
 
-
   (
     doc.body ||
     doc.documentElement
   )
   .appendChild(
-    activityScript
+    trackerScript
   );
-
 
   return (
     "<!doctype html>\n" +
@@ -3704,7 +4277,7 @@ function preparePrivateCourseHtml(
 
 
 /* ============================================================
-   MENSAJES DEL CURSO
+   MENSAJES DESDE CURSOS
    ============================================================ */
 
 window.addEventListener(
@@ -3713,7 +4286,6 @@ window.addEventListener(
 
     const frame =
       $("courseFrame");
-
 
     if (
       !frame ||
@@ -3724,10 +4296,8 @@ window.addEventListener(
       return;
     }
 
-
     const message =
       event.data;
-
 
     if (!message) {
 
@@ -3747,6 +4317,54 @@ window.addEventListener(
 
 
     if (
+      message.type ===
+      "COURSE_PROGRESS_UPDATE"
+    ) {
+
+      markStudyActivity();
+
+      if (
+        currentCourseCode &&
+        message.courseCode ===
+          currentCourseCode
+      ) {
+
+        queueCourseProgress({
+
+          courseCode:
+            currentCourseCode,
+
+          file:
+            message.file ||
+            currentCourseFile,
+
+          position:
+            Number(
+              message.position
+            ) || 0,
+
+          section:
+            message.section ||
+            currentCourseTitle,
+
+          completedItems:
+            Number(
+              message.completedItems
+            ) || 0,
+
+          totalItems:
+            Number(
+              message.totalItems
+            ) || 0
+
+        });
+      }
+
+      return;
+    }
+
+
+    if (
       message.type !==
       "OPEN_PRIVATE_LISTENING_FILE"
     ) {
@@ -3754,12 +4372,10 @@ window.addEventListener(
       return;
     }
 
-
     const fileName =
       String(
         message.file || ""
       );
-
 
     if (
       !LISTENING_FILES.has(
@@ -3770,35 +4386,32 @@ window.addEventListener(
       return;
     }
 
+    await flushCourseProgress();
 
-    const active =
-      await ensureCurrentAccountIsActive();
+    currentCourseCode =
+      "LISTENING";
 
+    currentCourseFile =
+      fileName;
 
-    if (!active) {
-
-      return;
-    }
-
-
-    const sectionName =
+    currentCourseTitle =
       LISTENING_TITLES[
         fileName
       ] ||
       "American Listening Lab";
 
-
     await startStudySession(
       "LISTENING",
-      sectionName
+      currentCourseTitle
     );
-
 
     await loadPrivateCourseFile(
       fileName,
-      sectionName,
-      "LISTENING"
+      currentCourseTitle,
+      "LISTENING",
+      null
     );
+
   }
 );
 
@@ -3810,8 +4423,21 @@ window.addEventListener(
 $("backToPortal").onclick =
   async () => {
 
+    await flushCourseProgress();
+
     await finishStudySession();
 
+    currentCourseCode =
+      null;
+
+    currentCourseFile =
+      null;
+
+    currentCourseTitle =
+      null;
+
+    currentCourseProgress =
+      null;
 
     $("courseView")
       .classList
@@ -3819,16 +4445,13 @@ $("backToPortal").onclick =
         "hidden"
       );
 
-
     $("courseFrame")
       .removeAttribute(
         "srcdoc"
       );
 
-
     $("courseFrame").src =
       "about:blank";
-
 
     if (
       currentProfile &&
@@ -3840,13 +4463,54 @@ $("backToPortal").onclick =
         "Portal principal"
       );
 
-
       await loadDailyGoal();
 
+      await loadMotivationPanel();
+
+      await loadCourseProgressPanel();
+    }
+
+  };
+
+
+/* ============================================================
+   ACTUALIZAR PANELES
+   ============================================================ */
+
+setInterval(
+  async () => {
+
+    if (
+      currentProfile &&
+      !currentProfile.is_admin &&
+      currentProfile.is_active
+    ) {
+
+      await loadDailyGoal();
+    }
+
+  },
+  60000
+);
+
+
+setInterval(
+  async () => {
+
+    if (
+      currentProfile &&
+      !currentProfile.is_admin &&
+      currentProfile.is_active
+    ) {
 
       await loadMotivationPanel();
+
+      await loadCourseProgressPanel();
     }
-  };
+
+  },
+  120000
+);
 
 
 /* ============================================================
@@ -3869,12 +4533,10 @@ function buildStudySummary(
           )
       );
 
-
   const lastEntry =
     allRows[0]
       ?.started_at ||
     null;
-
 
   const studyRows =
     allRows.filter(
@@ -3883,14 +4545,11 @@ function buildStudySummary(
         "PORTAL"
     );
 
-
   const todayStart =
     startOfToday();
 
-
   const weekStart =
     startOfLast7Days();
-
 
   let todaySeconds =
     0;
@@ -3901,14 +4560,8 @@ function buildStudySummary(
   let totalSeconds =
     0;
 
-
   const activeDays =
     new Set();
-
-
-  const perCourse =
-    new Map();
-
 
   for (
     const row
@@ -3923,16 +4576,13 @@ function buildStudySummary(
         ) || 0
       );
 
-
     totalSeconds +=
       seconds;
-
 
     const started =
       new Date(
         row.started_at
       );
-
 
     if (
       started >=
@@ -3943,7 +4593,6 @@ function buildStudySummary(
         seconds;
     }
 
-
     if (
       started >=
       weekStart
@@ -3952,55 +4601,13 @@ function buildStudySummary(
       weekSeconds +=
         seconds;
 
-
       activeDays.add(
         localDayKey(
           row.started_at
         )
       );
     }
-
-
-    perCourse.set(
-      row.course_code,
-      (
-        perCourse.get(
-          row.course_code
-        ) || 0
-      ) +
-      seconds
-    );
   }
-
-
-  let topCourseCode =
-    null;
-
-  let topCourseSeconds =
-    0;
-
-
-  for (
-    const [
-      code,
-      seconds
-    ]
-    of perCourse
-  ) {
-
-    if (
-      seconds >
-      topCourseSeconds
-    ) {
-
-      topCourseCode =
-        code;
-
-      topCourseSeconds =
-        seconds;
-    }
-  }
-
 
   return {
     lastEntry,
@@ -4009,8 +4616,6 @@ function buildStudySummary(
     totalSeconds,
     activeDays:
       activeDays.size,
-    topCourseCode,
-    topCourseSeconds,
     recent:
       studyRows.slice(
         0,
@@ -4023,67 +4628,6 @@ function buildStudySummary(
 function renderStudyStats(
   summary
 ) {
-
-  const recentHtml =
-    summary.recent.length
-
-      ? summary.recent
-          .map(
-            row => `
-
-              <div
-                style="
-                  display:flex;
-                  justify-content:space-between;
-                  gap:12px;
-                  padding:8px 0;
-                  border-top:
-                    1px solid rgba(148,163,184,.18);
-                "
-              >
-
-                <div>
-
-                  <strong>
-                    ${escapeHtml(
-                      row.section_name ||
-                      courseDisplayName(
-                        row.course_code
-                      )
-                    )}
-                  </strong>
-
-                  <div class="small">
-                    ${escapeHtml(
-                      formatDateTime(
-                        row.started_at
-                      )
-                    )}
-                  </div>
-
-                </div>
-
-
-                <strong>
-                  ${escapeHtml(
-                    formatStudyTime(
-                      row.active_seconds
-                    )
-                  )}
-                </strong>
-
-              </div>
-
-            `
-          )
-          .join("")
-
-      : `
-          <div class="small">
-            Todavía no hay sesiones.
-          </div>
-        `;
-
 
   return `
 
@@ -4101,7 +4645,6 @@ function renderStudyStats(
       <strong>
         📊 Estadísticas de estudio
       </strong>
-
 
       <div
         style="
@@ -4152,21 +4695,6 @@ function renderStudyStats(
 
       </div>
 
-
-      <div
-        style="
-          margin-top:12px;
-        "
-      >
-
-        <strong>
-          Actividad reciente
-        </strong>
-
-        ${recentHtml}
-
-      </div>
-
     </div>
 
   `;
@@ -4186,63 +4714,40 @@ function ensureStudentSearchControls() {
     return;
   }
 
-
   const usersList =
     $("usersList");
-
 
   if (!usersList) {
 
     return;
   }
 
-
   const searchWrap =
     document.createElement(
       "div"
     );
-
-
-  searchWrap.id =
-    "studentSearchWrap";
-
-
-  searchWrap.style.cssText = `
-    margin:18px 0 14px;
-    display:flex;
-    gap:10px;
-    align-items:center;
-  `;
-
 
   searchWrap.innerHTML = `
 
     <input
       id="studentSearch"
       type="search"
-      placeholder="Buscar estudiante por nombre o correo..."
-      autocomplete="off"
+      placeholder="Buscar estudiante..."
       style="
-        flex:1;
+        width:100%;
         padding:12px 14px;
         border-radius:12px;
+        margin:15px 0;
       "
     >
 
-    <span
-      id="studentSearchCount"
-      class="small"
-    ></span>
-
   `;
-
 
   usersList.parentNode
     .insertBefore(
       searchWrap,
       usersList
     );
-
 
   $("studentSearch")
     .addEventListener(
@@ -4262,109 +4767,52 @@ function filterStudentCards() {
     .trim()
     .toLowerCase();
 
+  document
+    .querySelectorAll(
+      ".student-details-card"
+    )
+    .forEach(
+      card => {
 
-  const cards =
-    [
-      ...document.querySelectorAll(
-        ".student-details-card"
-      )
-    ];
+        card.style.display =
+          String(
+            card.dataset.search ||
+            ""
+          )
+          .toLowerCase()
+          .includes(
+            query
+          )
+            ? "block"
+            : "none";
 
-
-  let visibleCount =
-    0;
-
-
-  cards.forEach(
-    card => {
-
-      const visible =
-        !query ||
-        String(
-          card.dataset.search ||
-          ""
-        )
-        .toLowerCase()
-        .includes(
-          query
-        );
-
-
-      card.style.display =
-        visible
-          ? "block"
-          : "none";
-
-
-      if (visible) {
-
-        visibleCount +=
-          1;
       }
-    }
-  );
-
-
-  if (
-    $("studentSearchCount")
-  ) {
-
-    $("studentSearchCount").textContent =
-      query
-        ? `${visibleCount} resultados`
-        : `${cards.length} estudiantes`;
-  }
+    );
 }
 
 
 function setupStudentDropdowns() {
 
-  const detailsList =
+  const list =
     [
       ...document.querySelectorAll(
         ".student-details-card"
       )
     ];
 
-
-  detailsList.forEach(
+  list.forEach(
     details => {
-
-      const icon =
-        details.querySelector(
-          ".student-toggle-icon"
-        );
-
-
-      function updateIcon() {
-
-        if (icon) {
-
-          icon.textContent =
-            details.open
-              ? "▼"
-              : "▶";
-        }
-      }
-
-
-      updateIcon();
-
 
       details.addEventListener(
         "toggle",
         () => {
-
-          updateIcon();
-
 
           if (!details.open) {
 
             return;
           }
 
-
-          detailsList.forEach(
+          list.forEach(
             other => {
 
               if (
@@ -4376,8 +4824,10 @@ function setupStudentDropdowns() {
               }
             }
           );
+
         }
       );
+
     }
   );
 }
@@ -4391,7 +4841,6 @@ async function loadUsers() {
 
   ensureStudentSearchControls();
 
-
   const {
     data: profiles,
     error
@@ -4401,7 +4850,7 @@ async function loadUsers() {
         "profiles"
       )
       .select(
-        "id,email,display_name,is_admin,is_active,created_at,activated_at,auto_blocked,blocked_at,blocked_reason"
+        "id,email,display_name,is_admin,is_active,created_at,auto_blocked"
       )
       .order(
         "created_at",
@@ -4410,14 +4859,10 @@ async function loadUsers() {
         }
       );
 
-
   if (error) {
-
-    console.error(error);
 
     return;
   }
-
 
   const {
     data: accessRows
@@ -4430,7 +4875,6 @@ async function loadUsers() {
         "user_id,course_code"
       );
 
-
   const {
     data: activityRows
   } =
@@ -4439,19 +4883,11 @@ async function loadUsers() {
         "study_activity"
       )
       .select(
-        "user_id,course_code,section_name,started_at,ended_at,active_seconds"
-      )
-      .order(
-        "started_at",
-        {
-          ascending: false
-        }
+        "user_id,course_code,section_name,started_at,active_seconds"
       );
-
 
   const accessMap =
     new Map();
-
 
   for (
     const row
@@ -4470,7 +4906,6 @@ async function loadUsers() {
       );
     }
 
-
     accessMap
       .get(
         row.user_id
@@ -4480,10 +4915,8 @@ async function loadUsers() {
       );
   }
 
-
   const activityMap =
     new Map();
-
 
   for (
     const row
@@ -4502,7 +4935,6 @@ async function loadUsers() {
       );
     }
 
-
     activityMap
       .get(
         row.user_id
@@ -4512,13 +4944,11 @@ async function loadUsers() {
       );
   }
 
-
   const students =
     profiles.filter(
-      profile =>
-        !profile.is_admin
+      p =>
+        !p.is_admin
     );
-
 
   $("adminStats").innerHTML = `
 
@@ -4526,9 +4956,7 @@ async function loadUsers() {
       <strong>
         ${students.length}
       </strong>
-      <span>
-        Estudiantes
-      </span>
+      <span>Estudiantes</span>
     </div>
 
     <div class="stat">
@@ -4540,9 +4968,7 @@ async function loadUsers() {
           ).length
         }
       </strong>
-      <span>
-        Activos
-      </span>
+      <span>Activos</span>
     </div>
 
     <div class="stat">
@@ -4554,59 +4980,38 @@ async function loadUsers() {
           ).length
         }
       </strong>
-      <span>
-        Bloqueados
-      </span>
+      <span>Bloqueados</span>
     </div>
 
   `;
 
-
-  const admins =
-    profiles.filter(
-      profile =>
-        profile.is_admin
-    );
-
-
   const adminHtml =
-    admins
+    profiles
+      .filter(
+        p =>
+          p.is_admin
+      )
       .map(
-        profile => `
+        p => `
 
           <div class="student-admin-card">
 
-            <div class="student-admin-head">
+            <strong>
+              ${escapeHtml(
+                p.display_name ||
+                p.email
+              )}
+            </strong>
 
-              <div class="user-meta">
-
-                <strong>
-                  ${escapeHtml(
-                    profile.display_name ||
-                    "Sin nombre"
-                  )}
-                </strong>
-
-                <span>
-                  ${escapeHtml(
-                    profile.email
-                  )}
-                </span>
-
-              </div>
-
-              <span class="status active">
-                Administrador
-              </span>
-
-            </div>
+            <span class="status active">
+              Administrador
+            </span>
 
           </div>
 
         `
       )
       .join("");
-
 
   const studentHtml =
     students
@@ -4619,26 +5024,10 @@ async function loadUsers() {
             ) ||
             new Set();
 
-
-          const summary =
-            buildStudySummary(
-              activityMap.get(
-                profile.id
-              ) || []
-            );
-
-
           const switches =
-            COURSES.map(
-              course => {
-
-                const hasAccess =
-                  userCourses.has(
-                    course.code
-                  );
-
-
-                return `
+            COURSES
+              .map(
+                course => `
 
                   <div class="course-switch-row">
 
@@ -4650,16 +5039,7 @@ async function loadUsers() {
                         )}
                       </strong>
 
-                      <span>
-                        ${
-                          hasAccess
-                            ? "Acceso permitido"
-                            : "Sin acceso"
-                        }
-                      </span>
-
                     </div>
-
 
                     <label class="switch">
 
@@ -4669,7 +5049,9 @@ async function loadUsers() {
                         data-id="${profile.id}"
                         data-code="${course.code}"
                         ${
-                          hasAccess
+                          userCourses.has(
+                            course.code
+                          )
                             ? "checked"
                             : ""
                         }
@@ -4681,11 +5063,16 @@ async function loadUsers() {
 
                   </div>
 
-                `;
-              }
-            )
-            .join("");
+                `
+              )
+              .join("");
 
+          const summary =
+            buildStudySummary(
+              activityMap.get(
+                profile.id
+              ) || []
+            );
 
           const statusText =
             profile.is_active
@@ -4694,11 +5081,13 @@ async function loadUsers() {
                 ? "Bloqueado por inactividad"
                 : "Bloqueado";
 
-
           return `
 
             <details
-              class="student-admin-card student-details-card"
+              class="
+                student-admin-card
+                student-details-card
+              "
               data-search="${escapeHtml(
                 `${
                   profile.display_name || ""
@@ -4709,44 +5098,28 @@ async function loadUsers() {
             >
 
               <summary
-                class="student-admin-head student-summary"
+                class="student-admin-head"
                 style="
                   cursor:pointer;
-                  list-style:none;
                 "
               >
 
-                <div
-                  style="
-                    display:flex;
-                    align-items:center;
-                    gap:10px;
-                  "
-                >
+                <div class="user-meta">
 
-                  <span class="student-toggle-icon">
-                    ▶
+                  <strong>
+                    ${escapeHtml(
+                      profile.display_name ||
+                      "Sin nombre"
+                    )}
+                  </strong>
+
+                  <span>
+                    ${escapeHtml(
+                      profile.email
+                    )}
                   </span>
 
-                  <div class="user-meta">
-
-                    <strong>
-                      ${escapeHtml(
-                        profile.display_name ||
-                        "Sin nombre"
-                      )}
-                    </strong>
-
-                    <span>
-                      ${escapeHtml(
-                        profile.email
-                      )}
-                    </span>
-
-                  </div>
-
                 </div>
-
 
                 <span
                   class="status ${
@@ -4755,41 +5128,22 @@ async function loadUsers() {
                       : "blocked"
                   }"
                 >
-                  ${escapeHtml(
-                    statusText
-                  )}
+                  ${statusText}
                 </span>
 
               </summary>
 
-
               <div
                 style="
-                  margin-top:16px;
-                  padding-top:14px;
-                  border-top:
-                    1px solid rgba(148,163,184,.18);
+                  margin-top:15px;
                 "
               >
 
                 <div class="student-account-control">
 
-                  <div>
-
-                    <strong>
-                      Cuenta del estudiante
-                    </strong>
-
-                    <div class="small">
-                      ${
-                        profile.is_active
-                          ? "Puede entrar a la plataforma"
-                          : "Cuenta bloqueada"
-                      }
-                    </div>
-
-                  </div>
-
+                  <strong>
+                    Cuenta
+                  </strong>
 
                   <label class="switch">
 
@@ -4810,11 +5164,9 @@ async function loadUsers() {
 
                 </div>
 
-
                 <div class="course-access-list">
                   ${switches}
                 </div>
-
 
                 ${renderStudyStats(
                   summary
@@ -4829,11 +5181,9 @@ async function loadUsers() {
       )
       .join("");
 
-
   $("usersList").innerHTML =
     adminHtml +
     studentHtml;
-
 
   setupStudentDropdowns();
 
@@ -4847,17 +5197,14 @@ async function loadUsers() {
     .forEach(
       input => {
 
-        input.addEventListener(
-          "change",
+        input.onchange =
           async () => {
 
-            const newStatus =
+            const checked =
               input.checked;
-
 
             input.disabled =
               true;
-
 
             const {
               error
@@ -4869,33 +5216,22 @@ async function loadUsers() {
                     input.dataset.id,
 
                   p_active:
-                    newStatus
+                    checked
                 }
               );
 
-
             if (error) {
 
-              console.error(error);
-
-
               input.checked =
-                !newStatus;
-
-
-              alert(
-                "No se pudo cambiar la cuenta."
-              );
+                !checked;
             }
-
 
             input.disabled =
               false;
 
-
             await loadUsers();
-          }
-        );
+          };
+
       }
     );
 
@@ -4907,96 +5243,50 @@ async function loadUsers() {
     .forEach(
       input => {
 
-        input.addEventListener(
-          "change",
+        input.onchange =
           async () => {
 
-            const userId =
-              input.dataset.id;
-
-
-            const courseCode =
-              input.dataset.code;
-
-
-            const giveAccess =
+            const checked =
               input.checked;
-
 
             input.disabled =
               true;
 
+            if (checked) {
 
-            let error =
-              null;
+              await supabase
+                .from(
+                  "course_access"
+                )
+                .insert({
+                  user_id:
+                    input.dataset.id,
 
-
-            if (
-              giveAccess
-            ) {
-
-              const result =
-                await supabase
-                  .from(
-                    "course_access"
-                  )
-                  .insert({
-                    user_id:
-                      userId,
-
-                    course_code:
-                      courseCode
-                  });
-
-
-              error =
-                result.error;
+                  course_code:
+                    input.dataset.code
+                });
 
             } else {
 
-              const result =
-                await supabase
-                  .from(
-                    "course_access"
-                  )
-                  .delete()
-                  .eq(
-                    "user_id",
-                    userId
-                  )
-                  .eq(
-                    "course_code",
-                    courseCode
-                  );
-
-
-              error =
-                result.error;
+              await supabase
+                .from(
+                  "course_access"
+                )
+                .delete()
+                .eq(
+                  "user_id",
+                  input.dataset.id
+                )
+                .eq(
+                  "course_code",
+                  input.dataset.code
+                );
             }
-
-
-            if (error) {
-
-              console.error(error);
-
-
-              input.checked =
-                !giveAccess;
-
-
-              alert(
-                "No se pudo cambiar el acceso."
-              );
-            }
-
 
             input.disabled =
               false;
+          };
 
-
-            await loadUsers();
-          }
-        );
       }
     );
 }
@@ -5007,7 +5297,74 @@ $("refreshUsers").onclick =
 
 
 /* ============================================================
-   AUTH
+   BLOQUEO EN VIVO
+   ============================================================ */
+
+setInterval(
+  async () => {
+
+    if (
+      !currentProfile ||
+      currentProfile.is_admin
+    ) {
+
+      return;
+    }
+
+    const {
+      data
+    } =
+      await supabase
+        .from(
+          "profiles"
+        )
+        .select(
+          "is_active,auto_blocked,blocked_at,blocked_reason,activated_at"
+        )
+        .eq(
+          "id",
+          currentProfile.id
+        )
+        .single();
+
+    if (
+      !data
+    ) {
+
+      return;
+    }
+
+    currentProfile = {
+      ...currentProfile,
+      ...data
+    };
+
+    if (
+      !data.is_active
+    ) {
+
+      await flushCourseProgress();
+
+      await finishStudySession();
+
+      $("courseView")
+        .classList
+        .add(
+          "hidden"
+        );
+
+      showInactiveAccount(
+        currentProfile
+      );
+    }
+
+  },
+  5000
+);
+
+
+/* ============================================================
+   AUTH CHANGE
    ============================================================ */
 
 supabase.auth
@@ -5022,14 +5379,6 @@ supabase.auth
         currentProfile =
           null;
 
-
-        $("logoutBtn")
-          .classList
-          .add(
-            "hidden"
-          );
-
-
         showOnly(
           "authView"
         );
@@ -5039,106 +5388,14 @@ supabase.auth
 
 
 /* ============================================================
-   COMPROBAR BLOQUEO
-   ============================================================ */
-
-setInterval(
-
-  async () => {
-
-    const {
-      data: {
-        session
-      }
-    } =
-      await supabase.auth
-        .getSession();
-
-
-    if (
-      !session ||
-      currentProfile?.is_admin
-    ) {
-
-      return;
-    }
-
-
-    const {
-      data:
-        profile,
-
-      error
-    } =
-      await supabase
-        .from(
-          "profiles"
-        )
-        .select(
-          "is_active,auto_blocked,blocked_at,blocked_reason,activated_at"
-        )
-        .eq(
-          "id",
-          session.user.id
-        )
-        .single();
-
-
-    if (error) {
-
-      return;
-    }
-
-
-    currentProfile = {
-      ...currentProfile,
-      ...profile
-    };
-
-
-    if (
-      !profile.is_active
-    ) {
-
-      await finishStudySession();
-
-
-      $("courseView")
-        .classList
-        .add(
-          "hidden"
-        );
-
-
-      $("courseFrame")
-        .removeAttribute(
-          "srcdoc"
-        );
-
-
-      $("courseFrame").src =
-        "about:blank";
-
-
-      showInactiveAccount(
-        currentProfile
-      );
-    }
-
-  },
-
-  5000
-
-);
-
-
-/* ============================================================
-   CERRAR PÁGINA
+   SALIR / CERRAR PÁGINA
    ============================================================ */
 
 window.addEventListener(
   "pagehide",
   () => {
+
+    flushCourseProgress();
 
     saveStudyTime();
   }
