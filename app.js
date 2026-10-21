@@ -1589,7 +1589,7 @@ async function loadCourseProgressPanel() {
             opacity:.8;
           "
         >
-          ${escapeHtml(
+          📍 ${escapeHtml(
             detail
           )}
         </div>
@@ -1630,8 +1630,7 @@ async function loadCourseProgressPanel() {
         "
       >
         Cuando empieces un curso, aquí aparecerá
-        el botón para continuar exactamente donde
-        estabas estudiando.
+        el botón para continuar donde estabas.
       </div>
 
     `;
@@ -1725,7 +1724,7 @@ async function loadCourseProgressPanel() {
                   opacity:.72;
                 "
               >
-                ${sectionText}
+                📍 ${sectionText}
               </div>
 
             </div>
@@ -1944,8 +1943,6 @@ async function loadDailyGoal() {
       );
 
   if (error) {
-
-    console.error(error);
 
     return;
   }
@@ -3515,6 +3512,7 @@ async function resumeCourse(
     {
       resume:
         true,
+
       savedProgress:
         progress
     }
@@ -3560,7 +3558,7 @@ async function openCourse(
     }
   }
 
-  let savedProgress =
+  const savedProgress =
     options.savedProgress ||
     await getCourseProgress(
       courseCode
@@ -3701,6 +3699,11 @@ async function loadPrivateCourseFile(
                           .last_position
                       ) || 0,
 
+                    section:
+                      restoreProgress
+                        .last_section ||
+                      "",
+
                     completedItems:
                       Number(
                         restoreProgress
@@ -3720,7 +3723,7 @@ async function loadPrivateCourseFile(
                 );
 
             },
-            400
+            500
           );
         }
       };
@@ -3853,6 +3856,42 @@ function preparePrivateCourseHtml(
         null;
 
 
+      function normalizeText(
+        value
+      ) {
+
+        return String(
+          value || ""
+        )
+        .replace(
+          /\\\\s+/g,
+          " "
+        )
+        .trim()
+        .toLowerCase();
+      }
+
+
+      function cleanText(
+        element
+      ) {
+
+        return String(
+          element?.textContent ||
+          ""
+        )
+        .replace(
+          /\\\\s+/g,
+          " "
+        )
+        .trim()
+        .slice(
+          0,
+          180
+        );
+      }
+
+
       function notifyActivity() {
 
         parent.postMessage(
@@ -3865,55 +3904,117 @@ function preparePrivateCourseHtml(
       }
 
 
-      function findCurrentSection() {
+      /* ======================================================
+         BUSCAR LA LECCIÓN PRINCIPAL ACTUAL
 
-        const elements =
+         Prioridad:
+         1. details.topic > summary
+         2. details > summary
+         3. h2 / h3
+         4. otros headings
+         ====================================================== */
+
+      function getLessonCandidates() {
+
+        const preferred =
           Array.from(
             document.querySelectorAll(
-              "h1,h2,h3,h4,h5,h6,summary"
+              "details.topic > summary"
             )
           );
 
-        let section =
+        if (
+          preferred.length
+        ) {
+
+          return preferred;
+        }
+
+
+        const details =
+          Array.from(
+            document.querySelectorAll(
+              "details > summary"
+            )
+          );
+
+        if (
+          details.length
+        ) {
+
+          return details;
+        }
+
+
+        const mainHeadings =
+          Array.from(
+            document.querySelectorAll(
+              "h2,h3"
+            )
+          );
+
+        if (
+          mainHeadings.length
+        ) {
+
+          return mainHeadings;
+        }
+
+
+        return Array.from(
+          document.querySelectorAll(
+            "h1,h2,h3,h4,h5,h6"
+          )
+        );
+      }
+
+
+      function findCurrentSection() {
+
+        const candidates =
+          getLessonCandidates();
+
+        if (
+          !candidates.length
+        ) {
+
+          return "";
+        }
+
+
+        let current =
           "";
+
 
         for (
           const element
-          of elements
+          of candidates
         ) {
-
-          if (
-            !element.offsetParent
-          ) {
-
-            continue;
-          }
 
           const rect =
             element.getBoundingClientRect();
 
+
+          /*
+            Usamos aproximadamente 180 px desde
+            arriba porque el estudiante puede tener
+            una barra/header visible.
+          */
+
           if (
-            rect.top <= 160
+            rect.top <= 180
           ) {
 
             const text =
-              String(
-                element.textContent ||
-                ""
-              )
-              .replace(
-                /\\s+/g,
-                " "
-              )
-              .trim();
+              cleanText(
+                element
+              );
+
 
             if (text) {
 
-              section =
-                text.slice(
-                  0,
-                  140
-                );
+              current =
+                text;
             }
 
           } else {
@@ -3922,9 +4023,261 @@ function preparePrivateCourseHtml(
           }
         }
 
-        return section;
+
+        /*
+          Si todavía estamos antes de la primera lección,
+          usamos la primera.
+        */
+
+        if (
+          !current &&
+          candidates[0]
+        ) {
+
+          current =
+            cleanText(
+              candidates[0]
+            );
+        }
+
+
+        return current;
       }
 
+
+      /* ======================================================
+         ABRIR DETAILS PADRES
+         ====================================================== */
+
+      function openParentDetails(
+        element
+      ) {
+
+        let details =
+          element.closest(
+            "details"
+          );
+
+
+        while (
+          details
+        ) {
+
+          details.open =
+            true;
+
+
+          details =
+            details.parentElement
+              ?.closest(
+                "details"
+              ) ||
+            null;
+        }
+      }
+
+
+      /* ======================================================
+         ENCONTRAR UNA LECCIÓN GUARDADA
+         ====================================================== */
+
+      function findSavedLesson(
+        savedSection
+      ) {
+
+        const target =
+          normalizeText(
+            savedSection
+          );
+
+
+        if (
+          !target
+        ) {
+
+          return null;
+        }
+
+
+        const selectors = [
+
+          "details.topic > summary",
+
+          "details > summary",
+
+          "h2",
+
+          "h3",
+
+          "h4",
+
+          "h1",
+
+          "h5",
+
+          "h6"
+
+        ];
+
+
+        const candidates =
+          Array.from(
+            document.querySelectorAll(
+              selectors.join(",")
+            )
+          );
+
+
+        /*
+          Primero buscamos coincidencia exacta.
+        */
+
+        let match =
+          candidates.find(
+            element =>
+              normalizeText(
+                cleanText(
+                  element
+                )
+              ) ===
+              target
+          );
+
+
+        if (
+          match
+        ) {
+
+          return match;
+        }
+
+
+        /*
+          Si el título guardado tiene números,
+          iconos o pequeñas diferencias,
+          intentamos coincidencia parcial.
+        */
+
+        match =
+          candidates.find(
+            element => {
+
+              const text =
+                normalizeText(
+                  cleanText(
+                    element
+                  )
+                );
+
+
+              return (
+                text &&
+                (
+                  text.includes(
+                    target
+                  ) ||
+                  target.includes(
+                    text
+                  )
+                )
+              );
+            }
+          );
+
+
+        return match ||
+          null;
+      }
+
+
+      /* ======================================================
+         IR A LECCIÓN EXACTA
+         ====================================================== */
+
+      function restoreExactLesson(
+        savedSection
+      ) {
+
+        const lesson =
+          findSavedLesson(
+            savedSection
+          );
+
+
+        if (
+          !lesson
+        ) {
+
+          return false;
+        }
+
+
+        openParentDetails(
+          lesson
+        );
+
+
+        /*
+          Si la propia lección es un summary,
+          también abrimos SU details.
+        */
+
+        if (
+          lesson.tagName ===
+          "SUMMARY"
+        ) {
+
+          const ownDetails =
+            lesson.parentElement;
+
+
+          if (
+            ownDetails?.tagName ===
+            "DETAILS"
+          ) {
+
+            ownDetails.open =
+              true;
+          }
+        }
+
+
+        setTimeout(
+          function () {
+
+            lesson.scrollIntoView(
+              {
+                behavior:
+                  "auto",
+
+                block:
+                  "start"
+              }
+            );
+
+
+            /*
+              Dejamos un poco de espacio arriba
+              para que no quede tapado por header.
+            */
+
+            window.scrollBy(
+              0,
+              -90
+            );
+
+          },
+          250
+        );
+
+
+        return true;
+      }
+
+
+      /* ======================================================
+         ENVIAR PROGRESO
+         ====================================================== */
 
       function sendProgress() {
 
@@ -3932,12 +4285,14 @@ function preparePrivateCourseHtml(
           document.scrollingElement ||
           document.documentElement;
 
+
         const maxScroll =
           Math.max(
             0,
             root.scrollHeight -
             window.innerHeight
           );
+
 
         let position =
           maxScroll > 0
@@ -3947,15 +4302,22 @@ function preparePrivateCourseHtml(
               ) * 100
             : 0;
 
+
         let completedItems =
           0;
+
 
         let totalItems =
           0;
 
+
         let section =
           findCurrentSection();
 
+
+        /* ====================================================
+           5000 VERBS
+           ==================================================== */
 
         if (
           COURSE_CODE ===
@@ -3982,7 +4344,9 @@ function preparePrivateCourseHtml(
                 ) + 1;
             }
 
-          } catch (error) {
+          } catch (
+            error
+          ) {
 
             completedItems =
               Number(
@@ -3992,8 +4356,10 @@ function preparePrivateCourseHtml(
               ) + 1;
           }
 
+
           totalItems =
             5000;
+
 
           completedItems =
             Math.max(
@@ -4004,11 +4370,13 @@ function preparePrivateCourseHtml(
               )
             );
 
+
           position =
             (
               completedItems /
               totalItems
             ) * 100;
+
 
           section =
             "Verbo " +
@@ -4055,9 +4423,11 @@ function preparePrivateCourseHtml(
 
         notifyActivity();
 
+
         clearTimeout(
           progressTimer
         );
+
 
         progressTimer =
           setTimeout(
@@ -4092,6 +4462,25 @@ function preparePrivateCourseHtml(
       );
 
 
+      /*
+        Cuando el estudiante abre/cierra una lección,
+        guardamos inmediatamente el nombre.
+      */
+
+      document.addEventListener(
+        "toggle",
+        function () {
+
+          setTimeout(
+            sendProgress,
+            250
+          );
+
+        },
+        true
+      );
+
+
       setInterval(
         sendProgress,
         5000
@@ -4111,12 +4500,17 @@ function preparePrivateCourseHtml(
       );
 
 
+      /* ======================================================
+         RESTAURAR PROGRESO
+         ====================================================== */
+
       window.addEventListener(
         "message",
         function (event) {
 
           const message =
             event.data;
+
 
           if (
             !message ||
@@ -4127,6 +4521,10 @@ function preparePrivateCourseHtml(
             return;
           }
 
+
+          /* ==================================================
+             5000 VERBS
+             ================================================== */
 
           if (
             COURSE_CODE ===
@@ -4147,12 +4545,14 @@ function preparePrivateCourseHtml(
                 )
               );
 
+
             try {
 
               localStorage.setItem(
                 "lewjoan_verbs5000_index",
                 targetIndex
               );
+
 
               if (
                 typeof index !==
@@ -4161,6 +4561,7 @@ function preparePrivateCourseHtml(
 
                 index =
                   targetIndex;
+
 
                 if (
                   typeof render ===
@@ -4175,9 +4576,35 @@ function preparePrivateCourseHtml(
               error
             ) {}
 
+
             return;
           }
 
+
+          /*
+            1. PRIMERO intentamos encontrar
+               la lección exacta.
+          */
+
+          const exactRestored =
+            restoreExactLesson(
+              message.section ||
+              ""
+            );
+
+
+          if (
+            exactRestored
+          ) {
+
+            return;
+          }
+
+
+          /*
+            2. Si no encontramos el título exacto,
+               usamos la posición porcentual.
+          */
 
           const position =
             Math.max(
@@ -4190,6 +4617,7 @@ function preparePrivateCourseHtml(
               )
             );
 
+
           setTimeout(
             function () {
 
@@ -4197,12 +4625,14 @@ function preparePrivateCourseHtml(
                 document.scrollingElement ||
                 document.documentElement;
 
+
               const maxScroll =
                 Math.max(
                   0,
                   root.scrollHeight -
                   window.innerHeight
                 );
+
 
               window.scrollTo(
                 0,
@@ -4214,12 +4644,16 @@ function preparePrivateCourseHtml(
               );
 
             },
-            300
+            350
           );
 
         }
       );
 
+
+      /* ======================================================
+         LISTENING PRIVADO
+         ====================================================== */
 
       document.addEventListener(
         "click",
@@ -4230,15 +4664,20 @@ function preparePrivateCourseHtml(
               "a[data-private-listening-file]"
             );
 
+
           if (!link) {
 
             return;
           }
 
+
           event.preventDefault();
+
           event.stopPropagation();
 
+
           sendProgress();
+
 
           parent.postMessage(
             {
