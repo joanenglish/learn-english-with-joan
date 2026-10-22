@@ -2620,7 +2620,6 @@ const labs =
       course.type ===
       "lab"
   );
-    );
 
   $("grammarGrid").innerHTML =
     grammar
