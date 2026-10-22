@@ -178,16 +178,16 @@ const COURSES = [
   },
 
   {
-  code: "SPEAKING",
-  title: "American Speaking Lab",
-  shortTitle: "Speaking Lab",
-  description:
-    "Práctica interactiva de speaking por niveles A1, A2, B1, B2 y C1.",
-  file: "speaking_index.html",
-  badge: "A1–C1",
-  type: "lab"
-},
-  
+    code: "SPEAKING",
+    title: "American Speaking Lab",
+    shortTitle: "Speaking Lab",
+    description:
+      "Práctica interactiva de speaking por niveles A1, A2, B1, B2 y C1.",
+    file: "speaking_index.html",
+    badge: "A1–C1",
+    type: "lab"
+  },
+
   {
     code: "IRREGULARS",
     title: "Irregular Verbs — American English",
@@ -280,6 +280,7 @@ const LISTENING_TITLES = {
 
 };
 
+
 /* ============================================================
    SPEAKING LAB
    ============================================================ */
@@ -361,6 +362,7 @@ const SPEAKING_TITLES = {
     "Speaking C1 — Volumen 3"
 
 };
+
 
 /* ============================================================
    ESTADO GLOBAL
@@ -2537,6 +2539,22 @@ function getSavedPlaceText(
 
 
   if (
+    course.code ===
+    "SPEAKING" &&
+    progress.last_file
+  ) {
+
+    return (
+      SPEAKING_TITLES[
+        progress.last_file
+      ] ||
+      progress.last_section ||
+      "Speaking"
+    );
+  }
+
+
+  if (
     progress.last_section
   ) {
 
@@ -2700,51 +2718,91 @@ async function renderCourses() {
     );
 
   const extra =
-  COURSES.filter(
-    course =>
-      course.type ===
-      "extra"
-  );
-
-const labs =
-  COURSES.filter(
-    course =>
-      course.type ===
-      "lab"
-  );
-
-  $("grammarGrid").innerHTML =
-    grammar
-      .map(
-        course =>
-          courseCardHtml(
-            course,
-            accessSet
-          )
-      )
-      .join("");
-
-  $("courseGrid").innerHTML =
-    extra
-      .map(
-        course =>
-          courseCardHtml(
-            course,
-            accessSet
-          )
-      )
-      .join("");
-  
-$("labGrid").innerHTML =
-  labs
-    .map(
+    COURSES.filter(
       course =>
-        courseCardHtml(
-          course,
-          accessSet
+        course.type ===
+        "extra"
+    );
+
+  const labs =
+    COURSES.filter(
+      course =>
+        course.type ===
+        "lab"
+    );
+
+  const grammarGrid =
+    $("grammarGrid");
+
+  const courseGrid =
+    $("courseGrid");
+
+  const labGrid =
+    $("labGrid");
+
+
+  if (grammarGrid) {
+
+    grammarGrid.innerHTML =
+      grammar
+        .map(
+          course =>
+            courseCardHtml(
+              course,
+              accessSet
+            )
         )
-    )
-    .join("");
+        .join("");
+  }
+
+
+  if (courseGrid) {
+
+    courseGrid.innerHTML =
+      extra
+        .map(
+          course =>
+            courseCardHtml(
+              course,
+              accessSet
+            )
+        )
+        .join("");
+  }
+
+
+  if (labGrid) {
+
+    labGrid.innerHTML =
+      labs
+        .map(
+          course =>
+            courseCardHtml(
+              course,
+              accessSet
+            )
+        )
+        .join("");
+
+  } else if (
+    courseGrid &&
+    labs.length
+  ) {
+
+    courseGrid.insertAdjacentHTML(
+      "beforeend",
+      labs
+        .map(
+          course =>
+            courseCardHtml(
+              course,
+              accessSet
+            )
+        )
+        .join("")
+    );
+  }
+
 
   document
     .querySelectorAll(
@@ -2849,6 +2907,20 @@ async function openCourse(
       progress.last_file;
   }
 
+  if (
+    resume &&
+    courseCode ===
+      "SPEAKING" &&
+    progress?.last_file &&
+    SPEAKING_FILES.has(
+      progress.last_file
+    )
+  ) {
+
+    fileName =
+      progress.last_file;
+  }
+
   currentCourseCode =
     courseCode;
 
@@ -2931,6 +3003,11 @@ async function loadPrivateCourseFile(
 
   const frame =
     $("courseFrame");
+
+  frame.setAttribute(
+    "allow",
+    "microphone"
+  );
 
   frame.removeAttribute(
     "src"
@@ -3909,59 +3986,115 @@ window.addEventListener(
 
 
     if (
-      message.type !==
+      message.type ===
       "OPEN_PRIVATE_LISTENING_FILE"
     ) {
 
-      return;
-    }
+      const fileName =
+        String(
+          message.file ||
+          ""
+        );
 
 
-    const fileName =
-      String(
-        message.file ||
-        ""
+      if (
+        !LISTENING_FILES.has(
+          fileName
+        )
+      ) {
+
+        return;
+      }
+
+
+      await flushCourseProgress();
+
+
+      currentCourseCode =
+        "LISTENING";
+
+      currentCourseFile =
+        fileName;
+
+      currentCourseTitle =
+        LISTENING_TITLES[
+          fileName
+        ] ||
+        "American Listening Lab";
+
+
+      await startStudySession(
+        "LISTENING",
+        currentCourseTitle
       );
 
 
-    if (
-      !LISTENING_FILES.has(
-        fileName
-      )
-    ) {
+      await loadPrivateCourseFile(
+        fileName,
+        currentCourseTitle,
+        "LISTENING",
+        null
+      );
+
 
       return;
     }
 
 
-    await flushCourseProgress();
+    if (
+      message.type ===
+      "OPEN_PRIVATE_SPEAKING_FILE"
+    ) {
+
+      const fileName =
+        String(
+          message.file ||
+          ""
+        );
 
 
-    currentCourseCode =
-      "LISTENING";
+      if (
+        !SPEAKING_FILES.has(
+          fileName
+        )
+      ) {
 
-    currentCourseFile =
-      fileName;
-
-    currentCourseTitle =
-      LISTENING_TITLES[
-        fileName
-      ] ||
-      "American Listening Lab";
+        return;
+      }
 
 
-    await startStudySession(
-      "LISTENING",
-      currentCourseTitle
-    );
+      await flushCourseProgress();
 
 
-    await loadPrivateCourseFile(
-      fileName,
-      currentCourseTitle,
-      "LISTENING",
-      null
-    );
+      currentCourseCode =
+        "SPEAKING";
+
+      currentCourseFile =
+        fileName;
+
+      currentCourseTitle =
+        SPEAKING_TITLES[
+          fileName
+        ] ||
+        "American Speaking Lab";
+
+
+      await startStudySession(
+        "SPEAKING",
+        currentCourseTitle
+      );
+
+
+      await loadPrivateCourseFile(
+        fileName,
+        currentCourseTitle,
+        "SPEAKING",
+        null
+      );
+
+
+      return;
+    }
 
   }
 );
