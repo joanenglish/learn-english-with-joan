@@ -2608,10 +2608,18 @@ async function renderCourses() {
     );
 
   const extra =
-    COURSES.filter(
-      course =>
-        course.type !==
-        "grammar"
+  COURSES.filter(
+    course =>
+      course.type ===
+      "extra"
+  );
+
+const labs =
+  COURSES.filter(
+    course =>
+      course.type ===
+      "lab"
+  );
     );
 
   $("grammarGrid").innerHTML =
@@ -2635,7 +2643,17 @@ async function renderCourses() {
           )
       )
       .join("");
-
+  
+$("labGrid").innerHTML =
+  labs
+    .map(
+      course =>
+        courseCardHtml(
+          course,
+          accessSet
+        )
+    )
+    .join("");
 
   document
     .querySelectorAll(
