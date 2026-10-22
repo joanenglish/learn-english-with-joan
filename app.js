@@ -174,7 +174,7 @@ const COURSES = [
       "7,000 ejercicios de listening organizados por niveles A1, A2, B1 y B2.",
     file: "listening_index.html",
     badge: "A1–B2",
-    type: "extra"
+    type: "lab"
   },
 
   {
