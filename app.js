@@ -178,6 +178,17 @@ const COURSES = [
   },
 
   {
+  code: "SPEAKING",
+  title: "American Speaking Lab",
+  shortTitle: "Speaking Lab",
+  description:
+    "Práctica interactiva de speaking por niveles A1, A2, B1, B2 y C1.",
+  file: "speaking_index.html",
+  badge: "A1–C1",
+  type: "lab"
+},
+  
+  {
     code: "IRREGULARS",
     title: "Irregular Verbs — American English",
     shortTitle: "Irregular Verbs",
