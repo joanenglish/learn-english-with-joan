@@ -280,6 +280,87 @@ const LISTENING_TITLES = {
 
 };
 
+/* ============================================================
+   SPEAKING LAB
+   ============================================================ */
+
+const SPEAKING_FILES =
+  new Set([
+    "speaking_index.html",
+
+    "American_Speaking_Lab_A1_Volumen_1_Final.html",
+    "American_Speaking_Lab_A1_Volumen_2_Final.html",
+    "American_Speaking_Lab_A1_Volumen_3_Final.html",
+
+    "American_Speaking_Lab_A2_Volumen_1_Final.html",
+    "American_Speaking_Lab_A2_Volumen_2_Final.html",
+    "American_Speaking_Lab_A2_Volumen_3_Final.html",
+
+    "American_Speaking_Lab_B1_Volumen_1_Final.html",
+    "American_Speaking_Lab_B1_Volumen_2_Final.html",
+    "American_Speaking_Lab_B1_Volumen_3_Final.html",
+
+    "American_Speaking_Lab_B2_Volumen_1_Final.html",
+    "American_Speaking_Lab_B2_Volumen_2_Final.html",
+    "American_Speaking_Lab_B2_Volumen_3_Final.html",
+
+    "American_Speaking_Lab_C1_Volumen_1_Final.html",
+    "American_Speaking_Lab_C1_Volumen_2_Final.html",
+    "American_Speaking_Lab_C1_Volumen_3_Final.html"
+  ]);
+
+
+const SPEAKING_TITLES = {
+
+  "speaking_index.html":
+    "American Speaking Lab",
+
+  "American_Speaking_Lab_A1_Volumen_1_Final.html":
+    "Speaking A1 — Volumen 1",
+
+  "American_Speaking_Lab_A1_Volumen_2_Final.html":
+    "Speaking A1 — Volumen 2",
+
+  "American_Speaking_Lab_A1_Volumen_3_Final.html":
+    "Speaking A1 — Volumen 3",
+
+  "American_Speaking_Lab_A2_Volumen_1_Final.html":
+    "Speaking A2 — Volumen 1",
+
+  "American_Speaking_Lab_A2_Volumen_2_Final.html":
+    "Speaking A2 — Volumen 2",
+
+  "American_Speaking_Lab_A2_Volumen_3_Final.html":
+    "Speaking A2 — Volumen 3",
+
+  "American_Speaking_Lab_B1_Volumen_1_Final.html":
+    "Speaking B1 — Volumen 1",
+
+  "American_Speaking_Lab_B1_Volumen_2_Final.html":
+    "Speaking B1 — Volumen 2",
+
+  "American_Speaking_Lab_B1_Volumen_3_Final.html":
+    "Speaking B1 — Volumen 3",
+
+  "American_Speaking_Lab_B2_Volumen_1_Final.html":
+    "Speaking B2 — Volumen 1",
+
+  "American_Speaking_Lab_B2_Volumen_2_Final.html":
+    "Speaking B2 — Volumen 2",
+
+  "American_Speaking_Lab_B2_Volumen_3_Final.html":
+    "Speaking B2 — Volumen 3",
+
+  "American_Speaking_Lab_C1_Volumen_1_Final.html":
+    "Speaking C1 — Volumen 1",
+
+  "American_Speaking_Lab_C1_Volumen_2_Final.html":
+    "Speaking C1 — Volumen 2",
+
+  "American_Speaking_Lab_C1_Volumen_3_Final.html":
+    "Speaking C1 — Volumen 3"
+
+};
 
 /* ============================================================
    ESTADO GLOBAL
