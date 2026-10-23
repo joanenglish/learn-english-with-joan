@@ -2909,17 +2909,17 @@ function ensurePronunciationModuleNav() {
       .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;min-width:88px}
       .pl-stat strong{display:block;font-size:19px}.pl-stat span{font-size:11px;color:#dce9ff}
       .pl-guide{background:#fff;border:1px solid #dfebfb;border-radius:16px;padding:15px 18px;margin-bottom:18px;line-height:1.6;color:#526783}
-      .pl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-      .pl-card{display:flex;flex-direction:column;gap:9px;min-height:150px;padding:14px;border:1px solid #dfe9f8;border-radius:17px;background:#fff;box-shadow:0 4px 12px rgba(27,65,115,.035);transition:transform .15s ease,box-shadow .15s ease}
+      .pl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-height:calc(100vh - 390px);min-height:180px;overflow-y:auto;overflow-x:hidden;padding:2px 8px 10px 2px;overscroll-behavior:contain;scrollbar-gutter:stable}
+      .pl-card{display:flex;flex-direction:column;gap:7px;min-height:118px;padding:11px;border:1px solid #dfe9f8;border-radius:17px;background:#fff;box-shadow:0 4px 12px rgba(27,65,115,.035);transition:transform .15s ease,box-shadow .15s ease}
       .pl-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(27,65,115,.09)}
       .pl-badge{align-self:flex-start;background:#eaf2ff;color:#2458a5;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}
       .pl-card strong{font-size:15px;color:#152b49;line-height:1.35}
-      .pl-card .pl-description{font-size:13px;line-height:1.55;color:#62758f;flex:1}
-      .pl-open{width:100%;padding:11px 14px;border:0;border-radius:10px;background:#2864d8;color:#fff;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s ease}
+      .pl-card .pl-description{font-size:11px;line-height:1.4;color:#62758f;flex:1}
+      .pl-open{width:100%;padding:8px 11px;border:0;border-radius:10px;background:#2864d8;color:#fff;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s ease}
       .pl-open:hover{background:#194fb7}
       #closePronunciationModule{background:#fff;color:#183d78;border:1px solid #b8cff0;padding:10px 15px;border-radius:10px;font-weight:800;cursor:pointer}
       @media(max-width:1100px){.pl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}} @media(max-width:800px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-      @media(max-width:560px){.pl-grid{grid-template-columns:1fr}.pl-hero{padding:22px 18px}.pl-card{min-height:135px}}\n      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}\n      #pronunciationModuleNav.pl-in-module{padding:12px!important;margin-bottom:10px!important;border-radius:12px!important}\n      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
+      @media(max-width:560px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:calc(100vh - 300px);min-height:160px}.pl-hero{padding:22px 18px}.pl-card{min-height:112px;padding:10px}}\n      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}\n      #pronunciationModuleNav.pl-in-module{padding:12px!important;margin-bottom:10px!important;border-radius:12px!important}\n      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
       </style>
       <div class="pl-hero">
         <span class="pl-eyebrow">LEARN ENGLISH WITH JOAN</span>
