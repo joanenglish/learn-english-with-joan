@@ -230,7 +230,18 @@ const COURSES = [
     file: "a2_grammar.html",
     badge: "A2",
     type: "grammar"
-  }
+  },
+
+  {
+    code: "B1",
+    title: "B1 — Intermediate",
+    shortTitle: "B1 — Intermediate",
+    description:
+      "Gramática B1 · explicaciones claras · ejemplos · pronunciación y práctica.",
+    file: "B1_Grammar_Topic_01_AINT+(1).html",
+    badge: "B1",
+    type: "grammar"
+  },
 
 ];
 
