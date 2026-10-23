@@ -63,11 +63,14 @@ responsiveStyle.textContent = `
   .pronunciation-module-nav.is-visible { display: block; }
   .pronunciation-module-nav h3 { margin: 0 0 8px; }
   .pronunciation-module-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
-  .pronunciation-module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
-  .pronunciation-module-grid button { min-height: 58px; cursor: pointer; text-align:left; line-height:1.35; white-space:normal; }
-  .pronunciation-module-grid button.is-current { outline: 2px solid var(--primary, #3b82f6); font-weight: 700; }
-  .pronunciation-module-grid button .module-number { display:block; font-size:11px; opacity:.75; margin-bottom:3px; }
-  .pronunciation-module-grid button .module-name { display:block; font-size:13px; }
+  .pronunciation-module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; align-items: stretch; }
+  .pronunciation-module-card { display:flex; flex-direction:column; align-items:stretch; gap:12px; min-height:150px; padding:16px; border:1px solid var(--border-color, rgba(127,127,127,.25)); border-radius:14px; background:var(--card-bg, rgba(127,127,127,.05)); box-shadow:0 2px 8px rgba(0,0,0,.04); }
+  .pronunciation-module-card.is-current { border:2px solid var(--primary, #3b82f6); padding:15px; }
+  .pronunciation-module-card .module-number { display:inline-flex; align-self:flex-start; padding:5px 9px; border-radius:999px; background:rgba(59,130,246,.12); font-size:11px; font-weight:700; letter-spacing:.04em; }
+  .pronunciation-module-card .module-name { display:block; font-size:15px; line-height:1.4; font-weight:700; }
+  .pronunciation-module-card .module-description { display:block; font-size:12px; line-height:1.45; opacity:.75; flex:1; }
+  .pronunciation-module-card .module-open-button { width:100%; min-height:40px; cursor:pointer; text-align:center; white-space:normal; }
+  .pronunciation-module-card .module-open-button.is-current { font-weight:700; }
 
   @media (max-width: 700px) {
 
@@ -2987,7 +2990,12 @@ function ensurePronunciationModuleNav() {
     grid.innerHTML = moduleNames.map((name, index) => {
       const number = String(index + 1).padStart(2, "0");
       const file = `American_Pronunciation_Lab_Module_${number}.html`;
-      return `<button type="button" class="secondary pronunciation-module-button" data-module-file="${file}" aria-expanded="false"><span class="module-number">MÓDULO ${number}</span><span class="module-name">${name}</span></button>`;
+      return `<article class="pronunciation-module-card" data-module-card="${file}">
+        <span class="module-number">MÓDULO ${number}</span>
+        <span class="module-name">${name}</span>
+        <span class="module-description">Practica la pronunciación americana con esta lección.</span>
+        <button type="button" class="secondary module-open-button" data-module-file="${file}" aria-expanded="false">Abrir módulo</button>
+      </article>`;
     }).join("");
     grid.dataset.built = "true";
 
@@ -2997,11 +3005,14 @@ function ensurePronunciationModuleNav() {
       const file = button.dataset.moduleFile;
       if (!PRONUNCIATION_FILES.has(file)) return;
 
-      // Pulsar de nuevo el módulo activo lo cierra.
+      // El botón de la lección activa funciona como abrir/cerrar.
       if (currentCourseFile === file && frame.style.display !== "none") {
         frame.style.display = "none";
         button.setAttribute("aria-expanded", "false");
         button.classList.remove("is-current");
+        button.textContent = "Abrir módulo";
+        const card = button.closest(".pronunciation-module-card");
+        if (card) card.classList.remove("is-current");
         $("courseStatus").textContent = `Módulo ${file.match(/Module_(\d+)/)?.[1] || ""} cerrado.`;
         return;
       }
@@ -3025,6 +3036,9 @@ function ensurePronunciationModuleNav() {
       nav.querySelectorAll("button[data-module-file]").forEach(button => {
         button.setAttribute("aria-expanded", "false");
         button.classList.remove("is-current");
+        button.textContent = "Abrir módulo";
+        const card = button.closest(".pronunciation-module-card");
+        if (card) card.classList.remove("is-current");
       });
       $("courseStatus").textContent = "Módulo cerrado. Selecciona otro de los 15 módulos.";
     });
@@ -3041,6 +3055,9 @@ function updatePronunciationModuleNav(fileName) {
     button.classList.toggle("is-current", active);
     button.setAttribute("aria-current", active ? "page" : "false");
     button.setAttribute("aria-expanded", active ? "true" : "false");
+    button.textContent = active ? "Cerrar módulo" : "Abrir módulo";
+    const card = button.closest(".pronunciation-module-card");
+    if (card) card.classList.toggle("is-current", active);
   });
 }
 
