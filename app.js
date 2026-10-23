@@ -2890,36 +2890,10 @@ const PRONUNCIATION_TITLES = {
   "American_Pronunciation_Lab_Module_15.html": "Diphthong OI"
 };
 
-function unlockPronunciationPageScroll() {
-  // Solo se activa al entrar al American Pronunciation Lab; no toca otras lecciones.
-  document.documentElement.style.setProperty("overflow-y", "auto", "important");
-  document.body.style.setProperty("overflow-y", "auto", "important");
-  document.body.style.setProperty("height", "auto", "important");
-  const view = $("courseView");
-  if (view) {
-    view.style.setProperty("height", "auto", "important");
-    view.style.setProperty("max-height", "none", "important");
-    view.style.setProperty("overflow", "visible", "important");
-  }
-  const nav = $("pronunciationModuleNav");
-  if (nav) {
-    nav.style.setProperty("height", "auto", "important");
-    nav.style.setProperty("max-height", "none", "important");
-    nav.style.setProperty("overflow", "visible", "important");
-  }
-  const grid = $("pronunciationModuleGrid");
-  if (grid) {
-    grid.style.setProperty("height", "auto", "important");
-    grid.style.setProperty("max-height", "none", "important");
-    grid.style.setProperty("overflow", "visible", "important");
-  }
-}
-
 function ensurePronunciationModuleNav() {
   const courseView = $("courseView");
   const frame = $("courseFrame");
   if (!courseView || !frame) return null;
-  unlockPronunciationPageScroll();
   let nav = $("pronunciationModuleNav");
   if (!nav) {
     nav = document.createElement("section");
@@ -2927,12 +2901,12 @@ function ensurePronunciationModuleNav() {
     nav.style.cssText = "padding:14px;border:1px solid #d5e2f7;border-radius:14px;background:var(--surface,#fff);margin-bottom:12px;";
     nav.innerHTML = `<style>
       #pronunciationModuleNav{border:0!important;background:#f2f7ff!important;padding:18px!important;border-radius:22px!important;color:#142b4b}
-      .pl-hero{background:linear-gradient(120deg,#183d78,#2864bd);color:#fff;border-radius:18px;padding:18px 24px;margin-bottom:12px;box-shadow:0 8px 20px rgba(25,65,125,.14)}
-      .pl-eyebrow{display:inline-block;background:rgba(255,255,255,.16);padding:5px 10px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.06em;margin-bottom:8px}
-      .pl-hero h3{font-size:clamp(22px,2.4vw,30px);line-height:1.15;margin:0 0 6px!important;color:#fff}
-      .pl-hero p{max-width:760px;line-height:1.4;color:#e5efff;margin:0!important}
-      .pl-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-      .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:7px 12px;min-width:80px}
+      .pl-hero{background:linear-gradient(120deg,#183d78,#2864bd);color:#fff;border-radius:22px;padding:20px 24px;margin-bottom:12px;box-shadow:0 12px 28px rgba(25,65,125,.16)}
+      .pl-eyebrow{display:inline-block;background:rgba(255,255,255,.16);padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em;margin-bottom:12px}
+      .pl-hero h3{font-size:clamp(22px,2.5vw,30px);line-height:1.15;margin:0 0 7px!important;color:#fff}
+      .pl-hero p{max-width:760px;line-height:1.45;color:#e5efff;margin:0!important}
+      .pl-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+      .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:7px 12px;min-width:80px}
       .pl-stat strong{display:block;font-size:19px}.pl-stat span{font-size:11px;color:#dce9ff}
       .pl-guide{background:#fff;border:1px solid #dfebfb;border-radius:16px;padding:15px 18px;margin-bottom:18px;line-height:1.6;color:#526783}
       .pl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-height:none;min-height:0;overflow:visible;padding:2px 2px 10px;overscroll-behavior:auto;scrollbar-gutter:auto}
@@ -2945,14 +2919,7 @@ function ensurePronunciationModuleNav() {
       .pl-open:hover{background:#194fb7}
       #closePronunciationModule{background:#fff;color:#183d78;border:1px solid #b8cff0;padding:10px 15px;border-radius:10px;font-weight:800;cursor:pointer}
       @media(max-width:1100px){.pl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}} @media(max-width:800px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-      @media(max-width:560px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:none;min-height:0}.pl-hero{padding:15px 14px}.pl-card{min-height:112px;padding:10px}}\n      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}\n      #pronunciationModuleNav.pl-in-module{padding:12px!important;margin-bottom:10px!important;border-radius:12px!important}\n      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
-      /* Fix de desplazamiento: los 15 módulos deben crecer con la página, no dentro de una caja */
-      html,body{overflow-y:auto!important;overscroll-behavior-y:auto!important}
-      body{height:auto!important;min-height:100%!important}
-      #courseView{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;overscroll-behavior:auto!important}
-      #pronunciationModuleNav{height:auto!important;max-height:none!important;overflow:visible!important;contain:none!important}
-      #pronunciationModuleGrid,.pl-grid{height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important;overflow-y:visible!important;overflow-x:visible!important}
-      #courseFrame{max-height:none!important;overflow:visible!important}
+      @media(max-width:560px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:none;min-height:0;overflow:visible}.pl-hero{padding:22px 18px}.pl-card{min-height:112px;padding:10px}}\n      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}\n      #pronunciationModuleNav.pl-in-module{padding:12px!important;margin-bottom:10px!important;border-radius:12px!important}\n      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
       </style>
       <div class="pl-hero">
         <span class="pl-eyebrow">LEARN ENGLISH WITH JOAN</span>
@@ -3003,7 +2970,6 @@ function ensurePronunciationModuleNav() {
     back.dataset.bound = "true";
     back.addEventListener("click", async () => {
       await requestCurrentProgressSave();
-      unlockPronunciationPageScroll();
       frame.style.display = "none";
       nav.classList.remove("pl-in-module");
       if (grid) grid.style.display = "grid";
@@ -3112,7 +3078,6 @@ async function openCourse(
     );
 
   if (courseCode === "PRONUNCIATION") {
-    unlockPronunciationPageScroll();
     const frame = $("courseFrame");
     if (frame) frame.style.display = "none";
     const nav = ensurePronunciationModuleNav();
