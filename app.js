@@ -2890,10 +2890,36 @@ const PRONUNCIATION_TITLES = {
   "American_Pronunciation_Lab_Module_15.html": "Diphthong OI"
 };
 
+function unlockPronunciationPageScroll() {
+  // Solo se activa al entrar al American Pronunciation Lab; no toca otras lecciones.
+  document.documentElement.style.setProperty("overflow-y", "auto", "important");
+  document.body.style.setProperty("overflow-y", "auto", "important");
+  document.body.style.setProperty("height", "auto", "important");
+  const view = $("courseView");
+  if (view) {
+    view.style.setProperty("height", "auto", "important");
+    view.style.setProperty("max-height", "none", "important");
+    view.style.setProperty("overflow", "visible", "important");
+  }
+  const nav = $("pronunciationModuleNav");
+  if (nav) {
+    nav.style.setProperty("height", "auto", "important");
+    nav.style.setProperty("max-height", "none", "important");
+    nav.style.setProperty("overflow", "visible", "important");
+  }
+  const grid = $("pronunciationModuleGrid");
+  if (grid) {
+    grid.style.setProperty("height", "auto", "important");
+    grid.style.setProperty("max-height", "none", "important");
+    grid.style.setProperty("overflow", "visible", "important");
+  }
+}
+
 function ensurePronunciationModuleNav() {
   const courseView = $("courseView");
   const frame = $("courseFrame");
   if (!courseView || !frame) return null;
+  unlockPronunciationPageScroll();
   let nav = $("pronunciationModuleNav");
   if (!nav) {
     nav = document.createElement("section");
@@ -2920,6 +2946,13 @@ function ensurePronunciationModuleNav() {
       #closePronunciationModule{background:#fff;color:#183d78;border:1px solid #b8cff0;padding:10px 15px;border-radius:10px;font-weight:800;cursor:pointer}
       @media(max-width:1100px){.pl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}} @media(max-width:800px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
       @media(max-width:560px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:none;min-height:0}.pl-hero{padding:15px 14px}.pl-card{min-height:112px;padding:10px}}\n      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}\n      #pronunciationModuleNav.pl-in-module{padding:12px!important;margin-bottom:10px!important;border-radius:12px!important}\n      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
+      /* Fix de desplazamiento: los 15 módulos deben crecer con la página, no dentro de una caja */
+      html,body{overflow-y:auto!important;overscroll-behavior-y:auto!important}
+      body{height:auto!important;min-height:100%!important}
+      #courseView{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;overscroll-behavior:auto!important}
+      #pronunciationModuleNav{height:auto!important;max-height:none!important;overflow:visible!important;contain:none!important}
+      #pronunciationModuleGrid,.pl-grid{height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important;overflow-y:visible!important;overflow-x:visible!important}
+      #courseFrame{max-height:none!important;overflow:visible!important}
       </style>
       <div class="pl-hero">
         <span class="pl-eyebrow">LEARN ENGLISH WITH JOAN</span>
@@ -2970,6 +3003,7 @@ function ensurePronunciationModuleNav() {
     back.dataset.bound = "true";
     back.addEventListener("click", async () => {
       await requestCurrentProgressSave();
+      unlockPronunciationPageScroll();
       frame.style.display = "none";
       nav.classList.remove("pl-in-module");
       if (grid) grid.style.display = "grid";
@@ -3078,6 +3112,7 @@ async function openCourse(
     );
 
   if (courseCode === "PRONUNCIATION") {
+    unlockPronunciationPageScroll();
     const frame = $("courseFrame");
     if (frame) frame.style.display = "none";
     const nav = ensurePronunciationModuleNav();
