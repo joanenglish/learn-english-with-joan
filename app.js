@@ -2901,8 +2901,7 @@ function ensurePronunciationModuleNav() {
     nav.style.cssText = "padding:14px;border:1px solid #d5e2f7;border-radius:14px;background:var(--surface,#fff);margin-bottom:12px;";
     nav.innerHTML = `<style>
       #pronunciationModuleNav{border:0!important;background:#f2f7ff!important;padding:18px!important;border-radius:22px!important;color:#142b4b}
-      .pl-hero{background:linear-gradient(120deg,#183d78,#2864bd);color:#fff;border-radius:22px;padding:28px 30px;margin-bottom:18px;box-shadow:0 12px 28px rgba(25,65,125,.16)}
-      .pl-eyebrow{display:inline-block;background:rgba(255,255,255,.16);padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em;margin-bottom:12px}
+.pl-hero{background:linear-gradient(120deg,#183d78,#2864bd);color:#fff;border-radius:18px;padding:18px 24px;margin-bottom:12px;box-shadow:0 8px 20px rgba(25,65,125,.14)}      .pl-eyebrow{display:inline-block;background:rgba(255,255,255,.16);padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em;margin-bottom:12px}
       .pl-hero h3{font-size:clamp(24px,3vw,36px);line-height:1.15;margin:0 0 10px!important;color:#fff}
       .pl-hero p{max-width:760px;line-height:1.65;color:#e5efff;margin:0!important}
       .pl-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
