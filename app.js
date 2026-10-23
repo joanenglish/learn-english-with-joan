@@ -2929,8 +2929,7 @@ function ensurePronunciationModuleNav() {
         <div class="pl-stats"><div class="pl-stat"><strong>15</strong><span>Módulos</span></div><div class="pl-stat"><strong>American</strong><span>Pronunciation</span></div><div class="pl-stat"><strong>A1–B1</strong><span>Práctica progresiva</span></div></div>
       </div>
       <div class="pl-guide"><strong>¿Cómo practicar?</strong> Elige un módulo, abre la lección y practica los sonidos con calma. Puedes volver a esta pantalla para escoger otra lección.</div>
-      <div class="pl-library-heading" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px"><div><h3 style="font-size:21px;margin:0 0 4px;color:#18304f">Todos los módulos</h3><p style="margin:0;color:#637791">Selecciona una tarjeta para comenzar.</p></div></div>
-      <div class="pl-module-heading" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 8px"><div><h3 style="font-size:18px;margin:0 0 4px;color:#18304f">Módulo abierto</h3><p style="margin:0;color:#637791">Practica la lección y vuelve para elegir otra.</p></div><button type="button" id="closePronunciationModule" style="display:none">← Volver a los módulos</button></div>
+      <div class="pl-module-heading" style="display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 8px"><button type="button" id="closePronunciationModule" style="display:none">← Volver a los módulos</button></div>
       <div id="pronunciationModuleGrid" class="pl-grid"></div>`;
     courseView.insertBefore(nav, frame);
   }
