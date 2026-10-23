@@ -59,19 +59,6 @@ responsiveStyle.textContent = `
     flex: 1 1 150px;
   }
 
-  .pronunciation-module-nav { display: none; margin: 0 0 14px; padding: 14px; border: 1px solid rgba(59,130,246,.22); border-radius: 14px; background: var(--card-bg, rgba(127,127,127,.06)); }
-  .pronunciation-module-nav.is-visible { display: block; }
-  .pronunciation-module-nav h3 { margin: 0 0 8px; }
-  .pronunciation-module-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
-  .pronunciation-module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; align-items: stretch; }
-  .pronunciation-module-card { display:flex; flex-direction:column; align-items:stretch; gap:12px; min-height:150px; padding:16px; border:1px solid var(--border-color, rgba(127,127,127,.25)); border-radius:14px; background:var(--card-bg, rgba(127,127,127,.05)); box-shadow:0 2px 8px rgba(0,0,0,.04); }
-  .pronunciation-module-card.is-current { border:2px solid var(--primary, #3b82f6); padding:15px; }
-  .pronunciation-module-card .module-number { display:inline-flex; align-self:flex-start; padding:5px 9px; border-radius:999px; background:rgba(59,130,246,.12); font-size:11px; font-weight:700; letter-spacing:.04em; }
-  .pronunciation-module-card .module-name { display:block; font-size:15px; line-height:1.4; font-weight:700; }
-  .pronunciation-module-card .module-description { display:block; font-size:12px; line-height:1.45; opacity:.75; flex:1; }
-  .pronunciation-module-card .module-open-button { width:100%; min-height:40px; cursor:pointer; text-align:center; white-space:normal; }
-  .pronunciation-module-card .module-open-button.is-current { font-weight:700; }
-
   @media (max-width: 700px) {
 
     .student-overview-layout {
@@ -206,9 +193,9 @@ const COURSES = [
     title: "American Pronunciation Lab",
     shortTitle: "Pronunciation Lab",
     description:
-      "15 módulos interactivos para aprender y practicar los sonidos del inglés americano.",
-    file: "",
-    badge: "15 MÓDULOS · American English",
+      "15 módulos para practicar los sonidos y la pronunciación del inglés americano.",
+    file: "American_Pronunciation_Lab_Module_01.html",
+    badge: "American English",
     type: "lab"
   },
 
@@ -397,37 +384,6 @@ const SPEAKING_TITLES = {
     "Speaking C1 — Volumen 3"
 
 };
-
-
-/* ============================================================
-   AMERICAN PRONUNCIATION LAB
-   ============================================================ */
-
-const PRONUNCIATION_FILES =
-  new Set(
-    Array.from(
-      { length: 15 },
-      (_, index) =>
-        `American_Pronunciation_Lab_Module_${String(index + 1).padStart(2, "0")}.html`
-    )
-  );
-
-
-const PRONUNCIATION_TITLES =
-  Object.fromEntries(
-    Array.from(
-      { length: 15 },
-      (_, index) => {
-        const number =
-          String(index + 1).padStart(2, "0");
-
-        return [
-          `American_Pronunciation_Lab_Module_${number}.html`,
-          `Pronunciation Lab — Module ${number}`
-        ];
-      }
-    )
-  );
 
 
 /* ============================================================
@@ -2621,22 +2577,6 @@ function getSavedPlaceText(
 
 
   if (
-    course.code ===
-    "PRONUNCIATION" &&
-    progress.last_file
-  ) {
-
-    return (
-      PRONUNCIATION_TITLES[
-        progress.last_file
-      ] ||
-      progress.last_section ||
-      "Pronunciation Lab"
-    );
-  }
-
-
-  if (
     progress.last_section
   ) {
 
@@ -2659,9 +2599,9 @@ function courseCardHtml(
 
   const allowed =
     currentProfile?.is_admin ||
-    accessSet.has(course.code) ||
-    (course.code === "PRONUNCIATION" && Array.from({ length: 15 }, (_, index) => accessSet.has(`PRONUNCIATION_${String(index + 1).padStart(2, "0")}`)).some(Boolean)) ||
-    (course.code.startsWith("PRONUNCIATION_") && accessSet.has("PRONUNCIATION"));
+    accessSet.has(
+      course.code
+    );
 
   const progress =
     !currentProfile?.is_admin
@@ -2924,157 +2864,97 @@ async function renderCourses() {
 
 
 /* ============================================================
-   SELECTOR DE LOS 15 MÓDULOS DE PRONUNCIATION LAB
+   ABRIR CURSO / CONTINUAR
    ============================================================ */
+
+const PRONUNCIATION_FILES = new Set(
+  Array.from({ length: 15 }, (_, i) =>
+    `American_Pronunciation_Lab_Module_${String(i + 1).padStart(2, "0")}.html`
+  )
+);
+const PRONUNCIATION_TITLES = {
+  "American_Pronunciation_Lab_Module_01.html": "Meet the Sounds",
+  "American_Pronunciation_Lab_Module_02.html": "Short I",
+  "American_Pronunciation_Lab_Module_03.html": "Long A",
+  "American_Pronunciation_Lab_Module_04.html": "Short E",
+  "American_Pronunciation_Lab_Module_05.html": "Short A",
+  "American_Pronunciation_Lab_Module_06.html": "Open A",
+  "American_Pronunciation_Lab_Module_07.html": "Schwa as in Fun",
+  "American_Pronunciation_Lab_Module_08.html": "Open O",
+  "American_Pronunciation_Lab_Module_09.html": "Long O",
+  "American_Pronunciation_Lab_Module_10.html": "Short U",
+  "American_Pronunciation_Lab_Module_11.html": "Long U",
+  "American_Pronunciation_Lab_Module_12.html": "R-Controlled Vowels",
+  "American_Pronunciation_Lab_Module_13.html": "Diphthong AI",
+  "American_Pronunciation_Lab_Module_14.html": "Diphthong AU",
+  "American_Pronunciation_Lab_Module_15.html": "Diphthong OI"
+};
 
 function ensurePronunciationModuleNav() {
   const courseView = $("courseView");
   const frame = $("courseFrame");
   if (!courseView || !frame) return null;
-
-  const moduleNames = [
-    "Meet the Sounds",
-    "Short I",
-    "Long A",
-    "Short E",
-    "Short A",
-    "Open A",
-    "Schwa as in Fun",
-    "Open O",
-    "Long O",
-    "Short U",
-    "Long U",
-    "R-Controlled Vowels",
-    "Diphthong AI",
-    "Diphthong AU",
-    "Diphthong OI"
-  ];
-
   let nav = $("pronunciationModuleNav");
   if (!nav) {
     nav = document.createElement("section");
     nav.id = "pronunciationModuleNav";
-    nav.className = "pronunciation-module-nav";
-    nav.innerHTML = `
-      <div class="pronunciation-module-toolbar">
-        <div>
-          <h3>American Pronunciation Lab — 15 módulos</h3>
-          <p>Abre cualquier módulo por separado. Puedes cerrarlo y elegir otro cuando quieras.</p>
-        </div>
-        <button type="button" class="secondary" id="closePronunciationModule" style="background:#e6eefc;color:#16345f;border:1px solid #9bb9ee;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer">← Volver a los módulos</button>
-      </div>
-      <div class="pronunciation-module-grid" id="pronunciationModuleGrid"></div>`;
+    nav.style.cssText = "padding:14px;border:1px solid #d5e2f7;border-radius:14px;background:var(--surface,#fff);margin-bottom:12px;";
+    nav.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <div><h3 style="margin:0 0 6px">American Pronunciation Lab — 15 módulos</h3><p style="margin:0">Elige una lección para abrirla. Después puedes volver aquí y seleccionar otra.</p></div>
+      <button type="button" id="closePronunciationModule" style="display:none;background:#e6eefc;color:#16345f;border:1px solid #9bb9ee;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer">← Volver a los módulos</button>
+    </div><div id="pronunciationModuleGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px"></div>`;
     courseView.insertBefore(nav, frame);
   }
-
   const grid = $("pronunciationModuleGrid");
   if (grid && !grid.dataset.built) {
-    grid.innerHTML = moduleNames.map((name, index) => {
+    grid.innerHTML = Object.values(PRONUNCIATION_TITLES).map((name, index) => {
       const number = String(index + 1).padStart(2, "0");
       const file = `American_Pronunciation_Lab_Module_${number}.html`;
-      return `<article class="pronunciation-module-card" data-module-card="${file}">
-        <span class="module-number">MÓDULO ${number}</span>
-        <span class="module-name">${name}</span>
-        <span class="module-description">Practica la pronunciación americana con esta lección.</span>
-        <button type="button" class="secondary module-open-button" data-module-file="${file}" aria-expanded="false">Abrir módulo</button>
-      </article>`;
+      return `<article style="display:flex;flex-direction:column;gap:12px;min-height:145px;padding:14px;border:1px solid #d9dfe8;border-radius:13px;background:var(--card-bg,#f8fafc)">
+        <span style="align-self:flex-start;background:#dfe9f8;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:700">MÓDULO ${number}</span><strong>${name}</strong>
+        <span style="font-size:12px;opacity:.75;flex:1">Practica la pronunciación americana con esta lección.</span>
+        <button type="button" data-module-file="${file}" style="width:100%;padding:10px;border:0;border-radius:9px;background:#e6eefc;color:#16345f;font-weight:700;cursor:pointer">Abrir módulo</button></article>`;
     }).join("");
     grid.dataset.built = "true";
-
     grid.addEventListener("click", async event => {
       const button = event.target.closest("button[data-module-file]");
       if (!button) return;
       const file = button.dataset.moduleFile;
       if (!PRONUNCIATION_FILES.has(file)) return;
-
-      // El botón de la lección activa funciona como abrir/cerrar.
-      if (currentCourseFile === file && frame.style.display !== "none") {
-        frame.style.display = "none";
-        currentCourseFile = "";
-        const moduleGrid = $("pronunciationModuleGrid");
-        if (moduleGrid) { moduleGrid.style.display = "grid"; moduleGrid.hidden = false; }
-        const toolbarTitle = nav.querySelector(".pronunciation-module-toolbar h3");
-        if (toolbarTitle) toolbarTitle.textContent = "American Pronunciation Lab — 15 módulos";
-        const toolbarDescription = nav.querySelector(".pronunciation-module-toolbar p");
-        if (toolbarDescription) toolbarDescription.textContent = "Abre cualquier módulo por separado. Puedes cerrarlo y elegir otro cuando quieras.";
-        const closeControl = $("closePronunciationModule");
-        if (closeControl) closeControl.textContent = "Cerrar módulo";
-        button.setAttribute("aria-expanded", "false");
-        button.classList.remove("is-current");
-        button.textContent = "Abrir módulo";
-        const card = button.closest(".pronunciation-module-card");
-        if (card) card.classList.remove("is-current");
-        $("courseStatus").textContent = `Módulo ${file.match(/Module_(\d+)/)?.[1] || ""} cerrado.`;
-        return;
-      }
-
       await requestCurrentProgressSave();
       currentCourseCode = "PRONUNCIATION";
       currentCourseFile = file;
       currentCourseTitle = PRONUNCIATION_TITLES[file] || "American Pronunciation Lab";
+      grid.style.display = "none";
+      const back = $("closePronunciationModule");
+      if (back) back.style.display = "inline-block";
+      const title = nav.querySelector("h3");
+      if (title) title.textContent = currentCourseTitle;
+      const description = nav.querySelector("p");
+      if (description) description.textContent = "Estás dentro de este módulo.";
       frame.style.display = "";
-      // Al entrar en una lección, ocultar las tarjetas para que el contenido
-      // del módulo ocupe la pantalla. El encabezado permanece para volver.
-      const moduleGrid = $("pronunciationModuleGrid");
-      if (moduleGrid) moduleGrid.style.display = "none";
-      const toolbarTitle = nav.querySelector(".pronunciation-module-toolbar h3");
-      if (toolbarTitle) toolbarTitle.textContent = currentCourseTitle;
-      const toolbarDescription = nav.querySelector(".pronunciation-module-toolbar p");
-      if (toolbarDescription) toolbarDescription.textContent = "Estás dentro de este módulo.";
-      const closeControl = $("closePronunciationModule");
-      if (closeControl) closeControl.textContent = "← Volver a los módulos";
       await loadPrivateCourseFile(file, currentCourseTitle, "PRONUNCIATION");
-      updatePronunciationModuleNav(file);
     });
   }
-
-  const closeButton = $("closePronunciationModule");
-  if (closeButton && !closeButton.dataset.bound) {
-    closeButton.dataset.bound = "true";
-    closeButton.addEventListener("click", async () => {
+  const back = $("closePronunciationModule");
+  if (back && !back.dataset.bound) {
+    back.dataset.bound = "true";
+    back.addEventListener("click", async () => {
       await requestCurrentProgressSave();
       frame.style.display = "none";
+      if (grid) grid.style.display = "grid";
+      back.style.display = "none";
       currentCourseFile = "";
-      const moduleGrid = $("pronunciationModuleGrid");
-      if (moduleGrid) { moduleGrid.style.display = "grid"; moduleGrid.hidden = false; }
-      const toolbarTitle = nav.querySelector(".pronunciation-module-toolbar h3");
-      if (toolbarTitle) toolbarTitle.textContent = "American Pronunciation Lab — 15 módulos";
-      const toolbarDescription = nav.querySelector(".pronunciation-module-toolbar p");
-      if (toolbarDescription) toolbarDescription.textContent = "Abre cualquier módulo por separado. Puedes cerrarlo y elegir otro cuando quieras.";
-      const closeControl = $("closePronunciationModule");
-      if (closeControl) closeControl.textContent = "Cerrar módulo";
-      nav.querySelectorAll("button[data-module-file]").forEach(button => {
-        button.setAttribute("aria-expanded", "false");
-        button.classList.remove("is-current");
-        button.textContent = "Abrir módulo";
-        const card = button.closest(".pronunciation-module-card");
-        if (card) card.classList.remove("is-current");
-      });
-      $("courseStatus").textContent = "Módulo cerrado. Selecciona otro de los 15 módulos.";
+      currentCourseTitle = "American Pronunciation Lab";
+      const title = nav.querySelector("h3");
+      if (title) title.textContent = "American Pronunciation Lab — 15 módulos";
+      const description = nav.querySelector("p");
+      if (description) description.textContent = "Elige una lección para abrirla. Después puedes volver aquí y seleccionar otra.";
+      $("courseStatus").textContent = "Selecciona uno de los 15 módulos para comenzar.";
     });
   }
-
   return nav;
 }
-
-function updatePronunciationModuleNav(fileName) {
-  const nav = $("pronunciationModuleNav");
-  if (!nav) return;
-  nav.querySelectorAll("button[data-module-file]").forEach(button => {
-    const active = button.dataset.moduleFile === fileName;
-    button.classList.toggle("is-current", active);
-    button.setAttribute("aria-current", active ? "page" : "false");
-    button.setAttribute("aria-expanded", active ? "true" : "false");
-    button.textContent = active ? "Cerrar módulo" : "Abrir módulo";
-    const card = button.closest(".pronunciation-module-card");
-    if (card) card.classList.toggle("is-current", active);
-  });
-}
-
-
-/* ============================================================
-   ABRIR CURSO / CONTINUAR
-   ============================================================ */
 
 async function openCourse(
   courseCode,
@@ -3100,12 +2980,11 @@ async function openCourse(
     const access =
       await getMyCourseAccess();
 
-    const hasCourseAccess =
-      access.has(courseCode) ||
-      (courseCode === "PRONUNCIATION" && Array.from({ length: 15 }, (_, index) => access.has(`PRONUNCIATION_${String(index + 1).padStart(2, "0")}`)).some(Boolean)) ||
-      (courseCode.startsWith("PRONUNCIATION_") && access.has("PRONUNCIATION"));
-
-    if (!hasCourseAccess) {
+    if (
+      !access.has(
+        courseCode
+      )
+    ) {
 
       alert(
         "No tienes acceso autorizado a este curso."
@@ -3121,31 +3000,6 @@ async function openCourse(
           courseCode
         )
       : null;
-
-  // American Pronunciation Lab is a parent page containing the 15 module cards.
-  // Do not load an HTML lesson until the learner presses its individual button.
-  if (courseCode === "PRONUNCIATION" && !(
-    resume && progress?.last_file && PRONUNCIATION_FILES.has(progress.last_file)
-  )) {
-    currentCourseCode = "PRONUNCIATION";
-    currentCourseFile = null;
-    currentCourseTitle = "American Pronunciation Lab";
-    $("courseView").classList.remove("hidden");
-
-    const frame = $("courseFrame");
-    if (frame) {
-      frame.style.display = "none";
-      frame.src = "about:blank";
-      frame.removeAttribute("srcdoc");
-    }
-
-    const pronunciationNav = ensurePronunciationModuleNav();
-    if (pronunciationNav) pronunciationNav.classList.add("is-visible");
-    updatePronunciationModuleNav(null);
-    $("courseStatus").textContent = "Selecciona uno de los 15 módulos para comenzar.";
-    await startStudySession("PRONUNCIATION", "American Pronunciation Lab");
-    return;
-  }
 
   let fileName =
     course.file;
@@ -3178,21 +3032,6 @@ async function openCourse(
       progress.last_file;
   }
 
-
-  if (
-    resume &&
-    courseCode ===
-      "PRONUNCIATION" &&
-    progress?.last_file &&
-    PRONUNCIATION_FILES.has(
-      progress.last_file
-    )
-  ) {
-
-    fileName =
-      progress.last_file;
-  }
-
   currentCourseCode =
     courseCode;
 
@@ -3208,10 +3047,22 @@ async function openCourse(
       "hidden"
     );
 
-  const pronunciationNav = ensurePronunciationModuleNav();
-  if (pronunciationNav) {
-    pronunciationNav.classList.toggle("is-visible", courseCode === "PRONUNCIATION");
-    if (courseCode === "PRONUNCIATION") updatePronunciationModuleNav(fileName);
+  if (courseCode === "PRONUNCIATION") {
+    const frame = $("courseFrame");
+    if (frame) frame.style.display = "none";
+    const nav = ensurePronunciationModuleNav();
+    if (nav) {
+      const grid = $("pronunciationModuleGrid");
+      if (grid) grid.style.display = "grid";
+      const back = $("closePronunciationModule");
+      if (back) back.style.display = "none";
+      const title = nav.querySelector("h3");
+      if (title) title.textContent = "American Pronunciation Lab — 15 módulos";
+      const description = nav.querySelector("p");
+      if (description) description.textContent = "Elige una lección para abrirla. Después puedes volver aquí y seleccionar otra.";
+    }
+    $("courseStatus").textContent = "Selecciona uno de los 15 módulos para comenzar.";
+    return;
   }
 
   await startStudySession(
@@ -3412,61 +3263,6 @@ function preparePrivateCourseHtml(
 
           link.setAttribute(
             "data-private-listening-file",
-            file
-          );
-        }
-      );
-  }
-
-
-  if (
-    PRONUNCIATION_FILES.has(
-      currentFile
-    )
-  ) {
-
-    doc
-      .querySelectorAll(
-        "a[href]"
-      )
-      .forEach(
-        link => {
-
-          const href =
-            (
-              link.getAttribute(
-                "href"
-              ) || ""
-            )
-            .trim()
-            .split("?")[0]
-            .split("#")[0]
-            .replace(
-              /^\.\//,
-              ""
-            );
-
-          const file =
-            href
-              .split("/")
-              .pop();
-
-          if (
-            !PRONUNCIATION_FILES.has(
-              file
-            )
-          ) {
-
-            return;
-          }
-
-          link.setAttribute(
-            "href",
-            "#"
-          );
-
-          link.setAttribute(
-            "data-private-pronunciation-file",
             file
           );
         }
@@ -4204,48 +4000,6 @@ function preparePrivateCourseHtml(
         true
       );
 
-
-      document.addEventListener(
-        "click",
-        function (event) {
-
-          const link =
-            event.target.closest(
-              "a[data-private-pronunciation-file]"
-            );
-
-
-          if (!link) {
-
-            return;
-          }
-
-
-          event.preventDefault();
-
-          event.stopPropagation();
-
-
-          sendProgress();
-
-
-          parent.postMessage(
-            {
-              type:
-                "OPEN_PRIVATE_PRONUNCIATION_FILE",
-
-              file:
-                link.getAttribute(
-                  "data-private-pronunciation-file"
-                )
-            },
-            "*"
-          );
-
-        },
-        true
-      );
-
     })();
 
   `;
@@ -4471,65 +4225,6 @@ window.addEventListener(
       return;
     }
 
-
-    if (
-      message.type ===
-      "OPEN_PRIVATE_PRONUNCIATION_FILE"
-    ) {
-
-      const fileName =
-        String(
-          message.file ||
-          ""
-        );
-
-
-      if (
-        !PRONUNCIATION_FILES.has(
-          fileName
-        )
-      ) {
-
-        return;
-      }
-
-
-      await flushCourseProgress();
-
-
-      currentCourseCode =
-        "PRONUNCIATION";
-
-      currentCourseFile =
-        fileName;
-
-      currentCourseTitle =
-        PRONUNCIATION_TITLES[
-          fileName
-        ] ||
-        "American Pronunciation Lab";
-
-      const pronunciationNav = ensurePronunciationModuleNav();
-      if (pronunciationNav) pronunciationNav.classList.add("is-visible");
-      updatePronunciationModuleNav(fileName);
-
-      await startStudySession(
-        "PRONUNCIATION",
-        currentCourseTitle
-      );
-
-
-      await loadPrivateCourseFile(
-        fileName,
-        currentCourseTitle,
-        "PRONUNCIATION",
-        null
-      );
-
-
-      return;
-    }
-
   }
 );
 
@@ -4600,8 +4295,6 @@ $("backToPortal").onclick =
         "hidden"
       );
 
-    const pronunciationNav = $("pronunciationModuleNav");
-    if (pronunciationNav) pronunciationNav.classList.remove("is-visible");
 
     $("courseFrame")
       .removeAttribute(
