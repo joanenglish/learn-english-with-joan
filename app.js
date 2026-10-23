@@ -2900,26 +2900,27 @@ function ensurePronunciationModuleNav() {
     nav.id = "pronunciationModuleNav";
     nav.style.cssText = "padding:14px;border:1px solid #d5e2f7;border-radius:14px;background:var(--surface,#fff);margin-bottom:12px;";
     nav.innerHTML = `<style>
-      #pronunciationModuleNav{border:0!important;background:#f2f7ff!important;padding:18px!important;border-radius:22px!important;color:#142b4b}
-      .pl-hero{background:linear-gradient(120deg,#183d78,#2864bd);color:#fff;border-radius:22px;padding:20px 24px;margin-bottom:12px;box-shadow:0 12px 28px rgba(25,65,125,.16)}
-      .pl-eyebrow{display:inline-block;background:rgba(255,255,255,.16);padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em;margin-bottom:12px}
-      .pl-hero h3{font-size:clamp(22px,2.5vw,30px);line-height:1.15;margin:0 0 7px!important;color:#fff}
-      .pl-hero p{max-width:760px;line-height:1.45;color:#e5efff;margin:0!important}
-      .pl-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-      .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:7px 12px;min-width:80px}
-      .pl-stat strong{display:block;font-size:19px}.pl-stat span{font-size:11px;color:#dce9ff}
-      .pl-guide{background:#fff;border:1px solid #dfebfb;border-radius:16px;padding:15px 18px;margin-bottom:18px;line-height:1.6;color:#526783}
-      .pl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-height:none;min-height:0;overflow:visible;padding:2px 2px 10px;overscroll-behavior:auto;scrollbar-gutter:auto}
-      .pl-card{display:flex;flex-direction:column;gap:7px;min-height:118px;padding:11px;border:1px solid #dfe9f8;border-radius:17px;background:#fff;box-shadow:0 4px 12px rgba(27,65,115,.035);transition:transform .15s ease,box-shadow .15s ease}
+      #pronunciationModuleNav{border:0!important;background:#f2f7ff!important;padding:10px 12px!important;border-radius:18px!important;color:#142b4b;margin-top:0!important}
+      .pl-hero{background:linear-gradient(120deg,#183d78,#2864bd);color:#fff;border-radius:18px;padding:14px 20px;margin:0 0 10px!important;box-shadow:0 8px 20px rgba(25,65,125,.13)}
+      .pl-eyebrow{display:inline-block;background:rgba(255,255,255,.16);padding:4px 9px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.06em;margin-bottom:5px}
+      .pl-hero h3{font-size:clamp(21px,2.3vw,29px);line-height:1.12;margin:0 0 5px!important;color:#fff}
+      .pl-hero p{max-width:900px;line-height:1.4;font-size:13px;color:#e5efff;margin:0!important}
+      .pl-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+      .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:5px 10px;min-width:78px}
+      .pl-stat strong{display:block;font-size:16px;line-height:1.2}.pl-stat span{font-size:10px;color:#dce9ff}
+      .pl-guide{background:#fff;border:1px solid #dfebfb;border-radius:12px;padding:9px 13px;margin-bottom:12px;line-height:1.45;font-size:12px;color:#526783}
+      .pl-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;max-height:none!important;height:auto!important;min-height:0;overflow:visible!important;padding:2px 2px 12px;overscroll-behavior:auto;scrollbar-gutter:auto}
+      .pl-card{display:flex;flex-direction:column;gap:6px;min-height:104px;padding:9px;border:1px solid #dfe9f8;border-radius:13px;background:#fff;box-shadow:0 4px 12px rgba(27,65,115,.035);transition:transform .15s ease,box-shadow .15s ease}
       .pl-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(27,65,115,.09)}
-      .pl-badge{align-self:flex-start;background:#eaf2ff;color:#2458a5;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}
-      .pl-card strong{font-size:15px;color:#152b49;line-height:1.35}
-      .pl-card .pl-description{font-size:11px;line-height:1.4;color:#62758f;flex:1}
-      .pl-open{width:100%;padding:8px 11px;border:0;border-radius:10px;background:#2864d8;color:#fff;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s ease}
+      .pl-badge{align-self:flex-start;background:#eaf2ff;color:#2458a5;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800}
+      .pl-card strong{font-size:13px;color:#152b49;line-height:1.3}
+      .pl-card .pl-description{font-size:10px;line-height:1.35;color:#62758f;flex:1}
+      .pl-open{width:100%;padding:7px 8px;border:0;border-radius:9px;background:#2864d8;color:#fff;font-size:12px;font-weight:800;cursor:pointer;transition:background .15s ease}
       .pl-open:hover{background:#194fb7}
       #closePronunciationModule{background:#fff;color:#183d78;border:1px solid #b8cff0;padding:10px 15px;border-radius:10px;font-weight:800;cursor:pointer}
-      @media(max-width:1100px){.pl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}} @media(max-width:800px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-      @media(max-width:560px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:none;min-height:0;overflow:visible}.pl-hero{padding:22px 18px}.pl-card{min-height:112px;padding:10px}}\n      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}\n      #pronunciationModuleNav.pl-in-module{padding:12px!important;margin-bottom:10px!important;border-radius:12px!important}\n      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
+      @media(max-width:1250px){.pl-grid{grid-template-columns:repeat(4,minmax(0,1fr))}} @media(max-width:950px){.pl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}} @media(max-width:680px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      @media(max-width:560px){#pronunciationModuleNav{padding:7px!important}.pl-hero{padding:12px 13px;border-radius:14px}.pl-hero h3{font-size:21px}.pl-hero p{font-size:12px}.pl-stat{padding:5px 8px}.pl-card{min-height:98px;padding:8px}}\n      #pronunciationModuleNav #pronunciationModuleGrid{max-height:none!important;height:auto!important;overflow:visible!important}
+      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}\n      #pronunciationModuleNav.pl-in-module{padding:12px!important;margin-bottom:10px!important;border-radius:12px!important}\n      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
       </style>
       <div class="pl-hero">
         <span class="pl-eyebrow">LEARN ENGLISH WITH JOAN</span>
