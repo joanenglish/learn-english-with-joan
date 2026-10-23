@@ -59,6 +59,16 @@ responsiveStyle.textContent = `
     flex: 1 1 150px;
   }
 
+  .pronunciation-module-nav { display: none; margin: 0 0 14px; padding: 14px; border: 1px solid rgba(59,130,246,.22); border-radius: 14px; background: var(--card-bg, rgba(127,127,127,.06)); }
+  .pronunciation-module-nav.is-visible { display: block; }
+  .pronunciation-module-nav h3 { margin: 0 0 8px; }
+  .pronunciation-module-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .pronunciation-module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+  .pronunciation-module-grid button { min-height: 58px; cursor: pointer; text-align:left; line-height:1.35; white-space:normal; }
+  .pronunciation-module-grid button.is-current { outline: 2px solid var(--primary, #3b82f6); font-weight: 700; }
+  .pronunciation-module-grid button .module-number { display:block; font-size:11px; opacity:.75; margin-bottom:3px; }
+  .pronunciation-module-grid button .module-name { display:block; font-size:13px; }
+
   @media (max-width: 700px) {
 
     .student-overview-layout {
@@ -2911,6 +2921,113 @@ async function renderCourses() {
 
 
 /* ============================================================
+   SELECTOR DE LOS 15 MÓDULOS DE PRONUNCIATION LAB
+   ============================================================ */
+
+function ensurePronunciationModuleNav() {
+  const courseView = $("courseView");
+  const frame = $("courseFrame");
+  if (!courseView || !frame) return null;
+
+  const moduleNames = [
+    "Meet the Sounds",
+    "Short I",
+    "Long A",
+    "Short E",
+    "Short A",
+    "Open A",
+    "Schwa as in Fun",
+    "Open O",
+    "Long O",
+    "Short U",
+    "Long U",
+    "R-Controlled Vowels",
+    "Diphthong AI",
+    "Diphthong AU",
+    "Diphthong OI"
+  ];
+
+  let nav = $("pronunciationModuleNav");
+  if (!nav) {
+    nav = document.createElement("section");
+    nav.id = "pronunciationModuleNav";
+    nav.className = "pronunciation-module-nav";
+    nav.innerHTML = `
+      <div class="pronunciation-module-toolbar">
+        <div>
+          <h3>American Pronunciation Lab — 15 módulos</h3>
+          <p>Abre cualquier módulo por separado. Puedes cerrarlo y elegir otro cuando quieras.</p>
+        </div>
+        <button type="button" class="ghost" id="closePronunciationModule">Cerrar módulo</button>
+      </div>
+      <div class="pronunciation-module-grid" id="pronunciationModuleGrid"></div>`;
+    courseView.insertBefore(nav, frame);
+  }
+
+  const grid = $("pronunciationModuleGrid");
+  if (grid && !grid.dataset.built) {
+    grid.innerHTML = moduleNames.map((name, index) => {
+      const number = String(index + 1).padStart(2, "0");
+      const file = `American_Pronunciation_Lab_Module_${number}.html`;
+      return `<button type="button" class="secondary pronunciation-module-button" data-module-file="${file}" aria-expanded="false"><span class="module-number">MÓDULO ${number}</span><span class="module-name">${name}</span></button>`;
+    }).join("");
+    grid.dataset.built = "true";
+
+    grid.addEventListener("click", async event => {
+      const button = event.target.closest("button[data-module-file]");
+      if (!button) return;
+      const file = button.dataset.moduleFile;
+      if (!PRONUNCIATION_FILES.has(file)) return;
+
+      // Pulsar de nuevo el módulo activo lo cierra.
+      if (currentCourseFile === file && frame.style.display !== "none") {
+        frame.style.display = "none";
+        button.setAttribute("aria-expanded", "false");
+        button.classList.remove("is-current");
+        $("courseStatus").textContent = `Módulo ${file.match(/Module_(\d+)/)?.[1] || ""} cerrado.`;
+        return;
+      }
+
+      await requestCurrentProgressSave();
+      currentCourseCode = "PRONUNCIATION";
+      currentCourseFile = file;
+      currentCourseTitle = PRONUNCIATION_TITLES[file] || "American Pronunciation Lab";
+      frame.style.display = "";
+      await loadPrivateCourseFile(file, currentCourseTitle, "PRONUNCIATION");
+      updatePronunciationModuleNav(file);
+    });
+  }
+
+  const closeButton = $("closePronunciationModule");
+  if (closeButton && !closeButton.dataset.bound) {
+    closeButton.dataset.bound = "true";
+    closeButton.addEventListener("click", async () => {
+      await requestCurrentProgressSave();
+      frame.style.display = "none";
+      nav.querySelectorAll("button[data-module-file]").forEach(button => {
+        button.setAttribute("aria-expanded", "false");
+        button.classList.remove("is-current");
+      });
+      $("courseStatus").textContent = "Módulo cerrado. Selecciona otro de los 15 módulos.";
+    });
+  }
+
+  return nav;
+}
+
+function updatePronunciationModuleNav(fileName) {
+  const nav = $("pronunciationModuleNav");
+  if (!nav) return;
+  nav.querySelectorAll("button[data-module-file]").forEach(button => {
+    const active = button.dataset.moduleFile === fileName;
+    button.classList.toggle("is-current", active);
+    button.setAttribute("aria-current", active ? "page" : "false");
+    button.setAttribute("aria-expanded", active ? "true" : "false");
+  });
+}
+
+
+/* ============================================================
    ABRIR CURSO / CONTINUAR
    ============================================================ */
 
@@ -3019,6 +3136,12 @@ async function openCourse(
     .remove(
       "hidden"
     );
+
+  const pronunciationNav = ensurePronunciationModuleNav();
+  if (pronunciationNav) {
+    pronunciationNav.classList.toggle("is-visible", courseCode === "PRONUNCIATION");
+    if (courseCode === "PRONUNCIATION") updatePronunciationModuleNav(fileName);
+  }
 
   await startStudySession(
     courseCode,
@@ -4315,6 +4438,9 @@ window.addEventListener(
         ] ||
         "American Pronunciation Lab";
 
+      const pronunciationNav = ensurePronunciationModuleNav();
+      if (pronunciationNav) pronunciationNav.classList.add("is-visible");
+      updatePronunciationModuleNav(fileName);
 
       await startStudySession(
         "PRONUNCIATION",
@@ -4403,6 +4529,8 @@ $("backToPortal").onclick =
         "hidden"
       );
 
+    const pronunciationNav = $("pronunciationModuleNav");
+    if (pronunciationNav) pronunciationNav.classList.remove("is-visible");
 
     $("courseFrame")
       .removeAttribute(
