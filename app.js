@@ -198,16 +198,35 @@ const COURSES = [
     type: "lab"
   },
 
-  {
-    code: "PRONUNCIATION",
-    title: "American Pronunciation Lab",
-    shortTitle: "Pronunciation Lab",
-    description:
-      "15 módulos interactivos para mejorar los sonidos, el ritmo y la pronunciación del inglés americano.",
-    file: "American_Pronunciation_Lab_Module_01.html",
-    badge: "15 módulos",
-    type: "lab"
-  },
+  ...Array.from({ length: 15 }, (_, index) => {
+    const number = String(index + 1).padStart(2, "0");
+    const moduleNames = [
+      "Meet the Sounds",
+      "Short I",
+      "Long A",
+      "Short E",
+      "Short A",
+      "Open A",
+      "Schwa as in Fun",
+      "Open O",
+      "Long O",
+      "Short U",
+      "Long U",
+      "R-Controlled Vowels",
+      "Diphthong AI",
+      "Diphthong AU",
+      "Diphthong OI"
+    ];
+    return {
+      code: `PRONUNCIATION_${number}`,
+      title: `American Pronunciation Lab — Module ${number}: ${moduleNames[index]}`,
+      shortTitle: `Pronunciation ${number}`,
+      description: `Módulo ${number} de pronunciación americana: ${moduleNames[index]}. Abre este módulo para estudiar y practicar.`,
+      file: `American_Pronunciation_Lab_Module_${number}.html`,
+      badge: `MÓDULO ${number} · American English`,
+      type: "lab"
+    };
+  }),
 
   {
     code: "IRREGULARS",
@@ -2656,9 +2675,8 @@ function courseCardHtml(
 
   const allowed =
     currentProfile?.is_admin ||
-    accessSet.has(
-      course.code
-    );
+    accessSet.has(course.code) ||
+    (course.code.startsWith("PRONUNCIATION_") && accessSet.has("PRONUNCIATION"));
 
   const progress =
     !currentProfile?.is_admin
@@ -3055,11 +3073,11 @@ async function openCourse(
     const access =
       await getMyCourseAccess();
 
-    if (
-      !access.has(
-        courseCode
-      )
-    ) {
+    const hasCourseAccess =
+      access.has(courseCode) ||
+      (courseCode.startsWith("PRONUNCIATION_") && access.has("PRONUNCIATION"));
+
+    if (!hasCourseAccess) {
 
       alert(
         "No tienes acceso autorizado a este curso."
