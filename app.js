@@ -201,35 +201,16 @@ const COURSES = [
     type: "lab"
   },
 
-  ...Array.from({ length: 15 }, (_, index) => {
-    const number = String(index + 1).padStart(2, "0");
-    const moduleNames = [
-      "Meet the Sounds",
-      "Short I",
-      "Long A",
-      "Short E",
-      "Short A",
-      "Open A",
-      "Schwa as in Fun",
-      "Open O",
-      "Long O",
-      "Short U",
-      "Long U",
-      "R-Controlled Vowels",
-      "Diphthong AI",
-      "Diphthong AU",
-      "Diphthong OI"
-    ];
-    return {
-      code: `PRONUNCIATION_${number}`,
-      title: `American Pronunciation Lab — Module ${number}: ${moduleNames[index]}`,
-      shortTitle: `Pronunciation ${number}`,
-      description: `Módulo ${number} de pronunciación americana: ${moduleNames[index]}. Abre este módulo para estudiar y practicar.`,
-      file: `American_Pronunciation_Lab_Module_${number}.html`,
-      badge: `MÓDULO ${number} · American English`,
-      type: "lab"
-    };
-  }),
+  {
+    code: "PRONUNCIATION",
+    title: "American Pronunciation Lab",
+    shortTitle: "Pronunciation Lab",
+    description:
+      "15 módulos interactivos para aprender y practicar los sonidos del inglés americano.",
+    file: "",
+    badge: "15 MÓDULOS · American English",
+    type: "lab"
+  },
 
   {
     code: "IRREGULARS",
@@ -2679,6 +2660,7 @@ function courseCardHtml(
   const allowed =
     currentProfile?.is_admin ||
     accessSet.has(course.code) ||
+    (course.code === "PRONUNCIATION" && Array.from({ length: 15 }, (_, index) => accessSet.has(`PRONUNCIATION_${String(index + 1).padStart(2, "0")}`)).some(Boolean)) ||
     (course.code.startsWith("PRONUNCIATION_") && accessSet.has("PRONUNCIATION"));
 
   const progress =
@@ -3092,6 +3074,7 @@ async function openCourse(
 
     const hasCourseAccess =
       access.has(courseCode) ||
+      (courseCode === "PRONUNCIATION" && Array.from({ length: 15 }, (_, index) => access.has(`PRONUNCIATION_${String(index + 1).padStart(2, "0")}`)).some(Boolean)) ||
       (courseCode.startsWith("PRONUNCIATION_") && access.has("PRONUNCIATION"));
 
     if (!hasCourseAccess) {
@@ -3110,6 +3093,31 @@ async function openCourse(
           courseCode
         )
       : null;
+
+  // American Pronunciation Lab is a parent page containing the 15 module cards.
+  // Do not load an HTML lesson until the learner presses its individual button.
+  if (courseCode === "PRONUNCIATION" && !(
+    resume && progress?.last_file && PRONUNCIATION_FILES.has(progress.last_file)
+  )) {
+    currentCourseCode = "PRONUNCIATION";
+    currentCourseFile = null;
+    currentCourseTitle = "American Pronunciation Lab";
+    $("courseView").classList.remove("hidden");
+
+    const frame = $("courseFrame");
+    if (frame) {
+      frame.style.display = "none";
+      frame.src = "about:blank";
+      frame.removeAttribute("srcdoc");
+    }
+
+    const pronunciationNav = ensurePronunciationModuleNav();
+    if (pronunciationNav) pronunciationNav.classList.add("is-visible");
+    updatePronunciationModuleNav(null);
+    $("courseStatus").textContent = "Selecciona uno de los 15 módulos para comenzar.";
+    await startStudySession("PRONUNCIATION", "American Pronunciation Lab");
+    return;
+  }
 
   let fileName =
     course.file;
