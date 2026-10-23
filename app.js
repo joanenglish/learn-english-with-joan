@@ -2899,10 +2899,37 @@ function ensurePronunciationModuleNav() {
     nav = document.createElement("section");
     nav.id = "pronunciationModuleNav";
     nav.style.cssText = "padding:14px;border:1px solid #d5e2f7;border-radius:14px;background:var(--surface,#fff);margin-bottom:12px;";
-    nav.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
-      <div><h3 style="margin:0 0 6px">American Pronunciation Lab — 15 módulos</h3><p style="margin:0">Elige una lección para abrirla. Después puedes volver aquí y seleccionar otra.</p></div>
-      <button type="button" id="closePronunciationModule" style="display:none;background:#e6eefc;color:#16345f;border:1px solid #9bb9ee;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer">← Volver a los módulos</button>
-    </div><div id="pronunciationModuleGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px"></div>`;
+    nav.innerHTML = `<style>
+      #pronunciationModuleNav{border:0!important;background:#f2f7ff!important;padding:18px!important;border-radius:22px!important;color:#142b4b}
+      .pl-hero{background:linear-gradient(120deg,#183d78,#2864bd);color:#fff;border-radius:22px;padding:28px 30px;margin-bottom:18px;box-shadow:0 12px 28px rgba(25,65,125,.16)}
+      .pl-eyebrow{display:inline-block;background:rgba(255,255,255,.16);padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em;margin-bottom:12px}
+      .pl-hero h3{font-size:clamp(24px,3vw,36px);line-height:1.15;margin:0 0 10px!important;color:#fff}
+      .pl-hero p{max-width:760px;line-height:1.65;color:#e5efff;margin:0!important}
+      .pl-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+      .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;min-width:88px}
+      .pl-stat strong{display:block;font-size:19px}.pl-stat span{font-size:11px;color:#dce9ff}
+      .pl-guide{background:#fff;border:1px solid #dfebfb;border-radius:16px;padding:15px 18px;margin-bottom:18px;line-height:1.6;color:#526783}
+      .pl-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px!important}
+      .pl-card{display:flex;flex-direction:column;gap:12px;min-height:190px;padding:18px;border:1px solid #dfe9f8;border-radius:17px;background:#fff;box-shadow:0 4px 12px rgba(27,65,115,.035);transition:transform .15s ease,box-shadow .15s ease}
+      .pl-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(27,65,115,.09)}
+      .pl-badge{align-self:flex-start;background:#eaf2ff;color:#2458a5;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}
+      .pl-card strong{font-size:17px;color:#152b49;line-height:1.35}
+      .pl-card .pl-description{font-size:13px;line-height:1.55;color:#62758f;flex:1}
+      .pl-open{width:100%;padding:11px 14px;border:0;border-radius:10px;background:#2864d8;color:#fff;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s ease}
+      .pl-open:hover{background:#194fb7}
+      #closePronunciationModule{background:#fff;color:#183d78;border:1px solid #b8cff0;padding:10px 15px;border-radius:10px;font-weight:800;cursor:pointer}
+      @media(max-width:900px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      @media(max-width:560px){.pl-grid{grid-template-columns:1fr}.pl-hero{padding:22px 18px}.pl-card{min-height:165px}}
+      </style>
+      <div class="pl-hero">
+        <span class="pl-eyebrow">LEARN ENGLISH WITH JOAN</span>
+        <h3>🎧 American Pronunciation Lab</h3>
+        <p>Entrena tu oído y mejora la claridad de tu inglés americano. Practica cada sonido, escucha los ejemplos y avanza módulo por módulo.</p>
+        <div class="pl-stats"><div class="pl-stat"><strong>15</strong><span>Módulos</span></div><div class="pl-stat"><strong>American</strong><span>Pronunciation</span></div><div class="pl-stat"><strong>A1–B1</strong><span>Práctica progresiva</span></div></div>
+      </div>
+      <div class="pl-guide"><strong>¿Cómo practicar?</strong> Elige un módulo, abre la lección y practica los sonidos con calma. Puedes volver a esta pantalla para escoger otra lección.</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px"><div><h3 style="font-size:21px;margin:0 0 4px;color:#18304f">Todos los módulos</h3><p style="margin:0;color:#637791">Selecciona una tarjeta para comenzar.</p></div><button type="button" id="closePronunciationModule" style="display:none">← Volver a los módulos</button></div>
+      <div id="pronunciationModuleGrid" class="pl-grid"></div>`;
     courseView.insertBefore(nav, frame);
   }
   const grid = $("pronunciationModuleGrid");
@@ -2910,10 +2937,10 @@ function ensurePronunciationModuleNav() {
     grid.innerHTML = Object.values(PRONUNCIATION_TITLES).map((name, index) => {
       const number = String(index + 1).padStart(2, "0");
       const file = `American_Pronunciation_Lab_Module_${number}.html`;
-      return `<article style="display:flex;flex-direction:column;gap:12px;min-height:145px;padding:14px;border:1px solid #d9dfe8;border-radius:13px;background:var(--card-bg,#f8fafc)">
-        <span style="align-self:flex-start;background:#dfe9f8;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:700">MÓDULO ${number}</span><strong>${name}</strong>
-        <span style="font-size:12px;opacity:.75;flex:1">Practica la pronunciación americana con esta lección.</span>
-        <button type="button" data-module-file="${file}" style="width:100%;padding:10px;border:0;border-radius:9px;background:#e6eefc;color:#16345f;font-weight:700;cursor:pointer">Abrir módulo</button></article>`;
+      return `<article class="pl-card">
+        <span class="pl-badge">MÓDULO ${number}</span><strong>${name}</strong>
+        <span class="pl-description">Practica la pronunciación americana con esta lección.</span>
+        <button type="button" class="pl-open" data-module-file="${file}">Abrir módulo</button></article>`;
     }).join("");
     grid.dataset.built = "true";
     grid.addEventListener("click", async event => {
