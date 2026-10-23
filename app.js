@@ -2961,7 +2961,7 @@ function ensurePronunciationModuleNav() {
           <h3>American Pronunciation Lab — 15 módulos</h3>
           <p>Abre cualquier módulo por separado. Puedes cerrarlo y elegir otro cuando quieras.</p>
         </div>
-        <button type="button" class="ghost" id="closePronunciationModule">Cerrar módulo</button>
+        <button type="button" class="ghost" id="closePronunciationModule">← Volver a los módulos</button>
       </div>
       <div class="pronunciation-module-grid" id="pronunciationModuleGrid"></div>`;
     courseView.insertBefore(nav, frame);
@@ -2990,6 +2990,14 @@ function ensurePronunciationModuleNav() {
       // El botón de la lección activa funciona como abrir/cerrar.
       if (currentCourseFile === file && frame.style.display !== "none") {
         frame.style.display = "none";
+        const moduleGrid = $("pronunciationModuleGrid");
+        if (moduleGrid) moduleGrid.style.display = "grid";
+        const toolbarTitle = nav.querySelector(".pronunciation-module-toolbar h3");
+        if (toolbarTitle) toolbarTitle.textContent = "American Pronunciation Lab — 15 módulos";
+        const toolbarDescription = nav.querySelector(".pronunciation-module-toolbar p");
+        if (toolbarDescription) toolbarDescription.textContent = "Abre cualquier módulo por separado. Puedes cerrarlo y elegir otro cuando quieras.";
+        const closeControl = $("closePronunciationModule");
+        if (closeControl) closeControl.textContent = "Cerrar módulo";
         button.setAttribute("aria-expanded", "false");
         button.classList.remove("is-current");
         button.textContent = "Abrir módulo";
@@ -3004,6 +3012,16 @@ function ensurePronunciationModuleNav() {
       currentCourseFile = file;
       currentCourseTitle = PRONUNCIATION_TITLES[file] || "American Pronunciation Lab";
       frame.style.display = "";
+      // Al entrar en una lección, ocultar las tarjetas para que el contenido
+      // del módulo ocupe la pantalla. El encabezado permanece para volver.
+      const moduleGrid = $("pronunciationModuleGrid");
+      if (moduleGrid) moduleGrid.style.display = "none";
+      const toolbarTitle = nav.querySelector(".pronunciation-module-toolbar h3");
+      if (toolbarTitle) toolbarTitle.textContent = currentCourseTitle;
+      const toolbarDescription = nav.querySelector(".pronunciation-module-toolbar p");
+      if (toolbarDescription) toolbarDescription.textContent = "Estás dentro de este módulo.";
+      const closeControl = $("closePronunciationModule");
+      if (closeControl) closeControl.textContent = "← Volver a los módulos";
       await loadPrivateCourseFile(file, currentCourseTitle, "PRONUNCIATION");
       updatePronunciationModuleNav(file);
     });
@@ -3015,6 +3033,14 @@ function ensurePronunciationModuleNav() {
     closeButton.addEventListener("click", async () => {
       await requestCurrentProgressSave();
       frame.style.display = "none";
+      const moduleGrid = $("pronunciationModuleGrid");
+      if (moduleGrid) moduleGrid.style.display = "grid";
+      const toolbarTitle = nav.querySelector(".pronunciation-module-toolbar h3");
+      if (toolbarTitle) toolbarTitle.textContent = "American Pronunciation Lab — 15 módulos";
+      const toolbarDescription = nav.querySelector(".pronunciation-module-toolbar p");
+      if (toolbarDescription) toolbarDescription.textContent = "Abre cualquier módulo por separado. Puedes cerrarlo y elegir otro cuando quieras.";
+      const closeControl = $("closePronunciationModule");
+      if (closeControl) closeControl.textContent = "Cerrar módulo";
       nav.querySelectorAll("button[data-module-file]").forEach(button => {
         button.setAttribute("aria-expanded", "false");
         button.classList.remove("is-current");
