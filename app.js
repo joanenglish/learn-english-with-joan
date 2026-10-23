@@ -2909,17 +2909,17 @@ function ensurePronunciationModuleNav() {
       .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;min-width:88px}
       .pl-stat strong{display:block;font-size:19px}.pl-stat span{font-size:11px;color:#dce9ff}
       .pl-guide{background:#fff;border:1px solid #dfebfb;border-radius:16px;padding:15px 18px;margin-bottom:18px;line-height:1.6;color:#526783}
-      .pl-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px!important}
-      .pl-card{display:flex;flex-direction:column;gap:12px;min-height:190px;padding:18px;border:1px solid #dfe9f8;border-radius:17px;background:#fff;box-shadow:0 4px 12px rgba(27,65,115,.035);transition:transform .15s ease,box-shadow .15s ease}
+      .pl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+      .pl-card{display:flex;flex-direction:column;gap:9px;min-height:150px;padding:14px;border:1px solid #dfe9f8;border-radius:17px;background:#fff;box-shadow:0 4px 12px rgba(27,65,115,.035);transition:transform .15s ease,box-shadow .15s ease}
       .pl-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(27,65,115,.09)}
       .pl-badge{align-self:flex-start;background:#eaf2ff;color:#2458a5;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}
-      .pl-card strong{font-size:17px;color:#152b49;line-height:1.35}
+      .pl-card strong{font-size:15px;color:#152b49;line-height:1.35}
       .pl-card .pl-description{font-size:13px;line-height:1.55;color:#62758f;flex:1}
       .pl-open{width:100%;padding:11px 14px;border:0;border-radius:10px;background:#2864d8;color:#fff;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s ease}
       .pl-open:hover{background:#194fb7}
       #closePronunciationModule{background:#fff;color:#183d78;border:1px solid #b8cff0;padding:10px 15px;border-radius:10px;font-weight:800;cursor:pointer}
-      @media(max-width:900px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-      @media(max-width:560px){.pl-grid{grid-template-columns:1fr}.pl-hero{padding:22px 18px}.pl-card{min-height:165px}}
+      @media(max-width:1100px){.pl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}} @media(max-width:800px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      @media(max-width:560px){.pl-grid{grid-template-columns:1fr}.pl-hero{padding:22px 18px}.pl-card{min-height:135px}}\n      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}\n      #pronunciationModuleNav.pl-in-module{padding:12px!important;margin-bottom:10px!important;border-radius:12px!important}\n      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
       </style>
       <div class="pl-hero">
         <span class="pl-eyebrow">LEARN ENGLISH WITH JOAN</span>
@@ -2928,7 +2928,8 @@ function ensurePronunciationModuleNav() {
         <div class="pl-stats"><div class="pl-stat"><strong>15</strong><span>Módulos</span></div><div class="pl-stat"><strong>American</strong><span>Pronunciation</span></div><div class="pl-stat"><strong>A1–B1</strong><span>Práctica progresiva</span></div></div>
       </div>
       <div class="pl-guide"><strong>¿Cómo practicar?</strong> Elige un módulo, abre la lección y practica los sonidos con calma. Puedes volver a esta pantalla para escoger otra lección.</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px"><div><h3 style="font-size:21px;margin:0 0 4px;color:#18304f">Todos los módulos</h3><p style="margin:0;color:#637791">Selecciona una tarjeta para comenzar.</p></div><button type="button" id="closePronunciationModule" style="display:none">← Volver a los módulos</button></div>
+      <div class="pl-library-heading" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px"><div><h3 style="font-size:21px;margin:0 0 4px;color:#18304f">Todos los módulos</h3><p style="margin:0;color:#637791">Selecciona una tarjeta para comenzar.</p></div></div>
+      <div class="pl-module-heading" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 8px"><div><h3 style="font-size:18px;margin:0 0 4px;color:#18304f">Módulo abierto</h3><p style="margin:0;color:#637791">Practica la lección y vuelve para elegir otra.</p></div><button type="button" id="closePronunciationModule" style="display:none">← Volver a los módulos</button></div>
       <div id="pronunciationModuleGrid" class="pl-grid"></div>`;
     courseView.insertBefore(nav, frame);
   }
@@ -2952,6 +2953,7 @@ function ensurePronunciationModuleNav() {
       currentCourseCode = "PRONUNCIATION";
       currentCourseFile = file;
       currentCourseTitle = PRONUNCIATION_TITLES[file] || "American Pronunciation Lab";
+      nav.classList.add("pl-in-module");
       grid.style.display = "none";
       const back = $("closePronunciationModule");
       if (back) back.style.display = "inline-block";
@@ -2969,6 +2971,7 @@ function ensurePronunciationModuleNav() {
     back.addEventListener("click", async () => {
       await requestCurrentProgressSave();
       frame.style.display = "none";
+      nav.classList.remove("pl-in-module");
       if (grid) grid.style.display = "grid";
       back.style.display = "none";
       currentCourseFile = "";
@@ -3079,6 +3082,7 @@ async function openCourse(
     if (frame) frame.style.display = "none";
     const nav = ensurePronunciationModuleNav();
     if (nav) {
+      nav.classList.remove("pl-in-module");
       const grid = $("pronunciationModuleGrid");
       if (grid) grid.style.display = "grid";
       const back = $("closePronunciationModule");
