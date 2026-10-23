@@ -189,6 +189,17 @@ const COURSES = [
   },
 
   {
+    code: "PRONUNCIATION",
+    title: "American Pronunciation Lab",
+    shortTitle: "Pronunciation Lab",
+    description:
+      "15 módulos interactivos para mejorar los sonidos, el ritmo y la pronunciación del inglés americano.",
+    file: "American_Pronunciation_Lab_Module_01.html",
+    badge: "15 módulos",
+    type: "lab"
+  },
+
+  {
     code: "IRREGULARS",
     title: "Irregular Verbs — American English",
     shortTitle: "Irregular Verbs",
@@ -373,6 +384,37 @@ const SPEAKING_TITLES = {
     "Speaking C1 — Volumen 3"
 
 };
+
+
+/* ============================================================
+   AMERICAN PRONUNCIATION LAB
+   ============================================================ */
+
+const PRONUNCIATION_FILES =
+  new Set(
+    Array.from(
+      { length: 15 },
+      (_, index) =>
+        `American_Pronunciation_Lab_Module_${String(index + 1).padStart(2, "0")}.html`
+    )
+  );
+
+
+const PRONUNCIATION_TITLES =
+  Object.fromEntries(
+    Array.from(
+      { length: 15 },
+      (_, index) => {
+        const number =
+          String(index + 1).padStart(2, "0");
+
+        return [
+          `American_Pronunciation_Lab_Module_${number}.html`,
+          `Pronunciation Lab — Module ${number}`
+        ];
+      }
+    )
+  );
 
 
 /* ============================================================
@@ -2566,6 +2608,22 @@ function getSavedPlaceText(
 
 
   if (
+    course.code ===
+    "PRONUNCIATION" &&
+    progress.last_file
+  ) {
+
+    return (
+      PRONUNCIATION_TITLES[
+        progress.last_file
+      ] ||
+      progress.last_section ||
+      "Pronunciation Lab"
+    );
+  }
+
+
+  if (
     progress.last_section
   ) {
 
@@ -2932,6 +2990,21 @@ async function openCourse(
       progress.last_file;
   }
 
+
+  if (
+    resume &&
+    courseCode ===
+      "PRONUNCIATION" &&
+    progress?.last_file &&
+    PRONUNCIATION_FILES.has(
+      progress.last_file
+    )
+  ) {
+
+    fileName =
+      progress.last_file;
+  }
+
   currentCourseCode =
     courseCode;
 
@@ -3145,6 +3218,61 @@ function preparePrivateCourseHtml(
 
           link.setAttribute(
             "data-private-listening-file",
+            file
+          );
+        }
+      );
+  }
+
+
+  if (
+    PRONUNCIATION_FILES.has(
+      currentFile
+    )
+  ) {
+
+    doc
+      .querySelectorAll(
+        "a[href]"
+      )
+      .forEach(
+        link => {
+
+          const href =
+            (
+              link.getAttribute(
+                "href"
+              ) || ""
+            )
+            .trim()
+            .split("?")[0]
+            .split("#")[0]
+            .replace(
+              /^\.\//,
+              ""
+            );
+
+          const file =
+            href
+              .split("/")
+              .pop();
+
+          if (
+            !PRONUNCIATION_FILES.has(
+              file
+            )
+          ) {
+
+            return;
+          }
+
+          link.setAttribute(
+            "href",
+            "#"
+          );
+
+          link.setAttribute(
+            "data-private-pronunciation-file",
             file
           );
         }
@@ -3882,6 +4010,48 @@ function preparePrivateCourseHtml(
         true
       );
 
+
+      document.addEventListener(
+        "click",
+        function (event) {
+
+          const link =
+            event.target.closest(
+              "a[data-private-pronunciation-file]"
+            );
+
+
+          if (!link) {
+
+            return;
+          }
+
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+
+          sendProgress();
+
+
+          parent.postMessage(
+            {
+              type:
+                "OPEN_PRIVATE_PRONUNCIATION_FILE",
+
+              file:
+                link.getAttribute(
+                  "data-private-pronunciation-file"
+                )
+            },
+            "*"
+          );
+
+        },
+        true
+      );
+
     })();
 
   `;
@@ -4100,6 +4270,62 @@ window.addEventListener(
         fileName,
         currentCourseTitle,
         "SPEAKING",
+        null
+      );
+
+
+      return;
+    }
+
+
+    if (
+      message.type ===
+      "OPEN_PRIVATE_PRONUNCIATION_FILE"
+    ) {
+
+      const fileName =
+        String(
+          message.file ||
+          ""
+        );
+
+
+      if (
+        !PRONUNCIATION_FILES.has(
+          fileName
+        )
+      ) {
+
+        return;
+      }
+
+
+      await flushCourseProgress();
+
+
+      currentCourseCode =
+        "PRONUNCIATION";
+
+      currentCourseFile =
+        fileName;
+
+      currentCourseTitle =
+        PRONUNCIATION_TITLES[
+          fileName
+        ] ||
+        "American Pronunciation Lab";
+
+
+      await startStudySession(
+        "PRONUNCIATION",
+        currentCourseTitle
+      );
+
+
+      await loadPrivateCourseFile(
+        fileName,
+        currentCourseTitle,
+        "PRONUNCIATION",
         null
       );
 
