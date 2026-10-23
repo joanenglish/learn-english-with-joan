@@ -2961,7 +2961,7 @@ function ensurePronunciationModuleNav() {
           <h3>American Pronunciation Lab — 15 módulos</h3>
           <p>Abre cualquier módulo por separado. Puedes cerrarlo y elegir otro cuando quieras.</p>
         </div>
-        <button type="button" class="ghost" id="closePronunciationModule">← Volver a los módulos</button>
+        <button type="button" class="secondary" id="closePronunciationModule" style="background:#e6eefc;color:#16345f;border:1px solid #9bb9ee;padding:10px 16px;border-radius:10px;font-weight:700;cursor:pointer">← Volver a los módulos</button>
       </div>
       <div class="pronunciation-module-grid" id="pronunciationModuleGrid"></div>`;
     courseView.insertBefore(nav, frame);
@@ -2990,8 +2990,9 @@ function ensurePronunciationModuleNav() {
       // El botón de la lección activa funciona como abrir/cerrar.
       if (currentCourseFile === file && frame.style.display !== "none") {
         frame.style.display = "none";
+        currentCourseFile = "";
         const moduleGrid = $("pronunciationModuleGrid");
-        if (moduleGrid) moduleGrid.style.display = "grid";
+        if (moduleGrid) { moduleGrid.style.display = "grid"; moduleGrid.hidden = false; }
         const toolbarTitle = nav.querySelector(".pronunciation-module-toolbar h3");
         if (toolbarTitle) toolbarTitle.textContent = "American Pronunciation Lab — 15 módulos";
         const toolbarDescription = nav.querySelector(".pronunciation-module-toolbar p");
@@ -3033,8 +3034,9 @@ function ensurePronunciationModuleNav() {
     closeButton.addEventListener("click", async () => {
       await requestCurrentProgressSave();
       frame.style.display = "none";
+      currentCourseFile = "";
       const moduleGrid = $("pronunciationModuleGrid");
-      if (moduleGrid) moduleGrid.style.display = "grid";
+      if (moduleGrid) { moduleGrid.style.display = "grid"; moduleGrid.hidden = false; }
       const toolbarTitle = nav.querySelector(".pronunciation-module-toolbar h3");
       if (toolbarTitle) toolbarTitle.textContent = "American Pronunciation Lab — 15 módulos";
       const toolbarDescription = nav.querySelector(".pronunciation-module-toolbar p");
