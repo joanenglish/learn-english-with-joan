@@ -2900,37 +2900,26 @@ function ensurePronunciationModuleNav() {
     nav.id = "pronunciationModuleNav";
     nav.style.cssText = "padding:14px;border:1px solid #d5e2f7;border-radius:14px;background:var(--surface,#fff);margin-bottom:12px;";
     nav.innerHTML = `<style>
-      #pronunciationModuleNav{border:0!important;background:transparent!important;padding:8px 10px 18px!important;border-radius:0!important;color:#142b4b;margin:0!important;max-width:100%;overflow:visible!important}
-      #pronunciationModuleNav *{box-sizing:border-box}
-      .pl-hero{background:linear-gradient(115deg,#173d78 0%,#2459a6 58%,#3478d4 100%);color:#fff;border-radius:18px;padding:16px 22px;margin:0 0 14px;box-shadow:0 7px 18px rgba(25,65,125,.12)}
-      .pl-eyebrow{display:inline-block;background:rgba(255,255,255,.16);padding:4px 9px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.06em;margin-bottom:6px}
-      .pl-hero h3{font-size:clamp(21px,2.1vw,29px);line-height:1.15;margin:0 0 5px!important;color:#fff}
-      .pl-hero p{max-width:760px;line-height:1.4;color:#e5efff;margin:0!important;font-size:13px}
-      .pl-stats{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-      .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 10px;min-width:75px}
-      .pl-stat strong{display:block;font-size:15px}.pl-stat span{font-size:10px;color:#dce9ff}
-      .pl-guide{display:none!important}
-      .pl-library-heading{margin:0 0 8px!important}
-      .pl-library-heading h3{font-size:18px!important;margin:0!important;color:#18304f}
-      .pl-library-heading p{display:none!important}
-      .pl-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;max-height:none!important;height:auto!important;min-height:0!important;overflow:visible!important;padding:0;margin:0;overscroll-behavior:auto;scrollbar-gutter:auto}
-      .pl-card{display:flex;flex-direction:column;gap:6px;min-height:108px;padding:10px;border:1px solid #dfe9f8;border-radius:14px;background:#fff;box-shadow:0 3px 10px rgba(27,65,115,.04);transition:transform .15s ease,box-shadow .15s ease;min-width:0}
-      .pl-card:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(27,65,115,.09)}
-      .pl-badge{align-self:flex-start;background:#eaf2ff;color:#2458a5;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800}
-      .pl-card strong{font-size:14px;color:#152b49;line-height:1.25;overflow-wrap:anywhere}
-      .pl-card .pl-description{font-size:10px;line-height:1.3;color:#62758f;flex:1}
-      .pl-open{width:100%;padding:8px 9px;border:0;border-radius:9px;background:#2864d8;color:#fff;font-size:12px;font-weight:800;cursor:pointer;transition:background .15s ease}
+      #pronunciationModuleNav{border:0!important;background:#f2f7ff!important;padding:18px!important;border-radius:22px!important;color:#142b4b}
+      .pl-hero{background:linear-gradient(120deg,#183d78,#2864bd);color:#fff;border-radius:22px;padding:28px 30px;margin-bottom:18px;box-shadow:0 12px 28px rgba(25,65,125,.16)}
+      .pl-eyebrow{display:inline-block;background:rgba(255,255,255,.16);padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em;margin-bottom:12px}
+      .pl-hero h3{font-size:clamp(24px,3vw,36px);line-height:1.15;margin:0 0 10px!important;color:#fff}
+      .pl-hero p{max-width:760px;line-height:1.65;color:#e5efff;margin:0!important}
+      .pl-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+      .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;min-width:88px}
+      .pl-stat strong{display:block;font-size:19px}.pl-stat span{font-size:11px;color:#dce9ff}
+      .pl-guide{background:#fff;border:1px solid #dfebfb;border-radius:16px;padding:15px 18px;margin-bottom:18px;line-height:1.6;color:#526783}
+      .pl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-height:calc(100vh - 390px);min-height:180px;overflow-y:auto;overflow-x:hidden;padding:2px 8px 10px 2px;overscroll-behavior:contain;scrollbar-gutter:stable}
+      .pl-card{display:flex;flex-direction:column;gap:7px;min-height:118px;padding:11px;border:1px solid #dfe9f8;border-radius:17px;background:#fff;box-shadow:0 4px 12px rgba(27,65,115,.035);transition:transform .15s ease,box-shadow .15s ease}
+      .pl-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(27,65,115,.09)}
+      .pl-badge{align-self:flex-start;background:#eaf2ff;color:#2458a5;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}
+      .pl-card strong{font-size:15px;color:#152b49;line-height:1.35}
+      .pl-card .pl-description{font-size:11px;line-height:1.4;color:#62758f;flex:1}
+      .pl-open{width:100%;padding:8px 11px;border:0;border-radius:10px;background:#2864d8;color:#fff;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s ease}
       .pl-open:hover{background:#194fb7}
-      #closePronunciationModule{background:#fff;color:#183d78;border:1px solid #b8cff0;padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer}
-      .pl-module-heading{margin:0 0 8px!important}
-      .pl-module-heading h3{font-size:16px!important;margin:0!important;color:#18304f}
-      .pl-module-heading p{display:none!important}
-      @media(max-width:1200px){.pl-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-      @media(max-width:900px){.pl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-      @media(max-width:620px){#pronunciationModuleNav{padding:6px 2px 14px!important}.pl-hero{padding:14px;border-radius:14px}.pl-hero h3{font-size:21px}.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pl-card{min-height:108px;padding:9px}}
-      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}
-      #pronunciationModuleNav.pl-in-module{padding:8px!important;margin-bottom:8px!important;border-radius:12px!important}
-      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
+      #closePronunciationModule{background:#fff;color:#183d78;border:1px solid #b8cff0;padding:10px 15px;border-radius:10px;font-weight:800;cursor:pointer}
+      @media(max-width:1100px){.pl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}} @media(max-width:800px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      @media(max-width:560px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:calc(100vh - 300px);min-height:160px}.pl-hero{padding:22px 18px}.pl-card{min-height:112px;padding:10px}}\n      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}\n      #pronunciationModuleNav.pl-in-module{padding:12px!important;margin-bottom:10px!important;border-radius:12px!important}\n      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
       </style>
       <div class="pl-hero">
         <span class="pl-eyebrow">LEARN ENGLISH WITH JOAN</span>
@@ -2938,8 +2927,9 @@ function ensurePronunciationModuleNav() {
         <p>Entrena tu oído y mejora la claridad de tu inglés americano. Practica cada sonido, escucha los ejemplos y avanza módulo por módulo.</p>
         <div class="pl-stats"><div class="pl-stat"><strong>15</strong><span>Módulos</span></div><div class="pl-stat"><strong>American</strong><span>Pronunciation</span></div><div class="pl-stat"><strong>A1–B1</strong><span>Práctica progresiva</span></div></div>
       </div>
-      <div class="pl-library-heading" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 8px"><div><h3>Elige una lección</h3><p>Selecciona un módulo para comenzar.</p></div></div>
-      <div class="pl-module-heading" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 8px"><div><h3>Lección seleccionada</h3><p>Practica el sonido y vuelve para elegir otra.</p></div><button type="button" id="closePronunciationModule" style="display:none">← Volver a los módulos</button></div>
+      <div class="pl-guide"><strong>¿Cómo practicar?</strong> Elige un módulo, abre la lección y practica los sonidos con calma. Puedes volver a esta pantalla para escoger otra lección.</div>
+      <div class="pl-library-heading" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px"><div><h3 style="font-size:21px;margin:0 0 4px;color:#18304f">Todos los módulos</h3><p style="margin:0;color:#637791">Selecciona una tarjeta para comenzar.</p></div></div>
+      <div class="pl-module-heading" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 8px"><div><h3 style="font-size:18px;margin:0 0 4px;color:#18304f">Módulo abierto</h3><p style="margin:0;color:#637791">Practica la lección y vuelve para elegir otra.</p></div><button type="button" id="closePronunciationModule" style="display:none">← Volver a los módulos</button></div>
       <div id="pronunciationModuleGrid" class="pl-grid"></div>`;
     courseView.insertBefore(nav, frame);
   }
@@ -3136,6 +3126,8 @@ async function loadPrivateCourseFile(
 
   $("courseStatus").textContent =
     "Cargando contenido privado...";
+
+  console.log("[PRONUNCIATION DEBUG] Archivo solicitado:", fileName, "| curso:", courseCode);
 
   const {
     data,
