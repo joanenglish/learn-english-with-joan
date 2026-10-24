@@ -167,6 +167,17 @@ const COURSES = [
   },
 
   {
+    code: "CHUNKS10000",
+    title: "American English Chunks — 10,000 Flashcards",
+    shortTitle: "American English Chunks",
+    description:
+      "10,000 expresiones organizadas por niveles A1–C2: collocations, phrasal verbs y estructuras del inglés americano.",
+    file: "American_English_Chunks_10000_By_Level.html",
+    badge: "A1–C2",
+    type: "extra"
+  },
+  
+  {
     code: "LISTENING",
     title: "American Listening Lab",
     shortTitle: "Listening Lab",
