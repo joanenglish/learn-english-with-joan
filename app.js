@@ -3390,85 +3390,33 @@ function preparePrivateCourseHtml(
   }
 
 
-  // Corrección selectiva de contraste: solo cambia fondos claros cuando
-  // el texto también es blanco/claro. No recolorea todas las tarjetas ni divs.
-  const contrastFix = doc.createElement("style");
-  contrastFix.id = "learn-english-joan-contrast-fix";
-  contrastFix.textContent = `
-    .leoj-blue-contrast-fix {
-      background-color: #0B1F3A !important;
-      color: #F1F6FF !important;
-      border-color: #203B5F !important;
-    }
-    .leoj-blue-contrast-fix a,
-    .leoj-blue-contrast-fix p,
-    .leoj-blue-contrast-fix span,
-    .leoj-blue-contrast-fix strong,
-    .leoj-blue-contrast-fix label,
-    .leoj-blue-contrast-fix h1,
-    .leoj-blue-contrast-fix h2,
-    .leoj-blue-contrast-fix h3,
-    .leoj-blue-contrast-fix h4 {
-      color: #F1F6FF !important;
-    }
-  `;
-  (doc.head || doc.documentElement).appendChild(contrastFix);
+  // Cambio limitado al fondo general de 1000 English Chunks.
+  // No modifica tarjetas, botones, controles, textos ni encabezados.
+  if (currentFile === "english_chunks.html") {
+    const chunksBackgroundStyle = doc.createElement("style");
+    chunksBackgroundStyle.id = "leoj-chunks-general-blue-background";
+    chunksBackgroundStyle.textContent = `
+      html,
+      body {
+        background-color: #0B1F3A !important;
+      }
 
-  const contrastScript = doc.createElement("script");
-  contrastScript.textContent = `
-    (function () {
-      function isLight(rgb) {
-        const m = String(rgb || "").match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)/i);
-        if (!m) return /^(white|#fff|#ffffff)$/i.test(String(rgb || "").trim());
-        const r = Number(m[1]), g = Number(m[2]), b = Number(m[3]);
-        return r > 225 && g > 225 && b > 215;
+      body > main,
+      body > #app,
+      body > .app,
+      body > .container,
+      body > .page,
+      body > .wrapper,
+      #app > main,
+      #app > .container,
+      .app-shell,
+      .page-shell,
+      .main-content {
+        background-color: #0B1F3A !important;
       }
-      function isLightText(rgb) {
-        const m = String(rgb || "").match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)/i);
-        if (!m) return /^(white|#fff|#ffffff)$/i.test(String(rgb || "").trim());
-        return Number(m[1]) > 220 && Number(m[2]) > 220 && Number(m[3]) > 220;
-      }
-      function fixContrast(root) {
-        const nodes = [];
-        if (root && root.nodeType === 1) nodes.push(root);
-        if (root && root.querySelectorAll) nodes.push(...root.querySelectorAll("*"));
-        nodes.forEach(function (el) {
-          if (el.classList && el.classList.contains("leoj-blue-contrast-fix")) return;
-          const cs = window.getComputedStyle(el);
-          if (isLight(cs.backgroundColor) && isLightText(cs.color)) {
-            el.classList.add("leoj-blue-contrast-fix");
-          }
-        });
-      }
-      function start() {
-        fixContrast(document.body || document.documentElement);
-        const observer = new MutationObserver(function (records) {
-          records.forEach(function (record) {
-            if (record.type === "childList") {
-              record.addedNodes.forEach(function (node) {
-                if (node.nodeType === 1) fixContrast(node);
-              });
-            } else if (record.type === "attributes" && record.target.nodeType === 1) {
-              fixContrast(record.target);
-            }
-          });
-        });
-        observer.observe(document.documentElement, {
-          subtree: true,
-          childList: true,
-          attributes: true,
-          attributeFilter: ["style", "class"]
-        });
-      }
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", start, { once: true });
-      } else {
-        start();
-      }
-    })();
-  `;
-  (doc.body || doc.documentElement).appendChild(contrastScript);
-
+    `;
+    (doc.head || doc.documentElement).appendChild(chunksBackgroundStyle);
+  }
 
   const script =
     doc.createElement(
