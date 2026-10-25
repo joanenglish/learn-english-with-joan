@@ -4246,6 +4246,7 @@ function preparePrivateCourseHtml(
     }
 
     main, section, article, aside, nav, header, footer,
+    div, ul, ol, li,
     .container, .wrapper, .app, .app-container, .page,
     .panel, .card, .content, .lesson, .topic, .chunk-card,
     .flashcard, .question, .example, .item, .word-card,
@@ -4253,7 +4254,10 @@ function preparePrivateCourseHtml(
     .quiz, .result, .option, .answer, .practice-card,
     .lesson-card, .topic-card, .content-card, details,
     .question-card, .example-card, .vocab-card, .entry,
-    .phrase-card, .sentence-card, .study-card {
+    .phrase-card, .sentence-card, .study-card,
+    .chunk-item, .chunk-row, .chunk-content, .chunk-example,
+    .chunk-translation, .chunk-entry, .chunk-body, .chunk-details,
+    .flashcard-inner, .content-inner, .lesson-content, .example-box {
       background-color: #0B1F3A !important;
       color: #F1F6FF !important;
       border-color: #203B5F !important;
@@ -4261,7 +4265,8 @@ function preparePrivateCourseHtml(
 
     h1, h2, h3, h4, h5, h6, p, li, label, summary,
     strong, b, small, span, td, th, dt, dd, legend {
-      border-color: #203B5F;
+      color: #F1F6FF !important;
+      border-color: #203B5F !important;
     }
 
     input, select, textarea {
@@ -4296,8 +4301,10 @@ function preparePrivateCourseHtml(
     [style*="background-color:#ffffff"], [style*="background-color: #ffffff"],
     [style*="background: white"], [style*="background:white"],
     [style*="background-color: white"], [style*="background-color:white"],
-    [style*="background:#f"], [style*="background: #f"],
-    [style*="background-color:#f"], [style*="background-color: #f"] {
+    [style*="background:#f0f0f0"], [style*="background: #f0f0f0"],
+    [style*="background-color:#f0f0f0"], [style*="background-color: #f0f0f0"],
+    [style*="background:#f8f9fa"], [style*="background: #f8f9fa"],
+    [style*="background-color:#f8f9fa"], [style*="background-color: #f8f9fa"] {
       background-color: #0B1F3A !important;
       color: #F1F6FF !important;
       border-color: #203B5F !important;
@@ -4320,9 +4327,64 @@ function preparePrivateCourseHtml(
   (doc.head || doc.documentElement).appendChild(internalBlueTheme);
 
   // Sobrescribe tarjetas con fondo blanco/claro declarado inline en el HTML original.
+  const recolorLightBackgrounds = root => {
+    const elements = [];
+    if (root && root.nodeType === 1 && root.matches("[style]")) elements.push(root);
+    if (root && root.querySelectorAll) elements.push(...root.querySelectorAll("[style]"));
+    elements.forEach(element => {
+      const inlineStyle = element.getAttribute("style") || "";
+      const bg = (element.style.backgroundColor || "").toLowerCase().replace(/\s+/g, "");
+      const match = inlineStyle.match(/background(?:-color)?\s*:\s*(?:white|#([0-9a-f]{3}|[0-9a-f]{6})|rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\))/i);
+      let light = /^(white|#fff|#ffffff|rgb\(255,255,255\))$/.test(bg) || /background(?:-color)?\s*:\s*white/i.test(inlineStyle);
+      if (match && match[1]) {
+        const h = match[1].length === 3 ? match[1].split("").map(ch => ch + ch).join("") : match[1];
+        const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+        light = r > 205 && g > 205 && b > 195;
+      } else if (match && match[2]) {
+        light = Number(match[2]) > 205 && Number(match[3]) > 205 && Number(match[4]) > 195;
+      }
+      if (light) {
+        element.style.setProperty("background-color", "#0B1F3A", "important");
+        element.style.setProperty("color", "#F1F6FF", "important");
+        element.style.setProperty("border-color", "#203B5F", "important");
+      }
+    });
+  };
+  recolorLightBackgrounds(doc.documentElement);
+
+  // Algunos módulos (por ejemplo, 1000 English Chunks) crean tarjetas después de cargar.
+  // Observa cambios nuevos y aplica el mismo tema azul a los fondos claros.
+  if (typeof MutationObserver !== "undefined") {
+    const blueThemeObserver = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        if (mutation.type === "attributes" && mutation.target) {
+          recolorLightBackgrounds(mutation.target);
+        }
+        mutation.addedNodes && mutation.addedNodes.forEach(node => {
+          if (node.nodeType === 1) recolorLightBackgrounds(node);
+        });
+      });
+    });
+    blueThemeObserver.observe(doc.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["style", "class"]
+    });
+  }
+
+  /* Legacy implementation retained below for compatibility. */
   doc.querySelectorAll("[style]").forEach(element => {
     const inlineStyle = element.getAttribute("style") || "";
-    if (/background(?:-color)?\s*:\s*(?:white|#fff(?:fff)?|#f[0-9a-f]{2,6}|rgb\(\s*25[0-5]\s*,\s*25[0-5]\s*,\s*25[0-5]\s*\))/i.test(inlineStyle)) {
+    const lightHexBackground = inlineStyle.match(/background(?:-color)?\s*:\s*(?:white|#([0-9a-f]{3}|[0-9a-f]{6}))/i);
+    const hex = lightHexBackground && lightHexBackground[1] ? lightHexBackground[1] : "";
+    let isLightHex = false;
+    if (hex) {
+      const fullHex = hex.length === 3 ? hex.split("").map(ch => ch + ch).join("") : hex;
+      const r = parseInt(fullHex.slice(0, 2), 16), g = parseInt(fullHex.slice(2, 4), 16), b = parseInt(fullHex.slice(4, 6), 16);
+      isLightHex = r > 205 && g > 205 && b > 195;
+    }
+    if (isLightHex || /background(?:-color)?\s*:\s*white/i.test(inlineStyle)) {
       element.style.setProperty("background-color", "#0B1F3A", "important");
       element.style.setProperty("color", "#F1F6FF", "important");
       element.style.setProperty("border-color", "#203B5F", "important");
