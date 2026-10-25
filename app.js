@@ -3408,8 +3408,8 @@ function preparePrivateCourseHtml(
     (doc.head || doc.documentElement).appendChild(collocationsHeadingFix);
   }
 
-  // Cambia únicamente el fondo GENERAL blanco de Chunks, Connectors, Collocations y Speaking Lab.
-  // No modifica tarjetas, botones, controles, textos ni encabezados internos.
+  // Corrige únicamente fondos GENERALES claros en estos cursos.
+  // Las tarjetas pequeñas, botones, inputs y controles se dejan intactos.
   if (
     courseCode === "CHUNKS" ||
     courseCode === "CONNECTORS" ||
@@ -3423,8 +3423,96 @@ function preparePrivateCourseHtml(
       body {
         background-color: #0B1F3A !important;
       }
+
+      /* Envolturas habituales que sirven como fondo general de la página */
+      body > main,
+      body > #app,
+      body > #root,
+      body > .app,
+      body > .page,
+      body > .page-wrapper,
+      body > .page-container,
+      body > .main,
+      body > .main-content,
+      body > .container,
+      body > .wrapper,
+      body > .wrap,
+      body > .shell,
+      body > .layout,
+      body > .app-container,
+      body > .site-content,
+      body > .content-wrapper,
+      body > .course-container,
+      body > .course-content,
+      main > .container,
+      main > .wrapper,
+      main > .page-container,
+      main > .content-wrapper,
+      #app > main,
+      #root > main {
+        background-color: #0B1F3A !important;
+      }
     `;
     (doc.head || doc.documentElement).appendChild(generalBlueBackground);
+
+    // Algunos cursos aplican el fondo desde JavaScript después de cargar.
+    // Solo recolorea áreas claras grandes; no toca tarjetas pequeñas ni controles.
+    const fixLargeGeneralBackgrounds = () => {
+      const viewportArea = Math.max(
+        doc.documentElement.clientWidth * doc.documentElement.clientHeight,
+        1
+      );
+
+      doc.body?.querySelectorAll("*").forEach(element => {
+        if (
+          element.matches(
+            "button, input, select, textarea, option, summary, details, a, label"
+          )
+        ) return;
+
+        const rect = element.getBoundingClientRect();
+        const area = Math.max(0, rect.width) * Math.max(0, rect.height);
+
+        // Evita alterar tarjetas y bloques pequeños: solo grandes áreas de página.
+        if (area < viewportArea * 0.28) return;
+
+        const bg = getComputedStyle(element).backgroundColor;
+        const match = bg.match(
+          /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/
+        );
+
+        if (!match) return;
+
+        const r = Number(match[1]);
+        const g = Number(match[2]);
+        const b = Number(match[3]);
+        const isLight = r > 220 && g > 220 && b > 220;
+
+        if (isLight) {
+          element.style.setProperty(
+            "background-color",
+            "#0B1F3A",
+            "important"
+          );
+        }
+      });
+    };
+
+    fixLargeGeneralBackgrounds();
+
+    const themeObserver = new MutationObserver(() => {
+      fixLargeGeneralBackgrounds();
+    });
+
+    themeObserver.observe(doc.body || doc.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["style", "class"]
+    });
+
+    // Guarda el observer en el documento para evitar que se recolecte.
+    doc.__leojGeneralBackgroundObserver = themeObserver;
   }
 
 
