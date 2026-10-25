@@ -2905,89 +2905,149 @@ function ensurePronunciationModuleNav() {
   const courseView = $("courseView");
   const frame = $("courseFrame");
   if (!courseView || !frame) return null;
+
   let nav = $("pronunciationModuleNav");
+
   if (!nav) {
     nav = document.createElement("section");
     nav.id = "pronunciationModuleNav";
-    nav.style.cssText = "padding:14px;border:1px solid #d5e2f7;border-radius:14px;background:var(--surface,#fff);margin-bottom:12px;";
+    nav.style.cssText = "width:100%;max-width:100%;height:auto;max-height:none;overflow:visible;box-sizing:border-box;margin:0 0 16px;padding:0;border:0;background:transparent;";
     nav.innerHTML = `<style>
-      #pronunciationModuleNav{border:0!important;background:#f2f7ff!important;padding:18px!important;border-radius:22px!important;color:#142b4b}
-      .pl-hero{background:linear-gradient(120deg,#183d78,#2864bd);color:#fff;border-radius:22px;padding:28px 30px;margin-bottom:18px;box-shadow:0 12px 28px rgba(25,65,125,.16)}
-      .pl-eyebrow{display:inline-block;background:rgba(255,255,255,.16);padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.06em;margin-bottom:12px}
-      .pl-hero h3{font-size:clamp(24px,3vw,36px);line-height:1.15;margin:0 0 10px!important;color:#fff}
-      .pl-hero p{max-width:760px;line-height:1.65;color:#e5efff;margin:0!important}
-      .pl-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
-      .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;min-width:88px}
-      .pl-stat strong{display:block;font-size:19px}.pl-stat span{font-size:11px;color:#dce9ff}
-      .pl-guide{background:#fff;border:1px solid #dfebfb;border-radius:16px;padding:15px 18px;margin-bottom:18px;line-height:1.6;color:#526783}
-.pl-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  max-height: calc(100dvh - 300px);
-  min-height: 160px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-  overscroll-behavior-y: auto;
-  padding: 2px 8px 10px 2px;
-}
-      .pl-card{display:flex;flex-direction:column;gap:7px;min-height:118px;padding:11px;border:1px solid #dfe9f8;border-radius:17px;background:#fff;box-shadow:0 4px 12px rgba(27,65,115,.035);transition:transform .15s ease,box-shadow .15s ease}
-      .pl-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(27,65,115,.09)}
-      .pl-badge{align-self:flex-start;background:#eaf2ff;color:#2458a5;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}
-      .pl-card strong{font-size:15px;color:#152b49;line-height:1.35}
-      .pl-card .pl-description{font-size:11px;line-height:1.4;color:#62758f;flex:1}
-      .pl-open{width:100%;padding:8px 11px;border:0;border-radius:10px;background:#2864d8;color:#fff;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s ease}
-      .pl-open:hover{background:#194fb7}
-      #closePronunciationModule{background:#fff;color:#183d78;border:1px solid #b8cff0;padding:10px 15px;border-radius:10px;font-weight:800;cursor:pointer}
-      @media(max-width:1100px){.pl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}} @media(max-width:800px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-      @media(max-width:560px){.pl-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:calc(100vh - 300px);min-height:160px}.pl-hero{padding:22px 18px}.pl-card{min-height:112px;padding:10px}}\n      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}\n      #pronunciationModuleNav.pl-in-module{padding:12px!important;margin-bottom:10px!important;border-radius:12px!important}\n      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
+      #pronunciationModuleNav,
+      #pronunciationModuleNav *{box-sizing:border-box}
+      #pronunciationModuleNav{--pl-bg:#071225;--pl-panel:#0d1b33;--pl-border:rgba(110,163,255,.2);--pl-blue:#3485ff;--pl-cyan:#59c7ff;--pl-text:#f2f7ff;--pl-muted:#a6b8d3;display:block;width:100%;max-width:100%;height:auto;max-height:none;min-height:0;overflow:visible;padding:clamp(12px,2.5vw,28px)!important;margin:0 0 16px!important;color:var(--pl-text);background:radial-gradient(circle at 90% 0%,rgba(44,120,255,.16),transparent 34%),var(--pl-bg)!important;border:1px solid var(--pl-border)!important;border-radius:22px!important;font-family:inherit;isolation:isolate}
+      #pronunciationModuleNav .pl-hero{position:relative;overflow:hidden;padding:clamp(22px,4vw,42px);margin-bottom:22px;border:1px solid rgba(112,169,255,.25);border-radius:22px;background:radial-gradient(circle at 85% 15%,rgba(89,199,255,.2),transparent 30%),linear-gradient(125deg,#10264b,#123d7c 62%,#0758b8);box-shadow:0 16px 40px rgba(0,0,0,.2)}
+      #pronunciationModuleNav .pl-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;margin-bottom:16px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.08);color:#c8e8ff;font-size:11px;font-weight:800;letter-spacing:.12em}
+      #pronunciationModuleNav .pl-eyebrow:before{content:"";width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--pl-cyan);box-shadow:0 0 12px var(--pl-cyan)}
+      #pronunciationModuleNav .pl-hero h3{margin:0 0 12px!important;color:#fff!important;font-size:clamp(25px,4vw,39px);line-height:1.15;font-weight:850;letter-spacing:-.035em}
+      #pronunciationModuleNav .pl-hero p{max-width:680px;margin:0!important;color:#d4e5ff!important;font-size:14px;line-height:1.8}
+      #pronunciationModuleNav .pl-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:24px;max-width:580px}
+      #pronunciationModuleNav .pl-stat{min-width:0;padding:12px;border:1px solid rgba(255,255,255,.15);border-radius:13px;background:rgba(4,19,43,.24)}
+      #pronunciationModuleNav .pl-stat strong{display:block;margin-bottom:4px;color:#fff;font-size:20px;line-height:1.25}
+      #pronunciationModuleNav .pl-stat span{display:block;color:#c2d9fb;font-size:11px;line-height:1.5}
+      #pronunciationModuleNav .pl-guide{display:flex;align-items:flex-start;gap:12px;padding:16px 18px;margin-bottom:26px;border:1px solid var(--pl-border);border-radius:15px;background:var(--pl-panel);color:var(--pl-muted);font-size:13px;line-height:1.75}
+      #pronunciationModuleNav .pl-guide-icon{display:flex;align-items:center;justify-content:center;width:35px;height:35px;flex:0 0 35px;border:1px solid rgba(67,145,255,.3);border-radius:11px;background:rgba(52,133,255,.12);color:#79baff;font-size:17px}
+      #pronunciationModuleNav .pl-guide strong{display:block;margin-bottom:3px;color:#f2f7ff;font-size:13px}
+      #pronunciationModuleNav .pl-library-heading,#pronunciationModuleNav .pl-module-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:0 0 15px}
+      #pronunciationModuleNav .pl-library-heading h3,#pronunciationModuleNav .pl-module-heading h3{margin:0 0 5px!important;color:#f2f7ff!important;font-size:21px;font-weight:800}
+      #pronunciationModuleNav .pl-library-heading p,#pronunciationModuleNav .pl-module-heading p{margin:0!important;color:var(--pl-muted)!important;font-size:12px;line-height:1.6}
+      #pronunciationModuleNav .pl-section-count{padding:7px 11px;border:1px solid var(--pl-border);border-radius:999px;background:rgba(52,133,255,.09);color:#9ccaff;font-size:11px;font-weight:800;white-space:nowrap}
+      #pronunciationModuleNav .pl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;width:100%;height:auto;max-height:none;min-height:0;overflow:visible;padding:0 0 8px;margin:0;touch-action:auto;overscroll-behavior:auto}
+      #pronunciationModuleNav .pl-card{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:12px;min-width:0;min-height:190px;padding:17px;overflow:hidden;border:1px solid var(--pl-border);border-radius:17px;background:linear-gradient(155deg,rgba(23,48,83,.98),rgba(12,28,52,.98));box-shadow:0 7px 20px rgba(0,0,0,.12);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+      #pronunciationModuleNav .pl-card:before{position:absolute;top:0;left:17px;right:17px;height:2px;content:"";border-radius:0 0 4px 4px;background:linear-gradient(90deg,#3485ff,#59c7ff);opacity:.75}
+      #pronunciationModuleNav .pl-card:hover{transform:translateY(-3px);border-color:rgba(83,157,255,.65);box-shadow:0 14px 28px rgba(0,0,0,.22)}
+      #pronunciationModuleNav .pl-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+      #pronunciationModuleNav .pl-badge{display:inline-flex;align-items:center;padding:6px 9px;border:1px solid rgba(74,148,255,.24);border-radius:8px;background:rgba(52,133,255,.12);color:#a8d0ff;font-size:10px;font-weight:850;letter-spacing:.06em}
+      #pronunciationModuleNav .pl-card-icon{display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:0 0 34px;border:1px solid rgba(89,199,255,.22);border-radius:11px;background:rgba(37,119,227,.13);color:#72caff;font-size:18px}
+      #pronunciationModuleNav .pl-card strong{display:block;color:#f3f7ff;font-size:15px;font-weight:800;line-height:1.4;overflow-wrap:anywhere}
+      #pronunciationModuleNav .pl-card .pl-description{display:block;flex:1;color:#a9bbd5;font-size:12px;line-height:1.65}
+      #pronunciationModuleNav .pl-open{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:39px;padding:10px 12px;border:1px solid rgba(116,177,255,.28);border-radius:10px;background:linear-gradient(110deg,#2475ed,#1761ce);color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:filter .15s ease,transform .15s ease}
+      #pronunciationModuleNav .pl-open:after{content:"→";font-size:16px;line-height:1}
+      #pronunciationModuleNav .pl-open:hover{filter:brightness(1.14)}
+      #pronunciationModuleNav #closePronunciationModule{padding:10px 14px;border:1px solid rgba(89,163,255,.35);border-radius:10px;background:#143765;color:#e8f3ff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer}
+      #pronunciationModuleNav .pl-open:focus-visible,#pronunciationModuleNav #closePronunciationModule:focus-visible{outline:3px solid #59c7ff;outline-offset:3px}
+      #pronunciationModuleNav.pl-in-module .pl-hero,#pronunciationModuleNav.pl-in-module .pl-guide,#pronunciationModuleNav.pl-in-module #pronunciationModuleGrid,#pronunciationModuleNav.pl-in-module .pl-library-heading{display:none!important}
+      #pronunciationModuleNav.pl-in-module{padding:14px!important;margin-bottom:12px!important;border-radius:14px!important}
+      #pronunciationModuleNav.pl-in-module .pl-module-heading{margin:0!important}
+      @media(max-width:1100px){#pronunciationModuleNav .pl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+      @media(max-width:760px){#pronunciationModuleNav .pl-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}#pronunciationModuleNav .pl-card{min-height:185px;padding:13px}#pronunciationModuleNav .pl-hero{border-radius:17px}}
+      @media(max-width:420px){#pronunciationModuleNav{padding:10px!important;border-radius:15px!important}#pronunciationModuleNav .pl-stats{gap:7px}#pronunciationModuleNav .pl-stat{padding:9px 7px}#pronunciationModuleNav .pl-stat strong{font-size:16px}#pronunciationModuleNav .pl-stat span{font-size:10px}#pronunciationModuleNav .pl-grid{grid-template-columns:minmax(0,1fr);gap:10px}#pronunciationModuleNav .pl-card{min-height:0;padding:15px}}
+      @media(prefers-reduced-motion:reduce){#pronunciationModuleNav *{transition:none!important}}
       </style>
       <div class="pl-hero">
         <span class="pl-eyebrow">LEARN ENGLISH WITH JOAN</span>
         <h3>🎧 American Pronunciation Lab</h3>
-        <p>Entrena tu oído y mejora la claridad de tu inglés americano. Practica cada sonido, escucha los ejemplos y avanza módulo por módulo.</p>
-        <div class="pl-stats"><div class="pl-stat"><strong>15</strong><span>Módulos</span></div><div class="pl-stat"><strong>American</strong><span>Pronunciation</span></div><div class="pl-stat"><strong>A1–B1</strong><span>Práctica progresiva</span></div></div>
+        <p>Train your ear. Master American English sounds. Escucha, practica y mejora tu pronunciación paso a paso.</p>
+        <div class="pl-stats">
+          <div class="pl-stat"><strong>15</strong><span>Módulos de práctica</span></div>
+          <div class="pl-stat"><strong>US English</strong><span>American pronunciation</span></div>
+          <div class="pl-stat"><strong>A1–B1</strong><span>Práctica progresiva</span></div>
+        </div>
       </div>
-      <div class="pl-guide"><strong>¿Cómo practicar?</strong> Elige un módulo, abre la lección y practica los sonidos con calma. Puedes volver a esta pantalla para escoger otra lección.</div>
-      <div class="pl-library-heading" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px"><div><h3 style="font-size:21px;margin:0 0 4px;color:#18304f">Todos los módulos</h3><p style="margin:0;color:#637791">Selecciona una tarjeta para comenzar.</p></div></div>
-      <div class="pl-module-heading" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 8px"><div><h3 style="font-size:18px;margin:0 0 4px;color:#18304f">Módulo abierto</h3><p style="margin:0;color:#637791">Practica la lección y vuelve para elegir otra.</p></div><button type="button" id="closePronunciationModule" style="display:none">← Volver a los módulos</button></div>
-      <div id="pronunciationModuleGrid" class="pl-grid"></div>`;
+      <div class="pl-guide">
+        <div class="pl-guide-icon" aria-hidden="true">ⓘ</div>
+        <div><strong>¿Cómo utilizar el laboratorio?</strong>Elige un módulo, abre su lección y practica los sonidos. Cuando termines, vuelve a esta pantalla para seleccionar otro módulo.</div>
+      </div>
+      <div class="pl-library-heading">
+        <div><h3>Tu ruta de pronunciación</h3><p>Selecciona un módulo para comenzar a practicar.</p></div>
+        <span class="pl-section-count">15 MÓDULOS</span>
+      </div>
+      <div class="pl-module-heading" style="display:none">
+        <div><h3>Módulo abierto</h3><p>Practica la lección y vuelve para elegir otra.</p></div>
+        <button type="button" id="closePronunciationModule" style="display:none">← Volver a los módulos</button>
+      </div>
+      <div id="pronunciationModuleGrid" class="pl-grid" aria-label="Módulos de pronunciación americana"></div>`;
     courseView.insertBefore(nav, frame);
   }
+
   const grid = $("pronunciationModuleGrid");
+
   if (grid && !grid.dataset.built) {
+    const moduleDetails = [
+      ["🎧", "Conoce los sonidos básicos y prepara tu oído para el inglés americano."],
+      ["ɪ", "Practica la vocal corta de palabras como sit, big y little."],
+      ["eɪ", "Aprende a reconocer y producir el sonido de long A."],
+      ["ɛ", "Distingue la vocal de palabras como bed, ten y friend."],
+      ["æ", "Entrena la vocal de palabras como cat, map y family."],
+      ["ɑ", "Practica el sonido abierto de palabras como hot y stop."],
+      ["ə", "Reconoce la schwa, una vocal frecuente en el habla natural."],
+      ["ɔ", "Trabaja el sonido de la O abierta en ejemplos americanos."],
+      ["oʊ", "Practica la vocal larga de palabras como go, home y open."],
+      ["ʌ", "Distingue la vocal de palabras como cup, luck y money."],
+      ["u", "Practica la vocal de palabras como blue, food y student."],
+      ["ɝ", "Entrena las vocales con R en palabras como bird, word y learn."],
+      ["aɪ", "Practica el diptongo de palabras como time, my y five."],
+      ["aʊ", "Entrena el diptongo de palabras como now, house y about."],
+      ["ɔɪ", "Practica el diptongo de palabras como boy, voice y enjoy."]
+    ];
+
     grid.innerHTML = Object.values(PRONUNCIATION_TITLES).map((name, index) => {
       const number = String(index + 1).padStart(2, "0");
       const file = `American_Pronunciation_Lab_Module_${number}.html`;
+      const [icon, description] = moduleDetails[index];
       return `<article class="pl-card">
-        <span class="pl-badge">MÓDULO ${number}</span><strong>${name}</strong>
-        <span class="pl-description">Practica la pronunciación americana con esta lección.</span>
-        <button type="button" class="pl-open" data-module-file="${file}">Abrir módulo</button></article>`;
+        <div class="pl-card-top"><span class="pl-badge">MÓDULO ${number}</span><span class="pl-card-icon" aria-hidden="true">${icon}</span></div>
+        <strong>${name}</strong>
+        <span class="pl-description">${description}</span>
+        <button type="button" class="pl-open" data-module-file="${file}">Abrir módulo</button>
+      </article>`;
     }).join("");
+
     grid.dataset.built = "true";
     grid.addEventListener("click", async event => {
       const button = event.target.closest("button[data-module-file]");
       if (!button) return;
       const file = button.dataset.moduleFile;
       if (!PRONUNCIATION_FILES.has(file)) return;
-      await requestCurrentProgressSave();
-      currentCourseCode = "PRONUNCIATION";
-      currentCourseFile = file;
-      currentCourseTitle = PRONUNCIATION_TITLES[file] || "American Pronunciation Lab";
-      nav.classList.add("pl-in-module");
-      grid.style.display = "none";
-      const back = $("closePronunciationModule");
-      if (back) back.style.display = "inline-block";
-      const title = nav.querySelector("h3");
-      if (title) title.textContent = currentCourseTitle;
-      const description = nav.querySelector("p");
-      if (description) description.textContent = "Estás dentro de este módulo.";
-      frame.style.display = "";
-      await loadPrivateCourseFile(file, currentCourseTitle, "PRONUNCIATION");
+
+      button.disabled = true;
+      try {
+        await requestCurrentProgressSave();
+        currentCourseCode = "PRONUNCIATION";
+        currentCourseFile = file;
+        currentCourseTitle = PRONUNCIATION_TITLES[file] || "American Pronunciation Lab";
+        nav.classList.add("pl-in-module");
+        grid.style.display = "none";
+
+        const back = $("closePronunciationModule");
+        if (back) back.style.display = "inline-flex";
+        const heading = nav.querySelector(".pl-module-heading");
+        if (heading) heading.style.display = "flex";
+        const title = nav.querySelector(".pl-module-heading h3");
+        if (title) title.textContent = currentCourseTitle;
+        const description = nav.querySelector(".pl-module-heading p");
+        if (description) description.textContent = "Estás dentro de este módulo.";
+
+        frame.style.display = "";
+        await loadPrivateCourseFile(file, currentCourseTitle, "PRONUNCIATION");
+      } catch (error) {
+        console.error("Error al abrir el módulo de pronunciación:", error);
+        alert("No se pudo abrir el módulo. Inténtalo de nuevo.");
+        button.disabled = false;
+      }
     });
   }
+
   const back = $("closePronunciationModule");
   if (back && !back.dataset.bound) {
     back.dataset.bound = "true";
@@ -2997,15 +3057,19 @@ function ensurePronunciationModuleNav() {
       nav.classList.remove("pl-in-module");
       if (grid) grid.style.display = "grid";
       back.style.display = "none";
+
+      const heading = nav.querySelector(".pl-module-heading");
+      if (heading) heading.style.display = "none";
+      const libraryHeading = nav.querySelector(".pl-library-heading");
+      if (libraryHeading) libraryHeading.style.display = "flex";
+
       currentCourseFile = "";
       currentCourseTitle = "American Pronunciation Lab";
-      const title = nav.querySelector("h3");
-      if (title) title.textContent = "American Pronunciation Lab — 15 módulos";
-      const description = nav.querySelector("p");
-      if (description) description.textContent = "Elige una lección para abrirla. Después puedes volver aquí y seleccionar otra.";
       $("courseStatus").textContent = "Selecciona uno de los 15 módulos para comenzar.";
+      nav.scrollIntoView({ behavior: "auto", block: "start" });
     });
   }
+
   return nav;
 }
 
