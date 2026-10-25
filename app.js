@@ -2980,6 +2980,8 @@ function ensurePronunciationModuleNav() {
     courseView.insertBefore(nav, frame);
   }
 
+  const grid = $("pronunciationModuleGrid");
+
   // Botones flotantes para ir al inicio o al final de los módulos.
   let scrollControls = $("plFloatingScrollControls");
   if (!scrollControls) {
