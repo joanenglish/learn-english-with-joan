@@ -4971,16 +4971,39 @@ async function loadUsers() {
       );
 
 
-  const {
-    data: activityRows
-  } =
-    await supabase
-      .from(
-        "study_activity"
-      )
-      .select(
-        "user_id,course_code,section_name,started_at,active_seconds"
-      );
+  // Cargar TODA la actividad por bloques para evitar el límite
+  // predeterminado de filas de Supabase (frecuentemente 1000).
+  const activityRows = [];
+  const activityPageSize = 1000;
+  let activityFrom = 0;
+
+  while (true) {
+    const {
+      data: activityPage,
+      error: activityError
+    } = await supabase
+      .from("study_activity")
+      .select("user_id,course_code,section_name,started_at,active_seconds")
+      .order("started_at", { ascending: false })
+      .range(activityFrom, activityFrom + activityPageSize - 1);
+
+    if (activityError) {
+      console.error("Error cargando actividad de estudio:", activityError);
+      break;
+    }
+
+    if (!activityPage || activityPage.length === 0) {
+      break;
+    }
+
+    activityRows.push(...activityPage);
+
+    if (activityPage.length < activityPageSize) {
+      break;
+    }
+
+    activityFrom += activityPageSize;
+  }
 
 
   const accessMap =
