@@ -3165,6 +3165,18 @@ async function openCourse(
     );
 
   if (courseCode === "PRONUNCIATION") {
+    // Fix: make the Pronunciation Lab view itself scrollable, even if
+    // the site's global .course-view/body CSS clips the page.
+    const pronunciationView = $("courseView");
+    if (pronunciationView) {
+      pronunciationView.style.setProperty("height", "100dvh", "important");
+      pronunciationView.style.setProperty("max-height", "100dvh", "important");
+      pronunciationView.style.setProperty("overflow-y", "auto", "important");
+      pronunciationView.style.setProperty("overflow-x", "hidden", "important");
+      pronunciationView.style.setProperty("-webkit-overflow-scrolling", "touch", "important");
+      pronunciationView.style.setProperty("overscroll-behavior-y", "contain", "important");
+      pronunciationView.style.setProperty("touch-action", "pan-y", "important");
+    }
     const frame = $("courseFrame");
     if (frame) frame.style.display = "none";
     const nav = ensurePronunciationModuleNav();
