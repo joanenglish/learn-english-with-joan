@@ -4222,6 +4222,89 @@ function preparePrivateCourseHtml(
   `;
 
 
+
+  // Tema azul unificado dentro de los contenidos cargados en el iframe.
+  // Solo aplica colores; no cambia estructura, tamaños, espaciado ni funciones.
+  const internalBlueTheme = doc.createElement("style");
+  internalBlueTheme.id = "learn-english-joan-internal-blue-theme";
+  internalBlueTheme.textContent = `
+    :root {
+      color-scheme: dark;
+      --bg: #071426;
+      --card: #0B1F3A;
+      --ink: #F1F6FF;
+      --muted: #AFC2DD;
+      --line: #203B5F;
+      --navy: #0B1F3A;
+      --blue: #168BFF;
+      --soft: #102B4C;
+    }
+
+    html, body {
+      background-color: #071426 !important;
+      color: #F1F6FF !important;
+    }
+
+    main, section, article, aside, nav, header, footer,
+    .container, .wrapper, .app, .app-container, .page,
+    .panel, .card, .content, .lesson, .topic, .chunk-card,
+    .flashcard, .question, .example, .item, .word-card,
+    .collocation-card, .chunk, .grammar-card, .exercise,
+    .quiz, .result, .option, .answer, .practice-card,
+    .lesson-card, .topic-card, .content-card, details,
+    .question-card, .example-card, .vocab-card, .entry,
+    .phrase-card, .sentence-card, .study-card {
+      background-color: #0B1F3A !important;
+      color: #F1F6FF !important;
+      border-color: #203B5F !important;
+    }
+
+    h1, h2, h3, h4, h5, h6, p, li, label, summary,
+    strong, b, small, span, td, th, dt, dd, legend {
+      border-color: #203B5F;
+    }
+
+    input, select, textarea {
+      background-color: #0D2542 !important;
+      color: #F1F6FF !important;
+      border-color: #35506F !important;
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #AFC2DD !important;
+      opacity: 1;
+    }
+
+    button, .button, .btn, [role="button"], input[type="button"],
+    input[type="submit"], input[type="reset"] {
+      border-color: #168BFF !important;
+    }
+
+    button.primary, .primary, .btn-primary, .button-primary,
+    .btn, .button, input[type="submit"], input[type="button"] {
+      background-color: #168BFF !important;
+      color: #FFFFFF !important;
+    }
+
+    a { color: #69B5FF !important; }
+    hr { border-color: #203B5F !important; }
+
+    /* Recolorea fondos claros declarados como estilos inline sin tocar su geometría. */
+    [style*="background:#fff"], [style*="background: #fff"],
+    [style*="background-color:#fff"], [style*="background-color: #fff"],
+    [style*="background:#ffffff"], [style*="background: #ffffff"],
+    [style*="background-color:#ffffff"], [style*="background-color: #ffffff"],
+    [style*="background: white"], [style*="background:white"],
+    [style*="background-color: white"], [style*="background-color:white"],
+    [style*="background:#f"], [style*="background: #f"],
+    [style*="background-color:#f"], [style*="background-color: #f"] {
+      background-color: #0B1F3A !important;
+      color: #F1F6FF !important;
+      border-color: #203B5F !important;
+    }
+  `;
+  (doc.head || doc.documentElement).appendChild(internalBlueTheme);
+
   (
     doc.body ||
     doc.documentElement
