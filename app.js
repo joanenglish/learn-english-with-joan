@@ -3451,8 +3451,8 @@ function preparePrivateCourseHtml(
     (doc.head || doc.documentElement).appendChild(connectorsHeadingFix);
   }
 
-  // Cambia únicamente el fondo GENERAL blanco de Chunks, Connectors, Collocations y Speaking Lab.
-  // No modifica tarjetas, botones, controles, textos ni encabezados internos.
+  // Cambia solo el fondo vacío/general de estos cursos a azul oscuro.
+  // Conserva tarjetas, botones, controles, textos y encabezados internos.
   if (
     courseCode === "CHUNKS" ||
     courseCode === "CONNECTORS" ||
@@ -3464,7 +3464,25 @@ function preparePrivateCourseHtml(
     generalBlueBackground.textContent = `
       html,
       body {
-        background-color: #0B1F3A !important;
+        background: #071B33 !important;
+        background-color: #071B33 !important;
+        background-image: none !important;
+      }
+
+      /* Solo los contenedores raíz que forman el fondo vacío de la página.
+         No se seleccionan tarjetas ni elementos de contenido interiores. */
+      body > #root,
+      body > #app,
+      body > .app,
+      body > .page-root,
+      body > .page-wrapper,
+      body > .site-wrapper,
+      body > .main-wrapper,
+      body > main#app,
+      body > main.page-root {
+        background: #071B33 !important;
+        background-color: #071B33 !important;
+        background-image: none !important;
       }
     `;
     (doc.head || doc.documentElement).appendChild(generalBlueBackground);
