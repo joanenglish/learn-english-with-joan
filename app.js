@@ -3390,33 +3390,23 @@ function preparePrivateCourseHtml(
   }
 
 
-  // Cambio limitado al fondo general de 1000 English Chunks.
-  // No modifica tarjetas, botones, controles, textos ni encabezados.
-  if (currentFile === "english_chunks.html") {
-    const chunksBackgroundStyle = doc.createElement("style");
-    chunksBackgroundStyle.id = "leoj-chunks-general-blue-background";
-    chunksBackgroundStyle.textContent = `
+  // Cambia únicamente el fondo GENERAL blanco de English Chunks y English Connectors.
+  // No modifica tarjetas, botones, controles, textos ni encabezados internos.
+  if (
+    courseCode === "CHUNKS" ||
+    courseCode === "CONNECTORS"
+  ) {
+    const generalBlueBackground = doc.createElement("style");
+    generalBlueBackground.id = "leoj-general-blue-background";
+    generalBlueBackground.textContent = `
       html,
       body {
         background-color: #0B1F3A !important;
       }
-
-      body > main,
-      body > #app,
-      body > .app,
-      body > .container,
-      body > .page,
-      body > .wrapper,
-      #app > main,
-      #app > .container,
-      .app-shell,
-      .page-shell,
-      .main-content {
-        background-color: #0B1F3A !important;
-      }
     `;
-    (doc.head || doc.documentElement).appendChild(chunksBackgroundStyle);
+    (doc.head || doc.documentElement).appendChild(generalBlueBackground);
   }
+
 
   const script =
     doc.createElement(
