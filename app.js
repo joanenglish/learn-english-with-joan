@@ -2920,7 +2920,19 @@ function ensurePronunciationModuleNav() {
       .pl-stat{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 14px;min-width:88px}
       .pl-stat strong{display:block;font-size:19px}.pl-stat span{font-size:11px;color:#dce9ff}
       .pl-guide{background:#fff;border:1px solid #dfebfb;border-radius:16px;padding:15px 18px;margin-bottom:18px;line-height:1.6;color:#526783}
-      .pl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-height:calc(100vh - 390px);min-height:180px;overflow-y:auto;overflow-x:hidden;padding:2px 8px 10px 2px;overscroll-behavior:contain;scrollbar-gutter:stable}
+.pl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  max-height: calc(100dvh - 300px);
+  min-height: 160px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: auto;
+  padding: 2px 8px 10px 2px;
+}
       .pl-card{display:flex;flex-direction:column;gap:7px;min-height:118px;padding:11px;border:1px solid #dfe9f8;border-radius:17px;background:#fff;box-shadow:0 4px 12px rgba(27,65,115,.035);transition:transform .15s ease,box-shadow .15s ease}
       .pl-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(27,65,115,.09)}
       .pl-badge{align-self:flex-start;background:#eaf2ff;color:#2458a5;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}
