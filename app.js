@@ -144,7 +144,7 @@ const STUDY_HEARTBEAT_MS =
   15000;
 
 const STUDY_IDLE_LIMIT_MS =
-  3 * 60 * 1000;
+  10 * 60 * 1000;
 
 
 /* ============================================================
@@ -3059,7 +3059,18 @@ function ensurePronunciationModuleNav() {
         if (description) description.textContent = "Estás dentro de este módulo.";
 
         frame.style.display = "";
-        await loadPrivateCourseFile(file, currentCourseTitle, "PRONUNCIATION");
+
+        // Cada módulo de Pronunciation Lab debe tener su propia sesión registrada.
+        await startStudySession(
+          "PRONUNCIATION",
+          currentCourseTitle
+        );
+
+        await loadPrivateCourseFile(
+          file,
+          currentCourseTitle,
+          "PRONUNCIATION"
+        );
       } catch (error) {
         console.error("Error al abrir el módulo de pronunciación:", error);
         alert("No se pudo abrir el módulo. Inténtalo de nuevo.");
@@ -3981,6 +3992,21 @@ function preparePrivateCourseHtml(
             450
           );
       }
+
+
+      // El audio o video reproduciéndose cuenta como estudio activo aunque
+      // el alumno no tenga que tocar la pantalla durante la reproducción.
+      setInterval(function () {
+        const mediaPlaying = Array.from(
+          document.querySelectorAll("audio, video")
+        ).some(function (media) {
+          return !media.paused && !media.ended && media.currentTime > 0;
+        });
+
+        if (mediaPlaying) {
+          sendActivity();
+        }
+      }, 15000);
 
 
       [
