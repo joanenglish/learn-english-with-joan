@@ -3408,12 +3408,13 @@ function preparePrivateCourseHtml(
     (doc.head || doc.documentElement).appendChild(collocationsHeadingFix);
   }
 
-  // Cambia únicamente el fondo GENERAL blanco de English Chunks, Connectors y Collocations.
+  // Cambia únicamente el fondo GENERAL blanco de Chunks, Connectors, Collocations y Speaking Lab.
   // No modifica tarjetas, botones, controles, textos ni encabezados internos.
   if (
     courseCode === "CHUNKS" ||
     courseCode === "CONNECTORS" ||
-    courseCode === "COLLOCATIONS"
+    courseCode === "COLLOCATIONS" ||
+    courseCode === "SPEAKING"
   ) {
     const generalBlueBackground = doc.createElement("style");
     generalBlueBackground.id = "leoj-general-blue-background";
