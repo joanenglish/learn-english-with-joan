@@ -2982,91 +2982,6 @@ function ensurePronunciationModuleNav() {
 
   const grid = $("pronunciationModuleGrid");
 
-  // Botones flotantes para ir al inicio o al final de los módulos.
-  let scrollControls = $("plFloatingScrollControls");
-  if (!scrollControls) {
-    scrollControls = document.createElement("div");
-    scrollControls.id = "plFloatingScrollControls";
-    scrollControls.setAttribute("aria-label", "Controles de desplazamiento");
-    scrollControls.innerHTML = `
-      <style>
-        #plFloatingScrollControls {
-          position: fixed;
-          right: max(16px, env(safe-area-inset-right));
-          bottom: max(18px, env(safe-area-inset-bottom));
-          z-index: 2147483000;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        #plFloatingScrollControls button {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 48px;
-          height: 48px;
-          border: 1px solid rgba(139, 197, 255, .55);
-          border-radius: 50%;
-          background: linear-gradient(145deg, #237cff, #0750bb);
-          color: #fff;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
-          font: 900 25px/1 Arial, sans-serif;
-          cursor: pointer;
-          touch-action: manipulation;
-        }
-        #plFloatingScrollControls button:active {
-          transform: scale(.94);
-        }
-        #plFloatingScrollControls button:focus-visible {
-          outline: 3px solid #59c7ff;
-          outline-offset: 3px;
-        }
-        @media (max-width: 480px) {
-          #plFloatingScrollControls { right: 10px; bottom: 14px; gap: 8px; }
-          #plFloatingScrollControls button { width: 44px; height: 44px; }
-        }
-      </style>
-      <button type="button" id="plScrollTop" aria-label="Subir al inicio" title="Subir al inicio">↑</button>
-      <button type="button" id="plScrollBottom" aria-label="Bajar al final" title="Bajar al final">↓</button>
-    `;
-    document.body.appendChild(scrollControls);
-
-    const scrollToTarget = target => {
-      if (!target) return;
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
-
-    $("plScrollTop").addEventListener("click", () => {
-      scrollToTarget($("pronunciationModuleNav"));
-    });
-
-    $("plScrollBottom").addEventListener("click", () => {
-      const moduleGrid = $("pronunciationModuleGrid");
-      const lastCard = moduleGrid && moduleGrid.lastElementChild;
-      scrollToTarget(lastCard || moduleGrid);
-    });
-  }
-
-  scrollControls.style.display = "flex";
-
-  if (!scrollControls.dataset.visibilityBound) {
-    scrollControls.dataset.visibilityBound = "true";
-    const syncVisibility = () => {
-      const view = $("courseView");
-      const isHidden = !view || view.classList.contains("hidden") ||
-        getComputedStyle(view).display === "none";
-      scrollControls.style.display = isHidden ? "none" : "flex";
-    };
-    const view = $("courseView");
-    if (view && window.MutationObserver) {
-      new MutationObserver(syncVisibility).observe(view, {
-        attributes: true,
-        attributeFilter: ["class", "style"]
-      });
-    }
-    syncVisibility();
-  }
-
   if (grid && !grid.dataset.built) {
     const moduleDetails = [
       ["🎧", "Conoce los sonidos básicos y prepara tu oído para el inglés americano."],
@@ -3250,18 +3165,6 @@ async function openCourse(
     );
 
   if (courseCode === "PRONUNCIATION") {
-    // Fix: make the Pronunciation Lab view itself scrollable, even if
-    // the site's global .course-view/body CSS clips the page.
-    const pronunciationView = $("courseView");
-    if (pronunciationView) {
-      pronunciationView.style.setProperty("height", "100dvh", "important");
-      pronunciationView.style.setProperty("max-height", "100dvh", "important");
-      pronunciationView.style.setProperty("overflow-y", "auto", "important");
-      pronunciationView.style.setProperty("overflow-x", "hidden", "important");
-      pronunciationView.style.setProperty("-webkit-overflow-scrolling", "touch", "important");
-      pronunciationView.style.setProperty("overscroll-behavior-y", "contain", "important");
-      pronunciationView.style.setProperty("touch-action", "pan-y", "important");
-    }
     const frame = $("courseFrame");
     if (frame) frame.style.display = "none";
     const nav = ensurePronunciationModuleNav();
@@ -3485,6 +3388,86 @@ function preparePrivateCourseHtml(
         }
       );
   }
+
+
+  // Corrección selectiva de contraste: solo cambia fondos claros cuando
+  // el texto también es blanco/claro. No recolorea todas las tarjetas ni divs.
+  const contrastFix = doc.createElement("style");
+  contrastFix.id = "learn-english-joan-contrast-fix";
+  contrastFix.textContent = `
+    .leoj-blue-contrast-fix {
+      background-color: #0B1F3A !important;
+      color: #F1F6FF !important;
+      border-color: #203B5F !important;
+    }
+    .leoj-blue-contrast-fix a,
+    .leoj-blue-contrast-fix p,
+    .leoj-blue-contrast-fix span,
+    .leoj-blue-contrast-fix strong,
+    .leoj-blue-contrast-fix label,
+    .leoj-blue-contrast-fix h1,
+    .leoj-blue-contrast-fix h2,
+    .leoj-blue-contrast-fix h3,
+    .leoj-blue-contrast-fix h4 {
+      color: #F1F6FF !important;
+    }
+  `;
+  (doc.head || doc.documentElement).appendChild(contrastFix);
+
+  const contrastScript = doc.createElement("script");
+  contrastScript.textContent = `
+    (function () {
+      function isLight(rgb) {
+        const m = String(rgb || "").match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)/i);
+        if (!m) return /^(white|#fff|#ffffff)$/i.test(String(rgb || "").trim());
+        const r = Number(m[1]), g = Number(m[2]), b = Number(m[3]);
+        return r > 225 && g > 225 && b > 215;
+      }
+      function isLightText(rgb) {
+        const m = String(rgb || "").match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)/i);
+        if (!m) return /^(white|#fff|#ffffff)$/i.test(String(rgb || "").trim());
+        return Number(m[1]) > 220 && Number(m[2]) > 220 && Number(m[3]) > 220;
+      }
+      function fixContrast(root) {
+        const nodes = [];
+        if (root && root.nodeType === 1) nodes.push(root);
+        if (root && root.querySelectorAll) nodes.push(...root.querySelectorAll("*"));
+        nodes.forEach(function (el) {
+          if (el.classList && el.classList.contains("leoj-blue-contrast-fix")) return;
+          const cs = window.getComputedStyle(el);
+          if (isLight(cs.backgroundColor) && isLightText(cs.color)) {
+            el.classList.add("leoj-blue-contrast-fix");
+          }
+        });
+      }
+      function start() {
+        fixContrast(document.body || document.documentElement);
+        const observer = new MutationObserver(function (records) {
+          records.forEach(function (record) {
+            if (record.type === "childList") {
+              record.addedNodes.forEach(function (node) {
+                if (node.nodeType === 1) fixContrast(node);
+              });
+            } else if (record.type === "attributes" && record.target.nodeType === 1) {
+              fixContrast(record.target);
+            }
+          });
+        });
+        observer.observe(document.documentElement, {
+          subtree: true,
+          childList: true,
+          attributes: true,
+          attributeFilter: ["style", "class"]
+        });
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", start, { once: true });
+      } else {
+        start();
+      }
+    })();
+  `;
+  (doc.body || doc.documentElement).appendChild(contrastScript);
 
 
   const script =
@@ -4221,175 +4204,6 @@ function preparePrivateCourseHtml(
 
   `;
 
-
-
-  // Tema azul unificado dentro de los contenidos cargados en el iframe.
-  // Solo aplica colores; no cambia estructura, tamaños, espaciado ni funciones.
-  const internalBlueTheme = doc.createElement("style");
-  internalBlueTheme.id = "learn-english-joan-internal-blue-theme";
-  internalBlueTheme.textContent = `
-    :root {
-      color-scheme: dark;
-      --bg: #071426;
-      --card: #0B1F3A;
-      --ink: #F1F6FF;
-      --muted: #AFC2DD;
-      --line: #203B5F;
-      --navy: #0B1F3A;
-      --blue: #168BFF;
-      --soft: #102B4C;
-    }
-
-    html, body {
-      background-color: #071426 !important;
-      color: #F1F6FF !important;
-    }
-
-    main, section, article, aside, nav, header, footer,
-    div, ul, ol, li,
-    .container, .wrapper, .app, .app-container, .page,
-    .panel, .card, .content, .lesson, .topic, .chunk-card,
-    .flashcard, .question, .example, .item, .word-card,
-    .collocation-card, .chunk, .grammar-card, .exercise,
-    .quiz, .result, .option, .answer, .practice-card,
-    .lesson-card, .topic-card, .content-card, details,
-    .question-card, .example-card, .vocab-card, .entry,
-    .phrase-card, .sentence-card, .study-card,
-    .chunk-item, .chunk-row, .chunk-content, .chunk-example,
-    .chunk-translation, .chunk-entry, .chunk-body, .chunk-details,
-    .flashcard-inner, .content-inner, .lesson-content, .example-box {
-      background-color: #0B1F3A !important;
-      color: #F1F6FF !important;
-      border-color: #203B5F !important;
-    }
-
-    h1, h2, h3, h4, h5, h6, p, li, label, summary,
-    strong, b, small, span, td, th, dt, dd, legend {
-      color: #F1F6FF !important;
-      border-color: #203B5F !important;
-    }
-
-    input, select, textarea {
-      background-color: #0D2542 !important;
-      color: #F1F6FF !important;
-      border-color: #35506F !important;
-    }
-
-    input::placeholder, textarea::placeholder {
-      color: #AFC2DD !important;
-      opacity: 1;
-    }
-
-    button, .button, .btn, [role="button"], input[type="button"],
-    input[type="submit"], input[type="reset"] {
-      border-color: #168BFF !important;
-    }
-
-    button.primary, .primary, .btn-primary, .button-primary,
-    .btn, .button, input[type="submit"], input[type="button"] {
-      background-color: #168BFF !important;
-      color: #FFFFFF !important;
-    }
-
-    a { color: #69B5FF !important; }
-    hr { border-color: #203B5F !important; }
-
-    /* Los fondos blancos y muy claros también pasan al azul, incluidos estilos inline. */
-    [style*="background:#fff"], [style*="background: #fff"],
-    [style*="background-color:#fff"], [style*="background-color: #fff"],
-    [style*="background:#ffffff"], [style*="background: #ffffff"],
-    [style*="background-color:#ffffff"], [style*="background-color: #ffffff"],
-    [style*="background: white"], [style*="background:white"],
-    [style*="background-color: white"], [style*="background-color:white"],
-    [style*="background:#f0f0f0"], [style*="background: #f0f0f0"],
-    [style*="background-color:#f0f0f0"], [style*="background-color: #f0f0f0"],
-    [style*="background:#f8f9fa"], [style*="background: #f8f9fa"],
-    [style*="background-color:#f8f9fa"], [style*="background-color: #f8f9fa"] {
-      background-color: #0B1F3A !important;
-      color: #F1F6FF !important;
-      border-color: #203B5F !important;
-    }
-
-    /* Texto y ejemplos dentro de tarjetas: legibles sobre el fondo azul. */
-    .intro, .instructions, .instruction, .notice, .tip, .method,
-    .example p, .example li, .example-card p, .example-card li {
-      color: #DCEAFF !important;
-    }
-
-    /* Si el HTML usa fondos claros con style inline, fuerza el azul incluso
-       cuando el color original fue declarado directamente en el elemento. */
-    .internal-blue-card {
-      background-color: #0B1F3A !important;
-      color: #F1F6FF !important;
-      border-color: #203B5F !important;
-    }
-  `;
-  (doc.head || doc.documentElement).appendChild(internalBlueTheme);
-
-  // Sobrescribe tarjetas con fondo blanco/claro declarado inline en el HTML original.
-  const recolorLightBackgrounds = root => {
-    const elements = [];
-    if (root && root.nodeType === 1 && root.matches("[style]")) elements.push(root);
-    if (root && root.querySelectorAll) elements.push(...root.querySelectorAll("[style]"));
-    elements.forEach(element => {
-      const inlineStyle = element.getAttribute("style") || "";
-      const bg = (element.style.backgroundColor || "").toLowerCase().replace(/\s+/g, "");
-      const match = inlineStyle.match(/background(?:-color)?\s*:\s*(?:white|#([0-9a-f]{3}|[0-9a-f]{6})|rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\))/i);
-      let light = /^(white|#fff|#ffffff|rgb\(255,255,255\))$/.test(bg) || /background(?:-color)?\s*:\s*white/i.test(inlineStyle);
-      if (match && match[1]) {
-        const h = match[1].length === 3 ? match[1].split("").map(ch => ch + ch).join("") : match[1];
-        const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
-        light = r > 205 && g > 205 && b > 195;
-      } else if (match && match[2]) {
-        light = Number(match[2]) > 205 && Number(match[3]) > 205 && Number(match[4]) > 195;
-      }
-      if (light) {
-        element.style.setProperty("background-color", "#0B1F3A", "important");
-        element.style.setProperty("color", "#F1F6FF", "important");
-        element.style.setProperty("border-color", "#203B5F", "important");
-      }
-    });
-  };
-  recolorLightBackgrounds(doc.documentElement);
-
-  // Algunos módulos (por ejemplo, 1000 English Chunks) crean tarjetas después de cargar.
-  // Observa cambios nuevos y aplica el mismo tema azul a los fondos claros.
-  if (typeof MutationObserver !== "undefined") {
-    const blueThemeObserver = new MutationObserver(mutations => {
-      mutations.forEach(mutation => {
-        if (mutation.type === "attributes" && mutation.target) {
-          recolorLightBackgrounds(mutation.target);
-        }
-        mutation.addedNodes && mutation.addedNodes.forEach(node => {
-          if (node.nodeType === 1) recolorLightBackgrounds(node);
-        });
-      });
-    });
-    blueThemeObserver.observe(doc.documentElement, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: ["style", "class"]
-    });
-  }
-
-  /* Legacy implementation retained below for compatibility. */
-  doc.querySelectorAll("[style]").forEach(element => {
-    const inlineStyle = element.getAttribute("style") || "";
-    const lightHexBackground = inlineStyle.match(/background(?:-color)?\s*:\s*(?:white|#([0-9a-f]{3}|[0-9a-f]{6}))/i);
-    const hex = lightHexBackground && lightHexBackground[1] ? lightHexBackground[1] : "";
-    let isLightHex = false;
-    if (hex) {
-      const fullHex = hex.length === 3 ? hex.split("").map(ch => ch + ch).join("") : hex;
-      const r = parseInt(fullHex.slice(0, 2), 16), g = parseInt(fullHex.slice(2, 4), 16), b = parseInt(fullHex.slice(4, 6), 16);
-      isLightHex = r > 205 && g > 205 && b > 195;
-    }
-    if (isLightHex || /background(?:-color)?\s*:\s*white/i.test(inlineStyle)) {
-      element.style.setProperty("background-color", "#0B1F3A", "important");
-      element.style.setProperty("color", "#F1F6FF", "important");
-      element.style.setProperty("border-color", "#203B5F", "important");
-    }
-  });
 
   (
     doc.body ||
