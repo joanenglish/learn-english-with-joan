@@ -3432,6 +3432,25 @@ function preparePrivateCourseHtml(
     (doc.head || doc.documentElement).appendChild(collocationsHeadingFix);
   }
 
+  // En English Connectors in Context, hace blancos los encabezados de categoría
+  // (por ejemplo, ADICIÓN y CONTRASTE / OPOSICIÓN) para que contrasten con el fondo azul.
+  // No modifica las tarjetas, los botones ni los controles.
+  if (courseCode === "CONNECTORS") {
+    const connectorsHeadingFix = doc.createElement("style");
+    connectorsHeadingFix.id = "leoj-connectors-heading-contrast";
+    connectorsHeadingFix.textContent = `
+      h1, h2, h3, h4, h5, h6,
+      .category-title, .section-title, .group-title,
+      .category-heading, .section-heading,
+      [class*="category"] h1, [class*="category"] h2,
+      [class*="category"] h3, [class*="section"] h2,
+      [class*="section"] h3 {
+        color: #FFFFFF !important;
+      }
+    `;
+    (doc.head || doc.documentElement).appendChild(connectorsHeadingFix);
+  }
+
   // Cambia únicamente el fondo GENERAL blanco de Chunks, Connectors, Collocations y Speaking Lab.
   // No modifica tarjetas, botones, controles, textos ni encabezados internos.
   if (
