@@ -3390,6 +3390,24 @@ function preparePrivateCourseHtml(
   }
 
 
+  // En English Collocations, aclara los títulos de sección (por ejemplo, MAKE)
+  // para que se lean sobre el fondo azul oscuro. No cambia tarjetas ni controles.
+  if (courseCode === "COLLOCATIONS") {
+    const collocationsHeadingFix = doc.createElement("style");
+    collocationsHeadingFix.id = "leoj-collocations-heading-contrast";
+    collocationsHeadingFix.textContent = `
+      h1, h2, h3, h4, h5, h6,
+      .category-title, .section-title, .group-title,
+      .collocation-category, .category-heading,
+      [class*="category"] h1, [class*="category"] h2,
+      [class*="category"] h3, [class*="section"] h2,
+      [class*="section"] h3 {
+        color: #FFFFFF !important;
+      }
+    `;
+    (doc.head || doc.documentElement).appendChild(collocationsHeadingFix);
+  }
+
   // Cambia únicamente el fondo GENERAL blanco de English Chunks, Connectors y Collocations.
   // No modifica tarjetas, botones, controles, textos ni encabezados internos.
   if (
