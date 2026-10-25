@@ -2980,7 +2980,90 @@ function ensurePronunciationModuleNav() {
     courseView.insertBefore(nav, frame);
   }
 
-  const grid = $("pronunciationModuleGrid");
+  // Botones flotantes para ir al inicio o al final de los módulos.
+  let scrollControls = $("plFloatingScrollControls");
+  if (!scrollControls) {
+    scrollControls = document.createElement("div");
+    scrollControls.id = "plFloatingScrollControls";
+    scrollControls.setAttribute("aria-label", "Controles de desplazamiento");
+    scrollControls.innerHTML = `
+      <style>
+        #plFloatingScrollControls {
+          position: fixed;
+          right: max(16px, env(safe-area-inset-right));
+          bottom: max(18px, env(safe-area-inset-bottom));
+          z-index: 2147483000;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        #plFloatingScrollControls button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 48px;
+          height: 48px;
+          border: 1px solid rgba(139, 197, 255, .55);
+          border-radius: 50%;
+          background: linear-gradient(145deg, #237cff, #0750bb);
+          color: #fff;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+          font: 900 25px/1 Arial, sans-serif;
+          cursor: pointer;
+          touch-action: manipulation;
+        }
+        #plFloatingScrollControls button:active {
+          transform: scale(.94);
+        }
+        #plFloatingScrollControls button:focus-visible {
+          outline: 3px solid #59c7ff;
+          outline-offset: 3px;
+        }
+        @media (max-width: 480px) {
+          #plFloatingScrollControls { right: 10px; bottom: 14px; gap: 8px; }
+          #plFloatingScrollControls button { width: 44px; height: 44px; }
+        }
+      </style>
+      <button type="button" id="plScrollTop" aria-label="Subir al inicio" title="Subir al inicio">↑</button>
+      <button type="button" id="plScrollBottom" aria-label="Bajar al final" title="Bajar al final">↓</button>
+    `;
+    document.body.appendChild(scrollControls);
+
+    const scrollToTarget = target => {
+      if (!target) return;
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    $("plScrollTop").addEventListener("click", () => {
+      scrollToTarget($("pronunciationModuleNav"));
+    });
+
+    $("plScrollBottom").addEventListener("click", () => {
+      const moduleGrid = $("pronunciationModuleGrid");
+      const lastCard = moduleGrid && moduleGrid.lastElementChild;
+      scrollToTarget(lastCard || moduleGrid);
+    });
+  }
+
+  scrollControls.style.display = "flex";
+
+  if (!scrollControls.dataset.visibilityBound) {
+    scrollControls.dataset.visibilityBound = "true";
+    const syncVisibility = () => {
+      const view = $("courseView");
+      const isHidden = !view || view.classList.contains("hidden") ||
+        getComputedStyle(view).display === "none";
+      scrollControls.style.display = isHidden ? "none" : "flex";
+    };
+    const view = $("courseView");
+    if (view && window.MutationObserver) {
+      new MutationObserver(syncVisibility).observe(view, {
+        attributes: true,
+        attributeFilter: ["class", "style"]
+      });
+    }
+    syncVisibility();
+  }
 
   if (grid && !grid.dataset.built) {
     const moduleDetails = [
