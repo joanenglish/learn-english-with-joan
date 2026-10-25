@@ -4289,7 +4289,7 @@ function preparePrivateCourseHtml(
     a { color: #69B5FF !important; }
     hr { border-color: #203B5F !important; }
 
-    /* Recolorea fondos claros declarados como estilos inline sin tocar su geometría. */
+    /* Los fondos blancos y muy claros también pasan al azul, incluidos estilos inline. */
     [style*="background:#fff"], [style*="background: #fff"],
     [style*="background-color:#fff"], [style*="background-color: #fff"],
     [style*="background:#ffffff"], [style*="background: #ffffff"],
@@ -4302,8 +4302,32 @@ function preparePrivateCourseHtml(
       color: #F1F6FF !important;
       border-color: #203B5F !important;
     }
+
+    /* Texto y ejemplos dentro de tarjetas: legibles sobre el fondo azul. */
+    .intro, .instructions, .instruction, .notice, .tip, .method,
+    .example p, .example li, .example-card p, .example-card li {
+      color: #DCEAFF !important;
+    }
+
+    /* Si el HTML usa fondos claros con style inline, fuerza el azul incluso
+       cuando el color original fue declarado directamente en el elemento. */
+    .internal-blue-card {
+      background-color: #0B1F3A !important;
+      color: #F1F6FF !important;
+      border-color: #203B5F !important;
+    }
   `;
   (doc.head || doc.documentElement).appendChild(internalBlueTheme);
+
+  // Sobrescribe tarjetas con fondo blanco/claro declarado inline en el HTML original.
+  doc.querySelectorAll("[style]").forEach(element => {
+    const inlineStyle = element.getAttribute("style") || "";
+    if (/background(?:-color)?\s*:\s*(?:white|#fff(?:fff)?|#f[0-9a-f]{2,6}|rgb\(\s*25[0-5]\s*,\s*25[0-5]\s*,\s*25[0-5]\s*\))/i.test(inlineStyle)) {
+      element.style.setProperty("background-color", "#0B1F3A", "important");
+      element.style.setProperty("color", "#F1F6FF", "important");
+      element.style.setProperty("border-color", "#203B5F", "important");
+    }
+  });
 
   (
     doc.body ||
