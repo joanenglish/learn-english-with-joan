@@ -4610,8 +4610,6 @@ $("backToPortal").onclick =
     document.body.classList.remove("course-open");
     const pronunciationScrollControls = $("pronunciationScrollControls");
     if (pronunciationScrollControls) pronunciationScrollControls.style.display = "none";
-    const pronunciationScrollControls = $("pronunciationScrollControls");
-    if (pronunciationScrollControls) pronunciationScrollControls.style.display = "none";
 
     $("courseFrame")
       .removeAttribute(
