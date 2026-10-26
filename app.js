@@ -1,4 +1,4 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+mport { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL =
   "https://ggdrcklhyzmacpwctblv.supabase.co";
@@ -5049,16 +5049,43 @@ async function loadUsers() {
       );
 
 
-  const {
-    data: activityRows
-  } =
-    await supabase
-      .from(
-        "study_activity"
-      )
-      .select(
-        "user_id,course_code,section_name,started_at,active_seconds"
+  // Cargar TODA la actividad de Supabase por páginas.
+  // Supabase normalmente devuelve como máximo 1,000 filas por consulta.
+  // Sin paginación, el panel podía calcular estadísticas con datos incompletos.
+  const activityRows = [];
+  const activityPageSize = 1000;
+  let activityFrom = 0;
+
+  while (true) {
+    const {
+      data: activityPage,
+      error: activityError
+    } = await supabase
+      .from("study_activity")
+      .select("user_id,course_code,section_name,started_at,active_seconds")
+      .order("started_at", { ascending: true })
+      .range(activityFrom, activityFrom + activityPageSize - 1);
+
+    if (activityError) {
+      console.error(
+        "No se pudo cargar toda la actividad de estudio; se canceló la actualización de estadísticas para no mostrar minutos incorrectos.",
+        activityError
       );
+      return;
+    }
+
+    if (!activityPage || activityPage.length === 0) {
+      break;
+    }
+
+    activityRows.push(...activityPage);
+
+    if (activityPage.length < activityPageSize) {
+      break;
+    }
+
+    activityFrom += activityPageSize;
+  }
 
 
   const accessMap =
