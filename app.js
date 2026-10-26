@@ -110,8 +110,21 @@ responsiveStyle.textContent = `
     background-color: #071b33 !important;
   }
 
+  html.course-open {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth;
+  }
+
   body.course-open {
     min-height: 100vh !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    position: relative !important;
+    overscroll-behavior-y: auto !important;
   }
 
   body.course-open #courseView {
@@ -3000,6 +3013,56 @@ function ensurePronunciationModuleNav() {
     courseView.insertBefore(nav, frame);
   }
 
+  // Controles flotantes para subir y bajar por Pronunciation Lab.
+  let scrollControls = $("pronunciationScrollControls");
+  if (!scrollControls) {
+    scrollControls = document.createElement("div");
+    scrollControls.id = "pronunciationScrollControls";
+    scrollControls.innerHTML = `
+      <button type="button" data-scroll="up" aria-label="Subir al inicio" title="Subir">↑</button>
+      <button type="button" data-scroll="down" aria-label="Bajar al final" title="Bajar">↓</button>
+    `;
+    scrollControls.style.cssText = "position:fixed;right:20px;bottom:22px;z-index:99999;display:flex;flex-direction:column;gap:10px;";
+    const style = document.createElement("style");
+    style.textContent = `
+      #pronunciationScrollControls button{width:48px;height:48px;border:1px solid rgba(255,255,255,.3);border-radius:50%;background:#1687f8;color:#fff;font-size:27px;font-weight:900;line-height:1;box-shadow:0 6px 20px rgba(0,0,0,.35);cursor:pointer;display:flex;align-items:center;justify-content:center}
+      #pronunciationScrollControls button:hover{filter:brightness(1.15);transform:translateY(-1px)}
+      @media(max-width:600px){#pronunciationScrollControls{right:12px!important;bottom:14px!important}#pronunciationScrollControls button{width:43px;height:43px}}
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(scrollControls);
+    scrollControls.addEventListener("click", event => {
+      const button = event.target.closest("button[data-scroll]");
+      if (!button) return;
+
+      const direction = button.dataset.scroll;
+      const distance = Math.max(500, window.innerHeight * 0.8);
+      const amount = direction === "up" ? -distance : distance;
+      const options = { top: amount, behavior: "smooth" };
+
+      // Scroll the outer portal page and its course container.
+      window.scrollBy(options);
+      const courseViewElement = $("courseView");
+      if (courseViewElement) courseViewElement.scrollBy(options);
+      document.documentElement.scrollBy?.(options);
+      document.body.scrollBy?.(options);
+
+      // If a lesson is open inside the iframe, scroll that lesson too.
+      const courseFrameElement = $("courseFrame");
+      try {
+        const frameWindow = courseFrameElement?.contentWindow;
+        const frameDocument = frameWindow?.document;
+        if (frameWindow) frameWindow.scrollBy(options);
+        const scrollingElement = frameDocument?.scrollingElement || frameDocument?.documentElement;
+        if (scrollingElement) scrollingElement.scrollBy(options);
+        if (frameDocument?.body) frameDocument.body.scrollBy?.(options);
+      } catch (error) {
+        console.debug("No se pudo desplazar el contenido interno del curso:", error);
+      }
+    });
+  }
+  scrollControls.style.display = document.body.classList.contains("course-open") ? "flex" : "none";
+
   const grid = $("pronunciationModuleGrid");
 
   if (grid && !grid.dataset.built) {
@@ -3192,6 +3255,8 @@ async function openCourse(
   // Poner en azul oscuro toda la pantalla, incluidos los laterales.
   document.documentElement.classList.add("course-open");
   document.body.classList.add("course-open");
+  const pronunciationScrollControls = $("pronunciationScrollControls");
+  if (pronunciationScrollControls) pronunciationScrollControls.style.display = "flex";
 
   $("courseView")
     .classList
@@ -4543,6 +4608,10 @@ $("backToPortal").onclick =
     // Restaurar el fondo normal al regresar al portal.
     document.documentElement.classList.remove("course-open");
     document.body.classList.remove("course-open");
+    const pronunciationScrollControls = $("pronunciationScrollControls");
+    if (pronunciationScrollControls) pronunciationScrollControls.style.display = "none";
+    const pronunciationScrollControls = $("pronunciationScrollControls");
+    if (pronunciationScrollControls) pronunciationScrollControls.style.display = "none";
 
     $("courseFrame")
       .removeAttribute(
@@ -4971,39 +5040,16 @@ async function loadUsers() {
       );
 
 
-  // Cargar TODA la actividad por bloques para evitar el límite
-  // predeterminado de filas de Supabase (frecuentemente 1000).
-  const activityRows = [];
-  const activityPageSize = 1000;
-  let activityFrom = 0;
-
-  while (true) {
-    const {
-      data: activityPage,
-      error: activityError
-    } = await supabase
-      .from("study_activity")
-      .select("user_id,course_code,section_name,started_at,active_seconds")
-      .order("started_at", { ascending: false })
-      .range(activityFrom, activityFrom + activityPageSize - 1);
-
-    if (activityError) {
-      console.error("Error cargando actividad de estudio:", activityError);
-      break;
-    }
-
-    if (!activityPage || activityPage.length === 0) {
-      break;
-    }
-
-    activityRows.push(...activityPage);
-
-    if (activityPage.length < activityPageSize) {
-      break;
-    }
-
-    activityFrom += activityPageSize;
-  }
+  const {
+    data: activityRows
+  } =
+    await supabase
+      .from(
+        "study_activity"
+      )
+      .select(
+        "user_id,course_code,section_name,started_at,active_seconds"
+      );
 
 
   const accessMap =
