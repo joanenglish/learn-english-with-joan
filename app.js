@@ -4678,6 +4678,7 @@ function buildStudySummary(
           )
       );
 
+
   const studyRows =
     ordered.filter(
       row =>
@@ -4685,44 +4686,93 @@ function buildStudySummary(
         "PORTAL"
     );
 
-  let todaySeconds = 0;
-  let weekSeconds = 0;
-  let totalSeconds = 0;
-  const activeDays = new Set();
 
-  // El panel admin debe usar la misma fecha de República Dominicana
-  // que el portal del estudiante, no la zona horaria del dispositivo.
-  const todayKey = dominicanDateKey(new Date());
-  const weekStartKey = dominicanDateKeyOffset(-6);
+  let todaySeconds =
+    0;
 
-  for (const row of studyRows) {
-    const seconds = Math.max(
-      0,
-      Number(row.active_seconds) || 0
-    );
+  let weekSeconds =
+    0;
 
-    if (!row.started_at) continue;
-    const startedKey = dominicanDateKey(new Date(row.started_at));
+  let totalSeconds =
+    0;
 
-    totalSeconds += seconds;
 
-    if (startedKey === todayKey) {
-      todaySeconds += seconds;
+  const activeDays =
+    new Set();
+
+
+  const today =
+    startOfToday();
+
+
+  const week =
+    startOfLast7Days();
+
+
+  for (
+    const row
+    of studyRows
+  ) {
+
+    const seconds =
+      Math.max(
+        0,
+        Number(
+          row.active_seconds
+        ) || 0
+      );
+
+
+    const started =
+      new Date(
+        row.started_at
+      );
+
+
+    totalSeconds +=
+      seconds;
+
+
+    if (
+      started >= today
+    ) {
+
+      todaySeconds +=
+        seconds;
     }
 
-    if (startedKey >= weekStartKey && startedKey <= todayKey) {
-      weekSeconds += seconds;
-      activeDays.add(startedKey);
+
+    if (
+      started >= week
+    ) {
+
+      weekSeconds +=
+        seconds;
+
+
+      activeDays.add(
+        localDayKey(
+          row.started_at
+        )
+      );
     }
   }
 
+
   return {
+
     todaySeconds,
+
     weekSeconds,
+
     totalSeconds,
-    activeDays: activeDays.size
+
+    activeDays:
+      activeDays.size
+
   };
 }
+
 
 function renderStudyStats(
   summary
@@ -4999,16 +5049,32 @@ async function loadUsers() {
       );
 
 
-  const {
-    data: activityRows
-  } =
-    await supabase
-      .from(
-        "study_activity"
-      )
-      .select(
-        "user_id,course_code,section_name,started_at,active_seconds"
-      );
+  // FIX ADMIN: cargar todos los registros, no solo los primeros 1,000.
+  // Este cambio solo afecta la consulta de actividad usada por el panel admin.
+  const activityRows = [];
+  const activityPageSize = 1000;
+  let activityFrom = 0;
+
+  while (true) {
+    const {
+      data: activityPage,
+      error: activityError
+    } = await supabase
+      .from("study_activity")
+      .select("user_id,course_code,section_name,started_at,active_seconds")
+      .order("started_at", { ascending: true })
+      .range(activityFrom, activityFrom + activityPageSize - 1);
+
+    if (activityError) {
+      console.error("Error al cargar la actividad de estudio del panel administrador:", activityError);
+      return;
+    }
+
+    if (!activityPage || activityPage.length === 0) break;
+    activityRows.push(...activityPage);
+    if (activityPage.length < activityPageSize) break;
+    activityFrom += activityPageSize;
+  }
 
 
   const accessMap =
