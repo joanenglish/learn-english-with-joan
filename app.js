@@ -298,6 +298,17 @@ const COURSES = [
     type: "grammar"
   },
 
+        {
+        code: "B2",
+        title: "B2 – Upper-Intermediate",
+        shortTitle: "B2 – Upper-Intermediate",
+        description:
+          "Gramática B2 de inglés americano · 32 temas · explicaciones · ejemplos · audio y práctica.",
+        file: "B2_Grammar_American_English_FINAL.html",
+        badge: "B2",
+        type: "grammar"
+      },
+  
 ];
 
 
