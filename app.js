@@ -4678,7 +4678,6 @@ function buildStudySummary(
           )
       );
 
-
   const studyRows =
     ordered.filter(
       row =>
@@ -4686,93 +4685,44 @@ function buildStudySummary(
         "PORTAL"
     );
 
+  let todaySeconds = 0;
+  let weekSeconds = 0;
+  let totalSeconds = 0;
+  const activeDays = new Set();
 
-  let todaySeconds =
-    0;
+  // El panel admin debe usar la misma fecha de República Dominicana
+  // que el portal del estudiante, no la zona horaria del dispositivo.
+  const todayKey = dominicanDateKey(new Date());
+  const weekStartKey = dominicanDateKeyOffset(-6);
 
-  let weekSeconds =
-    0;
+  for (const row of studyRows) {
+    const seconds = Math.max(
+      0,
+      Number(row.active_seconds) || 0
+    );
 
-  let totalSeconds =
-    0;
+    if (!row.started_at) continue;
+    const startedKey = dominicanDateKey(new Date(row.started_at));
 
+    totalSeconds += seconds;
 
-  const activeDays =
-    new Set();
-
-
-  const today =
-    startOfToday();
-
-
-  const week =
-    startOfLast7Days();
-
-
-  for (
-    const row
-    of studyRows
-  ) {
-
-    const seconds =
-      Math.max(
-        0,
-        Number(
-          row.active_seconds
-        ) || 0
-      );
-
-
-    const started =
-      new Date(
-        row.started_at
-      );
-
-
-    totalSeconds +=
-      seconds;
-
-
-    if (
-      started >= today
-    ) {
-
-      todaySeconds +=
-        seconds;
+    if (startedKey === todayKey) {
+      todaySeconds += seconds;
     }
 
-
-    if (
-      started >= week
-    ) {
-
-      weekSeconds +=
-        seconds;
-
-
-      activeDays.add(
-        localDayKey(
-          row.started_at
-        )
-      );
+    if (startedKey >= weekStartKey && startedKey <= todayKey) {
+      weekSeconds += seconds;
+      activeDays.add(startedKey);
     }
   }
 
-
   return {
-
     todaySeconds,
-
     weekSeconds,
-
     totalSeconds,
-
-    activeDays:
-      activeDays.size
-
+    activeDays: activeDays.size
   };
 }
-
 
 function renderStudyStats(
   summary
