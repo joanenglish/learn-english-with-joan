@@ -1,3 +1,4 @@
+
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL =
@@ -308,6 +309,17 @@ const COURSES = [
         badge: "B2",
         type: "grammar"
       },
+
+  {
+    code: "MODALS_SEMI_MODALS",
+    title: "Modals & Semi-Modals",
+    shortTitle: "Modals & Semi-Modals",
+    description:
+      "55 temas de modales y semimodales · explicaciones en español · ejemplos traducidos · flashcards con audio y traducción visible.",
+    file: "modals-semi-modals.html",
+    badge: "A1–C2",
+    type: "grammar"
+  },
   
 ];
 
