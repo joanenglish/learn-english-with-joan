@@ -1,4 +1,5 @@
 
+
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL =
@@ -472,6 +473,12 @@ let studyLastTick =
 let studyLastInteraction =
   Date.now();
 
+// Registra cuándo el estudiante deja de tener visible la pestaña del portal.
+// No identifica la aplicación o página que abrió fuera del portal.
+let visibilityEventId = null;
+let visibilityEventStartedAt = null;
+let visibilityEventBusy = false;
+
 
 /* ============================================================
    ESTADO DE PROGRESO / CONTINUAR
@@ -882,22 +889,91 @@ function markStudyActivity() {
 );
 
 
+async function recordPortalVisibilityChange() {
+
+  if (
+    !currentProfile ||
+    currentProfile.is_admin ||
+    visibilityEventBusy
+  ) {
+    return;
+  }
+
+  visibilityEventBusy = true;
+
+  try {
+    if (document.hidden) {
+      // Evita crear eventos duplicados por cambios rápidos de foco.
+      if (visibilityEventId) return;
+
+      const startedAt = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("study_activity")
+        .insert({
+          user_id: currentProfile.id,
+          course_code: "PORTAL",
+          section_name: "VISIBILITY: pestaña del portal oculta",
+          active_seconds: 0,
+          started_at: startedAt
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("No se pudo registrar el cambio de pestaña:", error);
+        return;
+      }
+
+      visibilityEventId = data.id;
+      visibilityEventStartedAt = startedAt;
+    } else {
+      markStudyActivity();
+
+      if (visibilityEventId) {
+        const eventId = visibilityEventId;
+        const startedAt = visibilityEventStartedAt;
+        visibilityEventId = null;
+        visibilityEventStartedAt = null;
+
+        const awaySeconds = startedAt
+          ? Math.max(0, Math.round((Date.now() - new Date(startedAt).getTime()) / 1000))
+          : 0;
+
+        const { error } = await supabase
+          .from("study_activity")
+          .update({
+            ended_at: new Date().toISOString(),
+            active_seconds: awaySeconds
+          })
+          .eq("id", eventId)
+          .eq("user_id", currentProfile.id);
+
+        if (error) {
+          console.error("No se pudo cerrar el registro de cambio de pestaña:", error);
+        }
+      }
+    }
+  } finally {
+    visibilityEventBusy = false;
+  }
+}
+
 document.addEventListener(
   "visibilitychange",
   () => {
-
-    studyLastTick =
-      Date.now();
-
-    if (
-      !document.hidden
-    ) {
-
-      markStudyActivity();
-    }
-
+    studyLastTick = Date.now();
+    recordPortalVisibilityChange();
   }
 );
+
+
+window.addEventListener("pagehide", () => {
+  if (!visibilityEventId || !currentProfile || currentProfile.is_admin) return;
+  // El navegador puede cancelar esta petición al cerrar la página; el panel lo mostrará como registro sin regreso.
+  supabase.from("study_activity").update({ ended_at: new Date().toISOString() })
+    .eq("id", visibilityEventId)
+    .eq("user_id", currentProfile.id);
+});
 
 
 /* ============================================================
@@ -5010,6 +5086,55 @@ function setupStudentDropdowns() {
 }
 
 
+function renderVisibilityEvents(rows) {
+
+  const events = (rows || [])
+    .filter(row =>
+      row.course_code === "PORTAL" &&
+      String(row.section_name || "").startsWith("VISIBILITY:")
+    )
+    .sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
+
+  const recent = events.slice(0, 5);
+  const formatDate = value => {
+    if (!value) return "Sin registrar";
+    const date = new Date(value);
+    return date.toLocaleString("es-DO", {
+      dateStyle: "short",
+      timeStyle: "short"
+    });
+  };
+  const formatAway = row => {
+    const seconds = Number(row.active_seconds) || 0;
+    if (!row.ended_at) return "Aún no se registra el regreso";
+    if (seconds < 60) return `${seconds} s fuera de la pestaña`;
+    const minutes = Math.floor(seconds / 60);
+    const remainder = seconds % 60;
+    return `${minutes} min ${remainder} s fuera de la pestaña`;
+  };
+
+  return `
+    <div style="margin-top:12px;padding:14px;border:1px solid rgba(148,163,184,.22);border-radius:14px;">
+      <strong>🧭 Cambios fuera de la pestaña del portal</strong>
+      <div style="margin-top:6px;font-size:13px;opacity:.85;">
+        Registros detectados: <strong>${events.length}</strong>
+      </div>
+      <div style="margin-top:8px;font-size:12px;opacity:.75;">
+        Esto indica que la pestaña quedó oculta o perdió visibilidad; no identifica si abrió TikTok u otra aplicación.
+      </div>
+      ${recent.length ? recent.map(row => `
+        <div style="margin-top:9px;padding-top:9px;border-top:1px solid rgba(148,163,184,.18);font-size:13px;">
+          <div><strong>Salida:</strong> ${escapeHtml(formatDate(row.started_at))}</div>
+          <div><strong>Duración:</strong> ${escapeHtml(formatAway(row))}</div>
+        </div>
+      `).join("") : `
+        <div style="margin-top:9px;font-size:13px;opacity:.75;">Todavía no hay registros.</div>
+      `}
+    </div>
+  `;
+}
+
+
 /* ============================================================
    PANEL ADMIN
    ============================================================ */
@@ -5073,7 +5198,7 @@ async function loadUsers() {
       error: activityError
     } = await supabase
       .from("study_activity")
-      .select("user_id,course_code,section_name,started_at,active_seconds")
+      .select("user_id,course_code,section_name,started_at,ended_at,active_seconds")
       .order("started_at", { ascending: true })
       .range(activityFrom, activityFrom + activityPageSize - 1);
 
@@ -5408,6 +5533,10 @@ async function loadUsers() {
 
                 ${renderStudyStats(
                   stats
+                )}
+
+                ${renderVisibilityEvents(
+                  activityMap.get(profile.id) || []
                 )}
 
               </div>
