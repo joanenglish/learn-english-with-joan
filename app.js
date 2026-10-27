@@ -203,7 +203,7 @@ const COURSES = [
 
   {
     code: "CHUNKS10000",
-    title: "American English Chunks — 10,000 Flashcards",
+    title: "American English Chunks — 2,000 Flashcards",
     shortTitle: "American English Chunks",
     description:
       "10,000 expresiones organizadas por niveles A1–C2: collocations, phrasal verbs y estructuras del inglés americano.",
