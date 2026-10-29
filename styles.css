@@ -1435,3 +1435,158 @@ body {
     transition: none;
   }
 }
+
+/* ============================================================
+   AJUSTE VISUAL FINAL â€” BLUE ACADEMY
+   Solo CSS: no cambia HTML, JavaScript, Supabase ni funciones.
+   ============================================================ */
+
+:root {
+  --blue: #258fff;
+  --line: rgba(115, 177, 255, 0.22);
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(37, 143, 255, 0.13), transparent 34%),
+    radial-gradient(ellipse at 92% 18%, rgba(35, 105, 210, 0.09), transparent 32%),
+    #061225;
+}
+
+.topbar {
+  background: linear-gradient(105deg, #061225 0%, #0b2b50 62%, #1268b8 100%);
+  border-bottom: 1px solid rgba(122, 185, 255, 0.25);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.brand {
+  text-shadow: 0 0 22px rgba(37, 143, 255, 0.22);
+}
+
+.container {
+  padding-top: 30px;
+}
+
+.auth-card,
+.panel {
+  border-color: rgba(115, 177, 255, 0.2);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.17);
+}
+
+#portalView {
+  gap: 20px;
+}
+
+#portalView > .welcome {
+  border: 1px solid rgba(115, 177, 255, 0.27);
+  border-radius: 25px;
+  background:
+    radial-gradient(ellipse at 90% 0%, rgba(37, 143, 255, 0.24), transparent 42%),
+    linear-gradient(125deg, #0b1d36 0%, #0d2b4d 58%, #10365d 100%) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+#portalView > .welcome > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+#portalView > .welcome #roleBadge {
+  margin-bottom: 4px;
+}
+
+#portalView > .welcome h1 {
+  margin: 12px 0 5px;
+  font-size: clamp(29px, 3.4vw, 43px);
+  line-height: 1.12;
+  letter-spacing: -0.8px;
+  overflow-wrap: anywhere;
+}
+
+#portalView > .welcome .portal-tagline {
+  order: 3;
+  margin: 8px 0 0;
+  color: #d8eaff;
+  font-size: clamp(14px, 1.3vw, 17px);
+  font-weight: 650;
+  letter-spacing: 0.1px;
+  line-height: 1.6;
+}
+
+#portalView > .welcome #welcomeEmail {
+  order: 4;
+  margin-top: 7px;
+  color: #9fb9d8;
+  font-size: 13px;
+}
+
+#portalView .dashboard-courses > .course-section {
+  border: 1px solid rgba(115, 177, 255, 0.2);
+  background: linear-gradient(145deg, rgba(13, 37, 67, 0.98), rgba(7, 25, 46, 0.98));
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+#portalView .section-head h2 {
+  color: #f4f8ff;
+}
+
+#portalView .section-head p {
+  color: #a9bdd8;
+}
+
+#portalView .course-card {
+  border-color: rgba(115, 177, 255, 0.2);
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(37, 143, 255, 0.13), transparent 56%),
+    linear-gradient(145deg, #102b4a, #091a30);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+#portalView .course-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 143, 255, 0.72);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.22), 0 0 20px rgba(37, 143, 255, 0.08);
+}
+
+#portalView #dailyGoalCard,
+#portalView #motivationCard {
+  border-color: rgba(115, 177, 255, 0.22) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+button.primary,
+#portalView .course-card button.primary {
+  background: linear-gradient(135deg, #258fff, #086ed3);
+  box-shadow: 0 7px 18px rgba(37, 143, 255, 0.18);
+}
+
+button.primary:focus-visible,
+button.secondary:focus-visible,
+button.ghost:focus-visible,
+#portalView .course-card button:focus-visible {
+  outline: 3px solid rgba(83, 169, 255, 0.55);
+  outline-offset: 3px;
+}
+
+@media (max-width: 700px) {
+  .container {
+    padding-top: 17px;
+  }
+
+  #portalView > .welcome {
+    padding: 23px 19px !important;
+    border-radius: 20px;
+  }
+
+  #portalView > .welcome h1 {
+    font-size: clamp(27px, 7.2vw, 35px);
+  }
+
+  #portalView > .welcome .portal-tagline {
+    font-size: 14px;
+  }
+}
