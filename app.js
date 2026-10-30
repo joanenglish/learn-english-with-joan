@@ -235,6 +235,17 @@ const COURSES = [
   },
 
   {
+    code: "READING",
+    title: "American Reading Lab",
+    shortTitle: "Reading Lab",
+    description:
+      "Lectura en inglés Pre-A1–B2 · cuentos · audio · traducción · reconocimiento de voz.",
+    file: "American_Reading_Lab_AZUL_OSCURO.html",
+    badge: "Pre-A1–B2",
+    type: "lab"
+  },
+  
+  {
     code: "PRONUNCIATION",
     title: "American Pronunciation Lab",
     shortTitle: "Pronunciation Lab",
