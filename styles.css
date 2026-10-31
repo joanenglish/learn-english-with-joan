@@ -126,3 +126,670 @@ button{
 
 .hero h1{
   font-size:clamp(38px,6vw,70px);
+  line-height:1.02;
+  margin:14px 0;
+}
+
+.hero p{
+  color:#DCEBFF;
+  font-size:18px;
+  max-width:700px;
+  margin-bottom:0;
+}
+
+.eyebrow{
+  font-size:12px;
+  letter-spacing:.16em;
+  font-weight:900;
+  color:#bcd2f5;
+}
+
+.auth-card,
+.panel{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:22px;
+  box-shadow:0 10px 40px rgba(15,23,42,.05);
+}
+
+.tabs{
+  display:flex;
+  gap:8px;
+  margin-bottom:18px;
+}
+
+.tab{
+  flex:1;
+  border:1px solid var(--line);
+  background:#0B1F3A;
+  padding:10px;
+  border-radius:10px;
+  font-weight:900;
+  color:var(--ink);
+}
+
+.tab.active{
+  background:var(--navy);
+  color:#ffffff;
+}
+
+label{
+  display:block;
+  font-weight:800;
+  margin:13px 0;
+}
+
+input,
+select{
+  width:100%;
+  margin-top:6px;
+  padding:12px 13px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#0B1F3A;
+  color:var(--ink);
+}
+
+input:focus,
+select:focus{
+  outline:3px solid rgba(22,139,255,.22);
+  border-color:#168BFF;
+}
+
+.msg{
+  min-height:1.35em;
+  font-weight:700;
+  color:#FF9A9A;
+}
+
+.msg.ok{
+  color:#65E6A6;
+}
+
+.small{
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* PORTAL */
+
+.welcome{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:16px;
+}
+
+.welcome h1{
+  margin:8px 0 4px;
+}
+
+.welcome p{
+  margin:0;
+  color:var(--muted);
+}
+
+.status{
+  display:inline-block;
+  border-radius:999px;
+  padding:5px 9px;
+  font-size:12px;
+  font-weight:900;
+  background:var(--soft);
+  color:#C5DCFF;
+}
+
+.status.admin{
+  background:#25244D;
+  color:#D7CCFF;
+}
+
+.status.active{
+  background:var(--green);
+  color:#8AE7B4;
+}
+
+.status.pending{
+  background:var(--amber);
+  color:#FFD978;
+}
+
+.status.blocked{
+  background:var(--red);
+  color:#FFAAAA;
+}
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.section-head h2{
+  margin:0;
+}
+
+.section-head p{
+  margin:5px 0 0;
+  color:var(--muted);
+}
+
+/* CURSOS */
+
+.course-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  margin-top:18px;
+}
+
+.course-card{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px;
+  background:#0D2542;
+  min-height:190px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+}
+
+.course-card h3{
+  margin:10px 0 6px;
+}
+
+.course-card p{
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.5;
+  flex:1;
+}
+
+.course-card button{
+  margin-top:12px;
+}
+
+/* ESTADÃ STICAS */
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin:18px 0;
+}
+
+.stat{
+  background:var(--soft);
+  border-radius:13px;
+  padding:14px;
+  text-align:center;
+}
+
+.stat strong{
+  display:block;
+  font-size:28px;
+}
+
+.stat span{
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* ADMIN */
+
+.users-list{
+  margin-top:10px;
+}
+
+.user-meta strong{
+  display:block;
+  font-size:15px;
+}
+
+.user-meta span{
+  display:block;
+  margin-top:3px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.student-admin-card{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  margin-top:12px;
+  background:#0D2542;
+}
+
+.student-admin-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--line);
+}
+
+.student-account-control{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:14px 0;
+  font-weight:800;
+}
+
+.course-access-list{
+  display:grid;
+  gap:9px;
+}
+
+.course-switch-row{
+  margin:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  padding:12px 13px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#0B1F3A;
+}
+
+.course-switch-copy{
+  min-width:0;
+}
+
+.course-switch-copy strong{
+  display:block;
+  font-size:14px;
+}
+
+.course-switch-copy span{
+  display:block;
+  margin-top:2px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--muted);
+}
+
+.admin-account-note{
+  margin-top:12px;
+  padding:11px 12px;
+  border-radius:11px;
+  background:var(--soft);
+  color:#C5DCFF;
+  font-weight:800;
+  font-size:13px;
+}
+
+/* INTERRUPTORES */
+
+.switch{
+  position:relative;
+  display:inline-block;
+  width:52px;
+  height:30px;
+  flex:0 0 auto;
+}
+
+.switch input{
+  opacity:0;
+  width:0;
+  height:0;
+  position:absolute;
+}
+
+.slider{
+  position:absolute;
+  inset:0;
+  cursor:pointer;
+  background:#35506F;
+  border-radius:999px;
+  transition:.2s ease;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.08);
+}
+
+.slider::before{
+  content:"";
+  position:absolute;
+  width:22px;
+  height:22px;
+  left:4px;
+  top:4px;
+  background:#0B1F3A;
+  border-radius:50%;
+  transition:.2s ease;
+  box-shadow:0 2px 6px rgba(15,23,42,.22);
+}
+
+.switch input:checked + .slider{
+  background:#168BFF;
+}
+
+.switch input:checked + .slider::before{
+  transform:translateX(22px);
+}
+
+.switch input:focus-visible + .slider{
+  outline:3px solid rgba(22,139,255,.35);
+  outline-offset:2px;
+}
+
+.switch input:disabled + .slider{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+/* CURSO ABIERTO */
+
+.course-view{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  height:100dvh;
+  background:#0B1F3A;
+  z-index:80;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.course-toolbar{
+  flex:0 0 auto;
+}
+
+#courseFrame{
+  flex:1 1 auto;
+  min-height:0;
+  width:100%;
+  border:0;
+  background:#0B1F3A;
+}
+
+.course-toolbar{
+  min-height:58px;
+  padding:9px 14px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  border-bottom:1px solid var(--line);
+  background:#0D2542;
+}
+
+.course-toolbar strong{
+  font-size:15px;
+}
+
+.course-toolbar #courseStatus{
+  margin-left:auto;
+  color:var(--muted);
+  font-size:13px;
+}
+
+#courseFrame{
+  flex:1;
+  width:100%;
+  border:0;
+  background:#0B1F3A;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+
+  .auth-grid{
+    grid-template-columns:1fr;
+  }
+
+  .hero{
+    padding:34px 26px;
+  }
+
+  .course-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(max-width:700px){
+
+  .container{
+    padding:16px 12px 40px;
+  }
+
+  .topbar{
+    padding:12px 14px;
+  }
+
+  .brand{
+    font-size:18px;
+  }
+
+  .hero{
+    padding:28px 20px;
+  }
+
+  .hero h1{
+    font-size:clamp(34px,10vw,52px);
+  }
+
+  .auth-card,
+  .panel{
+    padding:17px;
+  }
+
+  .course-grid{
+    grid-template-columns:1fr;
+  }
+
+  .stats{
+    grid-template-columns:1fr 1fr 1fr;
+  }
+
+  .student-admin-head,
+  .student-account-control,
+  .course-switch-row{
+    align-items:center;
+  }
+
+  .student-admin-card{
+    padding:13px;
+  }
+
+  .course-toolbar{
+    flex-wrap:wrap;
+  }
+
+  .course-toolbar #courseStatus{
+    width:100%;
+    margin-left:0;
+  }
+}
+
+@media(max-width:480px){
+
+  .stats{
+    grid-template-columns:1fr;
+  }
+
+  .tabs{
+    flex-direction:column;
+  }
+
+  .student-admin-head{
+    flex-direction:column;
+  }
+
+  .student-account-control,
+  .course-switch-row{
+    gap:10px;
+  }
+}
+/* ================================
+   LOGO BONITO TIPO CRISTAL
+   ================================ */
+
+.brand-box{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.portal-logo{
+  margin:0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.logo-text{
+  font-size:36px;
+  font-weight:900;
+  line-height:1.1;
+  letter-spacing:.4px;
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,.98) 0%,
+    rgba(220,238,255,.92) 30%,
+    rgba(255,255,255,.85) 55%,
+    rgba(190,220,255,.95) 75%,
+    rgba(255,255,255,1) 100%
+  );
+
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  color:transparent;
+
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.45),
+    0 2px 8px rgba(0,0,0,.10),
+    0 0 18px rgba(255,255,255,.22);
+}
+
+.logo-book{
+  font-size:30px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 10px;
+  border-radius:14px;
+
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.35),
+    0 4px 14px rgba(0,0,0,.12);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.portal-subtitle{
+  margin:0;
+  font-size:14px;
+  color:rgba(255,255,255,.92);
+  font-weight:600;
+  letter-spacing:.2px;
+}
+
+/* para mÃ³vil */
+@media (max-width:700px){
+
+  .logo-text{
+    font-size:28px;
+  }
+
+  .logo-book{
+    font-size:24px;
+    padding:5px 8px;
+  }
+
+  .portal-subtitle{
+    font-size:13px;
+  }
+}
+/* Nombre principal estilo cristal */
+
+.brand-glass{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.3px;
+
+  background:linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #dbeafe 28%,
+    #ffffff 52%,
+    #bfdbfe 76%,
+    #ffffff 100%
+  );
+
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.5),
+    0 2px 8px rgba(0,0,0,.16),
+    0 0 18px rgba(255,255,255,.22);
+}
+
+.brand-book{
+  -webkit-text-fill-color:initial;
+  font-size:24px;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.18));
+}
+
+@media(max-width:700px){
+  .brand-glass{
+    font-size:19px;
+  }
+
+  .brand-book{
+    font-size:21px;
+  }
+}
+/* LOGO DE LA BARRA AZUL */
+
+.brand-glass{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.4px;
+
+  background:linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #dcecff 28%,
+    #ffffff 52%,
+    #b9d8ff 76%,
+    #ffffff 100%
+  );
+
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.5),
+    0 2px 6px rgba(0,0,0,.20),
+    0 0 14px rgba(255,255,255,.20);
+}
+
+.brand-book{
+  -webkit-text-fill-color:initial;
+  font-size:23px;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));
+}
