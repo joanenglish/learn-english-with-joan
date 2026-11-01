@@ -2768,6 +2768,10 @@ function courseCardHtml(
       course.code
     );
 
+  if (!allowed) {
+  return "";
+}
+  
   const progress =
     !currentProfile?.is_admin
       ? progressCache.get(
