@@ -323,6 +323,17 @@ const COURSES = [
       },
 
   {
+    code: "AMERICAN_CHUNKS_3723",
+    title: "American English Chunks — 3,723 Expressions",
+    shortTitle: "American English Chunks",
+    description:
+      "3,723 expresiones del inglés americano · niveles A1–B2 · traducción · ejemplos · pronunciación y flashcards.",
+    file: "American_English_Chunks_3723_FINAL_AUDITADO.html",
+    badge: "A1–B2",
+    type: "grammar"
+},
+  
+  {
     code: "MODALS_SEMI_MODALS",
     title: "Modals & Semi-Modals",
     shortTitle: "Modals & Semi-Modals",
