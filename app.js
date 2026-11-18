@@ -4508,7 +4508,61 @@ window.addEventListener(
 
       return;
     }
+    // American Chunk Builder: cargar progreso del estudiante.
+    if (
+      message.type === "CHUNK_BUILDER_READY" &&
+      currentCourseCode === "CHUNK_BUILDER" &&
+      currentProfile
+    ) {
+      const { data, error } = await supabase
+        .from("chunk_builder_progress")
+        .select("state")
+        .eq("user_id", currentProfile.id)
+        .maybeSingle();
 
+      if (error) {
+        console.error("Error cargando Chunk Builder:", error);
+      }
+
+      if (event.source === $("courseFrame")?.contentWindow) {
+        event.source.postMessage(
+          {
+            type: "CHUNK_BUILDER_RESTORE",
+            state: data?.state || null
+          },
+          "*"
+        );
+      }
+
+      return;
+    }
+
+    // American Chunk Builder: guardar progreso del estudiante.
+    if (
+      message.type === "CHUNK_BUILDER_SAVE" &&
+      currentCourseCode === "CHUNK_BUILDER" &&
+      currentProfile &&
+      message.state &&
+      typeof message.state === "object" &&
+      !Array.isArray(message.state)
+    ) {
+      const { error } = await supabase
+        .from("chunk_builder_progress")
+        .upsert(
+          {
+            user_id: currentProfile.id,
+            state: message.state,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (error) {
+        console.error("Error guardando Chunk Builder:", error);
+      }
+
+      return;
+    }
 
     if (
       message.type ===
