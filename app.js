@@ -332,6 +332,17 @@ const COURSES = [
     badge: "A1–B2",
     type: "grammar"
 },
+
+    {
+    code: "CHUNK_BUILDER",
+    title: "American Chunk Builder — 3,640 Chunks",
+    shortTitle: "Chunk Builder",
+    description:
+      "Practica 3,640 chunks del inglés americano · niveles A1–C2 · cinco respuestas únicas por chunk.",
+    file: "American_Chunk_Builder_v3_SUPABASE.html",
+    badge: "A1–C2",
+    type: "extra"
+  },
   
   {
     code: "MODALS_SEMI_MODALS",
